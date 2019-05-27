@@ -69,12 +69,15 @@ namespace LibSaberPatch
                 // Console.WriteLine((pathID, offset, size, typeID));
             }
 
-            public void WriteTo(BinaryWriter w) {
+            // returns the location to patch the offsets
+            public long WriteTo(BinaryWriter w) {
                 w.AlignStream();
                 w.Write(pathID);
+                long patchPos = w.BaseStream.Position;
                 w.Write(offset);
                 w.Write(size);
                 w.Write(typeID);
+                return patchPos;
             }
         }
 
@@ -185,19 +188,49 @@ namespace LibSaberPatch
             }
         }
 
-        public void WriteTo(Stream outStream) {
-            // We write the sections in reverse order because each section needs sizes/offsets
-            // from the previous sections.
+        private static void PatchInt(byte[] arr, long index, int val, bool bigEndian) {
+            byte[] buff = BitConverter.GetBytes(val);
+            if(bigEndian) Array.Reverse(buff);
+            for(int i = 0; i < 4; i++) arr[i+index] = buff[i];
+        }
 
-            // ===== Write Data
-            byte[] data;
+        public void WriteTo(Stream outStream) {
+            List<long> patchLocs = new List<long>(objects.Count);
+            byte[] buf;
+            int length;
+            int dataOffset;
+            int metadataSize;
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter w = new BinaryWriter(stream);
 
+                // ===== Header
+                w.Write((int)0); // patch
+                w.Write((int)0); // patch
+                w.WriteInt32BE(parsedGeneration);
+                w.Write((int)0); // patch
+                w.WriteInt32BE(0); // not big endian
+
+                // ===== Metadata
+                w.WriteCString(version);
+                w.Write(targetPlatform);
+                w.Write(enableTypeTree);
+
+                w.WritePrefixedList(types, x => x.WriteTo(w));
+                w.WritePrefixedList(objects, x => patchLocs.Add(x.WriteTo(w)));
+                w.WritePrefixedList(scripts, x => x.WriteTo(w));
+                w.WritePrefixedList(externals, x => x.WriteTo(w));
+                w.Write((byte)0);
+                metadataSize = (int)w.BaseStream.Position - headerLen;
+
+                w.WriteZeros(paddingLen);
+                w.AlignStream();
+
+                // ===== Data
+                dataOffset = (int)w.BaseStream.Position;
                 foreach(AssetObject obj in objects) {
-                    obj.offset = (int)w.BaseStream.Position;
+                    obj.offset = (int)w.BaseStream.Position - dataOffset;
                     obj.data.WriteTo(w);
-                    obj.size = (int)w.BaseStream.Position - obj.offset;
+                    obj.size = ((int)w.BaseStream.Position - dataOffset) - obj.offset;
                     w.WriteZeros(obj.paddingLen);
 
                     // TODO do objects need to be aligned?
@@ -207,51 +240,23 @@ namespace LibSaberPatch
                     w.AlignStream();
                 }
 
+                length = (int)stream.Length;
                 stream.Close();
-                data = stream.ToArray();
+                buf = stream.GetBuffer();
             }
 
-            // ===== Write Metadata
-            byte[] metadata;
-            using (MemoryStream stream = new MemoryStream()) {
-                BinaryWriter w = new BinaryWriter(stream);
+            // Patch header
+            PatchInt(buf, 0*4, metadataSize, true);
+            PatchInt(buf, 1*4, length, true);
+            PatchInt(buf, 3*4, dataOffset, true);
 
-                w.WriteCString(version);
-                w.Write(targetPlatform);
-                w.Write(enableTypeTree);
-
-                w.WritePrefixedList(types, x => x.WriteTo(w));
-                w.WritePrefixedList(objects, x => x.WriteTo(w));
-                w.WritePrefixedList(scripts, x => x.WriteTo(w));
-                w.WritePrefixedList(externals, x => x.WriteTo(w));
-                w.Write((byte)0);
-
-                stream.Close();
-                metadata = stream.ToArray();
+            // Patch objects
+            for(int i = 0; i < patchLocs.Count; i++) {
+                PatchInt(buf, patchLocs[i] + 0*4, objects[i].offset, false);
+                PatchInt(buf, patchLocs[i] + 1*4, objects[i].size, false);
             }
 
-
-            // ===== Write Header and final content
-            {
-                BinaryWriter w = new BinaryWriter(outStream);
-                int dataOffset = headerLen + metadata.Length + paddingLen;
-                // Ensure the data section is always aligned, not sure if this is necessary
-                if(dataOffset % 4 != 0) {
-                    paddingLen += 4 - (dataOffset % 4);
-                    dataOffset = headerLen + metadata.Length + paddingLen;
-                }
-
-                int fileSize = dataOffset + data.Length;
-                w.WriteInt32BE(metadata.Length);
-                w.WriteInt32BE(fileSize);
-                w.WriteInt32BE(parsedGeneration);
-                w.WriteInt32BE(dataOffset);
-                w.WriteInt32BE(0); // not big endian
-
-                w.Write(metadata);
-                w.WriteZeros(paddingLen);
-                w.Write(data);
-            }
+            outStream.Write(buf, 0, length);
         }
     }
 }

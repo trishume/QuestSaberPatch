@@ -19,7 +19,7 @@ namespace TestApp
                 stream.Close();
                 outData = stream.ToArray();
             }
-            Assert.Equal(data, outData);
+            Assert.True(System.Linq.Enumerable.SequenceEqual(data, outData));
         }
 
         [Fact]

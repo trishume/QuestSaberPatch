@@ -235,6 +235,12 @@ namespace LibSaberPatch
             {
                 BinaryWriter w = new BinaryWriter(outStream);
                 int dataOffset = headerLen + metadata.Length + paddingLen;
+                // Ensure the data section is always aligned, not sure if this is necessary
+                if(dataOffset % 4 != 0) {
+                    paddingLen += 4 - (dataOffset % 4);
+                    dataOffset = headerLen + metadata.Length + paddingLen;
+                }
+
                 int fileSize = dataOffset + data.Length;
                 w.WriteInt32BE(metadata.Length);
                 w.WriteInt32BE(fileSize);
@@ -244,7 +250,6 @@ namespace LibSaberPatch
 
                 w.Write(metadata);
                 w.WriteZeros(paddingLen);
-                // TODO align in case of modification changing metadata size
                 w.Write(data);
             }
         }

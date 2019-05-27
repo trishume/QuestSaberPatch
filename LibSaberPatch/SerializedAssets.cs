@@ -183,7 +183,17 @@ namespace LibSaberPatch
                 if(reader.BaseStream.Position-dataOffset != obj.offset) {
                     throw new ParseException("Objects aren't in order");
                 }
-                obj.data = new UnknownAssetData(reader.ReadBytes(obj.size));
+                long startOffset = reader.BaseStream.Position;
+                switch(types[obj.typeID].classID) {
+                    case 114:
+                        obj.data = new MonoBehaviorAssetData(reader, obj.size);
+                        break;
+                    default:
+                        obj.data = new UnknownAssetData(reader, obj.size);
+                        break;
+                }
+                if(reader.BaseStream.Position - startOffset != obj.size)
+                    throw new ParseException("Couldn't parse entire object");
                 if(!reader.ReadAllZeros(obj.paddingLen)) throw new ParseException("Expected zeros for padding");
             }
         }

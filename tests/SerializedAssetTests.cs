@@ -14,6 +14,16 @@ namespace TestApp
             Stream stream = new FileStream(path, FileMode.Open);
             SerializedAssets assets = new SerializedAssets(stream);
             Assert.Equal(1, assets.types.Count);
+            Assert.Equal(1, assets.objects.Count);
+        }
+
+        [Fact]
+        public void TestBigFile() {
+            string path = $"{baseAPKUnpackedFolderPath}/assets/bin/Data/sharedassets17.assets";
+            Stream stream = SerializedAssets.JoinedStream(path);
+            SerializedAssets assets = new SerializedAssets(stream);
+            Assert.Equal(30, assets.types.Count);
+            Assert.Equal(260, assets.objects.Count);
         }
     }
 }

@@ -70,5 +70,13 @@ namespace LibSaberPatch
             }
             return list;
         }
+
+        public static bool ReadAllZeros(this BinaryReader reader, int len) {
+            byte[] padding = reader.ReadBytes(len);
+            foreach(byte b in padding) {
+                if(b != 0) return false;
+            }
+            return true;
+        }
     }
 }

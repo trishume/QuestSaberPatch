@@ -1,3 +1,6 @@
+testoutput
+
+# ========= Template
 *.swp
 *.*~
 project.lock.json

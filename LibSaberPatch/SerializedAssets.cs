@@ -188,6 +188,9 @@ namespace LibSaberPatch
                     case 114:
                         obj.data = new MonoBehaviorAssetData(reader, obj.size);
                         break;
+                    case 83:
+                        obj.data = new AudioClipAssetData(reader, obj.size);
+                        break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;

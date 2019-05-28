@@ -8,8 +8,9 @@ namespace TestApp
     {
         private const string baseAPKUnpackedFolderPath = "/Users/tristan/BeatSaber/base_apk";
 
-        private void TestRoundTrips(byte[] data) {
+        private void TestRoundTrips(byte[] data, string name) {
             SerializedAssets assets;
+            File.WriteAllBytes($"../../../../testoutput/{name}.before.asset", data);
             using (Stream stream = new MemoryStream(data)) {
                 assets = new SerializedAssets(stream);
             }
@@ -19,6 +20,7 @@ namespace TestApp
                 stream.Close();
                 outData = stream.ToArray();
             }
+            File.WriteAllBytes($"../../../../testoutput/{name}.after.asset", outData);
             Assert.True(System.Linq.Enumerable.SequenceEqual(data, outData));
         }
 
@@ -33,16 +35,16 @@ namespace TestApp
 
         [Fact]
         public void TestBasicRoundTrip() {
-            string path = $"{baseAPKUnpackedFolderPath}/assets/bin/Data/f6e3dc8bf93e55f4a98dc3b594aa0487";
+            string path = $"{baseAPKUnpackedFolderPath}/assets/bin/Data/3eb70b9e20363dd488f8c4841d7db87f";
             byte[] data = File.ReadAllBytes(path);
-            TestRoundTrips(data);
+            TestRoundTrips(data, "basic");
         }
 
         [Fact]
         public void TestBigRoundTrip() {
             string path = $"{baseAPKUnpackedFolderPath}/assets/bin/Data/sharedassets17.assets";
             byte[] data = SerializedAssets.JoinedContents(path);
-            TestRoundTrips(data);
+            TestRoundTrips(data, "big");
         }
 
         [Fact]

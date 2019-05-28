@@ -52,6 +52,12 @@ namespace LibSaberPatch
             int headerLen = (int)reader.BaseStream.Position - startOffset;
 
             switch(script.pathID) {
+                case 644:
+                    data = new LevelBehaviorData(reader, length - headerLen);
+                    break;
+                case 762:
+                    data = new LevelCollectionBehaviorData(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;
@@ -69,24 +75,24 @@ namespace LibSaberPatch
 
     public class AudioClipAssetData : AssetData
     {
-        string name;
-        int loadType;
-        int channels;
-        int frequency;
-        int bitsPerSample;
-        float length;
-        bool isTracker;
+        public string name;
+        public int loadType;
+        public int channels;
+        public int frequency;
+        public int bitsPerSample;
+        public float length;
+        public bool isTracker;
 
-        int subsoundIndex;
-        bool preloadAudio;
-        bool backgroundLoad;
-        bool legacy3D;
+        public int subsoundIndex;
+        public bool preloadAudio;
+        public bool backgroundLoad;
+        public bool legacy3D;
 
-        string source;
-        ulong offset;
-        ulong size;
+        public string source;
+        public ulong offset;
+        public ulong size;
         // 0 = PCM, 1 = Vorbis, 3 = MP3, ...
-        int compressionFormat;
+        public int compressionFormat;
 
         public AudioClipAssetData(BinaryReader reader, int _length) {
             name = reader.ReadAlignedString();

@@ -123,19 +123,6 @@ namespace LibSaberPatch
             public ParseException(string msg) : base(msg) {}
         }
 
-        public static byte[] JoinedContents(string basePath) {
-            using (MemoryStream stream = new MemoryStream()) {
-                string splitBase = basePath + ".split";
-                for(int i = 0; File.Exists(splitBase + i); i++) {
-                    using (Stream fileStream = new FileStream(splitBase+i, FileMode.Open)) {
-                        fileStream.CopyTo(stream);
-                    }
-                }
-                stream.Close();
-                return stream.ToArray();
-            }
-        }
-
         private const int headerLen = 5*4;
         private const int parsedGeneration = 17;
 

@@ -62,6 +62,13 @@ namespace LibSaberPatch
             return Encoding.UTF8.GetString(bytes.ToArray());
         }
 
+        public static byte[] ReadPrefixedBytes(this BinaryReader reader) {
+            int length = reader.ReadInt32();
+            var bytes = reader.ReadBytes(length);
+            reader.AlignStream();
+            return bytes;
+        }
+
         public static List<T> ReadPrefixedList<T>(this BinaryReader reader, Func<BinaryReader, T> del) {
             int length = reader.ReadInt32();
             var list = new List<T>(length);

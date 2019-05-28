@@ -58,6 +58,9 @@ namespace LibSaberPatch
                 case 762:
                     data = new LevelCollectionBehaviorData(reader, length - headerLen);
                     break;
+                case 1552:
+                    data = new BeatmapDataBehaviorData(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;

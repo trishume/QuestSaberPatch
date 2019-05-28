@@ -195,8 +195,9 @@ namespace LibSaberPatch
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;
                 }
-                if(reader.BaseStream.Position - startOffset != obj.size)
-                    throw new ParseException("Couldn't parse entire object");
+                long bytesParsed = reader.BaseStream.Position - startOffset;
+                if(bytesParsed != obj.size)
+                    throw new ParseException($"Parsed {bytesParsed} but expected {obj.size} for {obj.pathID}");
                 if(!reader.ReadAllZeros(obj.paddingLen)) throw new ParseException("Expected zeros for padding");
             }
         }

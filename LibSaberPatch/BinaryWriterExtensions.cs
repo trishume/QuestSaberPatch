@@ -53,6 +53,12 @@ namespace LibSaberPatch
             for(int i = 0; i < count; i++) writer.Write((byte)0);
         }
 
+        public static void WritePrefixedBytes(this BinaryWriter w, byte[] l) {
+            w.Write((int)l.Length);
+            w.Write(l);
+            w.AlignStream();
+        }
+
         public static void WritePrefixedList<T>(this BinaryWriter w, List<T> l, Action<T> del) {
             w.Write((int)l.Count);
             foreach(T o in l) {

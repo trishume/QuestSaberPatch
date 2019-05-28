@@ -34,6 +34,25 @@ namespace LibSaberPatch
         }
     }
 
+    public class BeatmapDataBehaviorData : BehaviorData
+    {
+        string jsonData;
+        byte[] signature;
+        byte[] projectedData;
+
+        public BeatmapDataBehaviorData(BinaryReader reader, int length) {
+            jsonData = reader.ReadAlignedString();
+            signature = reader.ReadPrefixedBytes();
+            projectedData = reader.ReadPrefixedBytes();
+        }
+
+        public override void WriteTo(BinaryWriter w) {
+            w.WriteAlignedString(jsonData);
+            w.WritePrefixedBytes(signature);
+            w.WritePrefixedBytes(projectedData);
+        }
+    }
+
     public class BeatmapDifficulty
     {
         public int difficulty;

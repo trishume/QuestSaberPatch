@@ -10,19 +10,11 @@ namespace TestApp
         private const string baseAPKPath = "/Users/tristan/BeatSaber/base_testing.apk";
 
         private void TestRoundTrips(byte[] data, string name) {
-            SerializedAssets assets;
             File.WriteAllBytes($"../../../../testoutput/{name}.before.asset", data);
-            using (Stream stream = new MemoryStream(data)) {
-                assets = new SerializedAssets(stream);
-                Assert.NotEmpty(assets.types);
-                Assert.NotEmpty(assets.objects);
-            }
-            byte[] outData;
-            using (MemoryStream stream = new MemoryStream()) {
-                assets.WriteTo(stream);
-                stream.Close();
-                outData = stream.ToArray();
-            }
+            SerializedAssets assets = SerializedAssets.FromBytes(data);
+            Assert.NotEmpty(assets.types);
+            Assert.NotEmpty(assets.objects);
+            byte[] outData = assets.ToBytes();
             File.WriteAllBytes($"../../../../testoutput/{name}.after.asset", outData);
             Assert.True(System.Linq.Enumerable.SequenceEqual(data, outData));
         }

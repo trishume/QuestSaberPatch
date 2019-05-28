@@ -126,6 +126,20 @@ namespace LibSaberPatch
         private const int headerLen = 5*4;
         private const int parsedGeneration = 17;
 
+        public static SerializedAssets FromBytes(byte[] data) {
+            using (Stream stream = new MemoryStream(data)) {
+                return new SerializedAssets(stream);
+            }
+        }
+
+        public byte[] ToBytes() {
+            using (MemoryStream stream = new MemoryStream()) {
+                WriteTo(stream);
+                stream.Close();
+                return stream.ToArray();
+            }
+        }
+
         public SerializedAssets(Stream stream) {
             BinaryReader reader = new BinaryReader(stream);
 

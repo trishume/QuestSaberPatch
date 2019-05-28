@@ -39,5 +39,16 @@ namespace LibSaberPatch
                 return stream.ToArray();
             }
         }
+
+        private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
+        private const int sigPatchLoc = 0x0109D074;
+        public static void PatchSignatureCheck(ZipArchive archive) {
+            byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
+            byte[] data = ApkUtils.ReadEntireEntry(archive, il2cppLibEntry);
+            for(int i = 0; i < sigPatch.Length; i++) {
+                data[sigPatchLoc + i] = sigPatch[i];
+            }
+            ApkUtils.WriteEntireEntry(archive, il2cppLibEntry, data);
+        }
     }
 }

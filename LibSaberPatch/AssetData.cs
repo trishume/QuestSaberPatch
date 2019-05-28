@@ -37,11 +37,11 @@ namespace LibSaberPatch
 
     public class MonoBehaviorAssetData : AssetData
     {
-        AssetPtr gameObject; // always zero AFAIK
-        int enabled;
-        AssetPtr script;
-        string name;
-        BehaviorData data;
+        public AssetPtr gameObject; // always zero AFAIK
+        public int enabled;
+        public AssetPtr script;
+        public string name;
+        public BehaviorData data;
 
         public MonoBehaviorAssetData(BinaryReader reader, int length) {
             int startOffset = (int)reader.BaseStream.Position;

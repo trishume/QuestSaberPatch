@@ -5,6 +5,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO.Compression;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -40,11 +41,33 @@ namespace LibSaberPatch
             }
         }
         sealed class PreSerializationBinder : SerializationBinder {
+            class CacheVal {
+                public string assemblyName;
+                public string typeName;
+            }
+
+            // public Stopwatch watch;
+            Dictionary<string,CacheVal> cache;
+
+            public PreSerializationBinder() {
+                cache = new Dictionary<string,CacheVal>();
+                // watch = new Stopwatch();
+            }
+
             public override void BindToName(
                 Type serializedType,
                 out string assemblyName,
                 out string typeName
             ) {
+                // watch.Start();
+                CacheVal cacheResult;
+                if(cache.TryGetValue(serializedType.FullName, out cacheResult)) {
+                    assemblyName = cacheResult.assemblyName;
+                    typeName = cacheResult.typeName;
+                    // watch.Stop();
+                    return;
+                }
+
                 // Console.WriteLine((serializedType.Name, serializedType.Assembly.FullName));
                 Assembly thisAssembly = Assembly.GetExecutingAssembly();
                 String exeAssembly = thisAssembly.FullName;
@@ -55,6 +78,9 @@ namespace LibSaberPatch
                 }
                 string fullName = serializedType.FullName;
                 typeName = fullName.Replace("LibSaberPatch.","").Replace(exeAssembly, AssemblyCSharp);
+
+                cache.Add(serializedType.FullName, new CacheVal() {assemblyName=assemblyName, typeName=typeName});
+                // watch.Stop();
                 // Console.WriteLine((typeName, assemblyName));
             }
             // This method is never called on serialization but we need to implement it to not be abstract
@@ -78,6 +104,8 @@ namespace LibSaberPatch
                     bf.Serialize(memoryStream, this);
                 }
                 memoryStream.Close();
+                // PreSerializationBinder preb = (PreSerializationBinder)bf.Binder;
+                // Console.WriteLine("serbinder: " + preb.watch.ElapsedMilliseconds);
                 result = memoryStream.ToArray();
             }
             return result;

@@ -132,7 +132,7 @@ namespace LibSaberPatch
         }
 
         public AssetPtr AddToAssets(SerializedAssets assets, Apk apk) {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            // var watch = System.Diagnostics.Stopwatch.StartNew();
             string levelID = LevelID();
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
@@ -164,8 +164,8 @@ namespace LibSaberPatch
                 name = level.levelID + "Level",
                 data = level,
             };
-            watch.Stop();
-            Console.WriteLine("song: " + watch.ElapsedMilliseconds);
+            // watch.Stop();
+            // Console.WriteLine("song: " + watch.ElapsedMilliseconds);
 
             return assets.AppendAsset(monob);
         }

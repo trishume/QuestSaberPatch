@@ -20,7 +20,8 @@ namespace app
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 for(int i = 1; i < args.Length; i++) {
                     JsonLevel level = JsonLevel.LoadFromFolder(args[i]);
-                    if(existingLevels.Contains(level.LevelID())) {
+                    string levelID = level.LevelID();
+                    if(existingLevels.Contains(levelID)) {
                         Console.WriteLine($"Present: {level._songName}");
                         continue;
                     } else {
@@ -28,6 +29,7 @@ namespace app
                     }
                     AssetPtr levelPtr = level.AddToAssets(assets, apk);
                     extrasCollection.levels.Add(levelPtr);
+                    existingLevels.Add(levelID);
                 }
 
                 byte[] outData = assets.ToBytes();

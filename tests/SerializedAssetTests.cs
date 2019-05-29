@@ -38,12 +38,13 @@ namespace TestApp
         [Fact]
         public void TestBigFile() {
             using (Apk apk = new Apk(baseAPKPath)) {
-                byte[] data = apk.JoinedContents("assets/bin/Data/sharedassets17.assets");
+                byte[] data = apk.JoinedContents(Apk.MainAssetsFile);
                 var assets = TestRoundTrips(data, "big");
 
-                string json = File.ReadAllText(repoPath("testdata/bubble_tea_song/info.dat"));
-                JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(json);
-                level.AddToAssets(assets);
+                // pass null as the apk so it doesn't get modified
+                assets.AppendLevelFromFolder(null, repoPath("testdata/bubble_tea_song/"));
+                byte[] outData = assets.ToBytes();
+                File.WriteAllBytes($"../../../../testoutput/bubble_tea_mod.asset", outData);
             }
         }
     }

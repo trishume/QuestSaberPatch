@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -90,9 +91,15 @@ namespace LibSaberPatch
         public string _coverImageFilename;
         public string _environmentName;
 
-        public void AddToAssets(SerializedAssets assets) {
+        public AssetPtr AddToAssets(SerializedAssets assets, Apk apk, string levelFolderPath) {
+            // TODO check if already in assets
+
+            string levelID = new string(_songName.Where(c => char.IsLetter(c)).ToArray());
+            AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID, levelFolderPath);
+            AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
+
             LevelBehaviorData level = new LevelBehaviorData() {
-                levelID = new string(_songName.Where(c => char.IsLetter(c)).ToArray()),
+                levelID = levelID,
                 songName = _songName,
                 songSubName = _songSubName,
                 songAuthorName = _songAuthorName,
@@ -104,8 +111,8 @@ namespace LibSaberPatch
                 previewStartTime = _previewStartTime,
                 previewDuration = _previewDuration,
 
+                audioClip = audioClipPtr,
                 // TODO currently $100 bills only valid in sharedassets17
-                audioClip = new AssetPtr(0, 28),
                 coverImage = new AssetPtr(0, 18),
                 environment = new AssetPtr(20, 1),
 
@@ -118,7 +125,32 @@ namespace LibSaberPatch
                 data = level,
             };
 
-            assets.AppendAsset(monob);
+            return assets.AppendAsset(monob);
+        }
+
+        private AudioClipAssetData CreateAudioAsset(Apk apk, string levelID, string levelFolderPath) {
+            string audioClipFile = Path.Combine(levelFolderPath, _songFilename);
+            string sourceFileName = levelID+".ogg";
+            if(apk != null) apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
+            ulong fileSize = (ulong)new FileInfo(audioClipFile).Length;
+            NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile);
+            return new AudioClipAssetData() {
+                name = levelID,
+                loadType = 1,
+                channels = v.Channels,
+                frequency = v.SampleRate,
+                bitsPerSample = 16,
+                length = (Single)v.TotalTime.TotalSeconds,
+                isTracker = false,
+                subsoundIndex = 0,
+                preloadAudio = false,
+                backgroundLoad = true,
+                legacy3D = true,
+                compressionFormat = 1, // vorbis
+                source = sourceFileName,
+                offset = 0,
+                size = fileSize,
+            };
         }
     }
 }

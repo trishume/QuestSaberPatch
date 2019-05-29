@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace LibSaberPatch
 {
@@ -285,6 +286,12 @@ namespace LibSaberPatch
             };
             objects.Add(obj);
             return new AssetPtr(0, pathID);
+        }
+
+        public AssetPtr AppendLevelFromFolder(Apk apk, string folderPath) {
+            string infoJson = File.ReadAllText(Path.Combine(folderPath, "info.dat"));
+            JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(infoJson);
+            return level.AddToAssets(this, apk, folderPath);
         }
     }
 }

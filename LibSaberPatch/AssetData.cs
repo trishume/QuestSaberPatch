@@ -121,6 +121,8 @@ namespace LibSaberPatch
         // 0 = PCM, 1 = Vorbis, 3 = MP3, ...
         public int compressionFormat;
 
+        public AudioClipAssetData() {}
+
         public AudioClipAssetData(BinaryReader reader, int _length) {
             name = reader.ReadAlignedString();
             loadType = reader.ReadInt32();

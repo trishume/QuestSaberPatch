@@ -67,7 +67,10 @@ namespace LibSaberPatch
     {
         Standard,
         OneSaber,
-        NoArrows
+        NoArrows,
+
+        // Unsupported
+        Lightshow,
     }
 
     public class JsonBeatmapSet
@@ -88,6 +91,8 @@ namespace LibSaberPatch
                 case Characteristic.Standard:
                     set.characteristic = new AssetPtr(22, 1);
                     break;
+                case Characteristic.Lightshow:
+                    return null;
             }
             set.difficultyBeatmaps = _difficultyBeatmaps.Select(s => s.ToAssets(assets, levelFolderPath, levelID, _beatmapCharacteristicName)).ToList();
             return set;
@@ -113,11 +118,23 @@ namespace LibSaberPatch
         public string _coverImageFilename;
         public string _environmentName;
 
-        public AssetPtr AddToAssets(SerializedAssets assets, Apk apk, string levelFolderPath) {
-            // TODO check if already in assets
+        private string levelFolderPath;
 
-            string levelID = new string(_songName.Where(c => char.IsLetter(c)).ToArray());
-            AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID, levelFolderPath);
+        public static JsonLevel LoadFromFolder(string levelFolderPath) {
+            string infoJson = File.ReadAllText(Path.Combine(levelFolderPath, "info.dat"));
+            JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(infoJson);
+            level.levelFolderPath = levelFolderPath;
+            return level;
+        }
+
+        public string LevelID() {
+            return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
+        }
+
+        public AssetPtr AddToAssets(SerializedAssets assets, Apk apk) {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            string levelID = LevelID();
+            AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
 
             LevelBehaviorData level = new LevelBehaviorData() {
@@ -139,7 +156,7 @@ namespace LibSaberPatch
                 // TODO switch on the various included environments
                 environment = new AssetPtr(20, 1),
 
-                difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).ToList(),
+                difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).Where(s => s!=null).ToList(),
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
@@ -147,11 +164,13 @@ namespace LibSaberPatch
                 name = level.levelID + "Level",
                 data = level,
             };
+            watch.Stop();
+            Console.WriteLine("song: " + watch.ElapsedMilliseconds);
 
             return assets.AppendAsset(monob);
         }
 
-        private AudioClipAssetData CreateAudioAsset(Apk apk, string levelID, string levelFolderPath) {
+        private AudioClipAssetData CreateAudioAsset(Apk apk, string levelID) {
             string audioClipFile = Path.Combine(levelFolderPath, _songFilename);
             string sourceFileName = levelID+".ogg";
             if(apk != null) apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");

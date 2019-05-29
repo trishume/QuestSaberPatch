@@ -288,10 +288,18 @@ namespace LibSaberPatch
             return new AssetPtr(0, pathID);
         }
 
-        public AssetPtr AppendLevelFromFolder(Apk apk, string folderPath) {
-            string infoJson = File.ReadAllText(Path.Combine(folderPath, "info.dat"));
-            JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(infoJson);
-            return level.AddToAssets(this, apk, folderPath);
+        public HashSet<string> ExistingLevelIDs() {
+            var set = new HashSet<string>();
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is MonoBehaviorAssetData))
+                    continue;
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                if(!(monob.data is LevelBehaviorData))
+                    continue;
+                LevelBehaviorData levelData = (LevelBehaviorData)monob.data;
+                set.Add(levelData.levelID);
+            }
+            return set;
         }
 
         public LevelCollectionBehaviorData FindExtrasLevelCollection() {

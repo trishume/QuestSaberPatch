@@ -41,8 +41,14 @@ namespace TestApp
                 byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
                 var assets = TestRoundTrips(data, "big");
 
+                var existing = assets.ExistingLevelIDs();
+                Assert.NotEmpty(existing);
+                Assert.False(existing.Contains("BUBBLETEA"), "Run tests on a non-patched APK");
+
+                JsonLevel level = JsonLevel.LoadFromFolder(repoPath("testdata/bubble_tea_song/"));
                 // pass null as the apk so it doesn't get modified
-                AssetPtr levelPtr = assets.AppendLevelFromFolder(null, repoPath("testdata/bubble_tea_song/"));
+                AssetPtr levelPtr = level.AddToAssets(assets, null);
+
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 extrasCollection.levels.Add(levelPtr);
                 byte[] outData = assets.ToBytes();

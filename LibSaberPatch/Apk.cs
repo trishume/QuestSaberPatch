@@ -39,7 +39,15 @@ namespace LibSaberPatch
 
         public void ReplaceAssetsFile(string entryPath, byte[] contents) {
             DeleteSplits(entryPath);
-            WriteEntireEntry(entryPath, contents);
+            try {
+                WriteEntireEntry(entryPath, contents);
+            } catch(FileNotFoundException) {
+                // no compression because faster and it's mostly already compressed beatmap data
+                ZipArchiveEntry entry = archive.CreateEntry(entryPath, CompressionLevel.NoCompression);
+                using (Stream stream = entry.Open()) {
+                    stream.Write(contents, 0, contents.Length);
+                }
+            }
         }
 
         public void CopyFileInto(string sourceFilePath, string destEntryPath) {

@@ -137,6 +137,19 @@ namespace LibSaberPatch
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
 
+            AssetPtr environment = new AssetPtr(20, 1); // default environment
+            switch(_environmentName) {
+                case "NiceEnvironment":
+                    environment = new AssetPtr(38, 3);
+                    break;
+                case "TriangleEnvironment":
+                    environment = new AssetPtr(0, 252);
+                    break;
+                case "BigMirrorEnvironment":
+                    environment = new AssetPtr(0, 249);
+                    break;
+            }
+
             LevelBehaviorData level = new LevelBehaviorData() {
                 levelID = levelID,
                 songName = _songName,
@@ -153,8 +166,7 @@ namespace LibSaberPatch
                 audioClip = audioClipPtr,
                 // TODO currently $100 bills only valid in sharedassets17
                 coverImage = new AssetPtr(0, 18),
-                // TODO switch on the various included environments
-                environment = new AssetPtr(20, 1),
+                environment = environment,
 
                 difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).Where(s => s!=null).ToList(),
             };

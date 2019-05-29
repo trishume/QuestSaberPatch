@@ -27,15 +27,37 @@ namespace LibSaberPatch
 
         public string _beatmapFilename;
 
-        public BeatmapDifficulty ToAssets(SerializedAssets assets) {
+        public BeatmapDifficulty ToAssets(
+            SerializedAssets assets,
+            string levelFolderPath,
+            string levelID,
+            Characteristic characteristic
+        ) {
+            string beatmapFile = Path.Combine(levelFolderPath, _beatmapFilename);
+            string jsonData = File.ReadAllText(beatmapFile);
+            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
+            byte[] projectedData = saveData.SerializeToBinary();
+
+            BeatmapDataBehaviorData beatmapData = new BeatmapDataBehaviorData() {
+                jsonData = "",
+                signature = new byte[128], // all zeros
+                projectedData = projectedData,
+            };
+            string characteristicPart = ((characteristic == Characteristic.Standard) ? "" : characteristic.ToString());
+            string assetName = levelID + characteristicPart + _difficulty.ToString() + "BeatmapData";
+            MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
+                script = new AssetPtr(1, BeatmapDataBehaviorData.PathID),
+                name = assetName,
+                data = beatmapData,
+            };
+            AssetPtr assetPtr = assets.AppendAsset(monob);
+
             return new BeatmapDifficulty() {
                 difficulty = (int)_difficulty,
                 difficultyRank = _difficultyRank,
                 noteJumpMovementSpeed = _noteJumpMovementSpeed,
                 noteJumpStartBeatOffset = _noteJumpStartBeatOffset,
-
-                // TODO properly create beatmap asset
-                beatmapData = new AssetPtr(0, 63) // $100 bills normal
+                beatmapData = assetPtr,
             };
         }
     }
@@ -53,7 +75,7 @@ namespace LibSaberPatch
         public List<JsonBeatmapDifficulty> _difficultyBeatmaps;
         public Characteristic _beatmapCharacteristicName;
 
-        public BeatmapSet ToAssets(SerializedAssets assets) {
+        public BeatmapSet ToAssets(SerializedAssets assets, string levelFolderPath, string levelID) {
             var set = new BeatmapSet();
             switch (_beatmapCharacteristicName)
             {
@@ -67,7 +89,7 @@ namespace LibSaberPatch
                     set.characteristic = new AssetPtr(22, 1);
                     break;
             }
-            set.difficultyBeatmaps = _difficultyBeatmaps.Select(s => s.ToAssets(assets)).ToList();
+            set.difficultyBeatmaps = _difficultyBeatmaps.Select(s => s.ToAssets(assets, levelFolderPath, levelID, _beatmapCharacteristicName)).ToList();
             return set;
         }
     }
@@ -114,9 +136,10 @@ namespace LibSaberPatch
                 audioClip = audioClipPtr,
                 // TODO currently $100 bills only valid in sharedassets17
                 coverImage = new AssetPtr(0, 18),
+                // TODO switch on the various included environments
                 environment = new AssetPtr(20, 1),
 
-                difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets)).ToList(),
+                difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).ToList(),
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {

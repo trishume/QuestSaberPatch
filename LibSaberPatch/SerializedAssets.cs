@@ -59,6 +59,7 @@ namespace LibSaberPatch
             public int offset;
             public int size;
 
+            public AssetObject() {}
 
             public AssetObject(BinaryReader reader) {
                 reader.AlignStream();
@@ -186,10 +187,10 @@ namespace LibSaberPatch
                 }
                 long startOffset = reader.BaseStream.Position;
                 switch(types[obj.typeID].classID) {
-                    case 114:
+                    case MonoBehaviorAssetData.ClassID:
                         obj.data = new MonoBehaviorAssetData(reader, obj.size);
                         break;
-                    case 83:
+                    case AudioClipAssetData.ClassID:
                         obj.data = new AudioClipAssetData(reader, obj.size);
                         break;
                     default:
@@ -272,6 +273,18 @@ namespace LibSaberPatch
             }
 
             outStream.Write(buf, 0, length);
+        }
+
+        public AssetPtr AppendAsset(AssetData data) {
+            ulong pathID = (ulong)(objects.Count + 1);
+            AssetObject obj = new AssetObject() {
+                pathID = pathID,
+                typeID = data.SharedAssetsTypeIndex(),
+                data = data,
+                paddingLen = 0,
+            };
+            objects.Add(obj);
+            return new AssetPtr(0, pathID);
         }
     }
 }

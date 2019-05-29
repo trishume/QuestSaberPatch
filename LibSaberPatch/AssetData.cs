@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace LibSaberPatch
@@ -6,6 +7,11 @@ namespace LibSaberPatch
     {
         public int fileID;
         public ulong pathID;
+
+        public AssetPtr(int _fileID, ulong _pathID) {
+            fileID = _fileID;
+            pathID = _pathID;
+        }
 
         public AssetPtr(BinaryReader reader) {
             fileID = reader.ReadInt32();
@@ -21,6 +27,7 @@ namespace LibSaberPatch
     public abstract class AssetData
     {
         public abstract void WriteTo(BinaryWriter w);
+        public abstract int SharedAssetsTypeIndex();
     }
 
     public class UnknownAssetData : AssetData
@@ -33,15 +40,26 @@ namespace LibSaberPatch
         public override void WriteTo(BinaryWriter w) {
             w.Write(bytes);
         }
+
+        public override int SharedAssetsTypeIndex() {
+            throw new ApplicationException("unknown type index");
+        }
     }
 
     public class MonoBehaviorAssetData : AssetData
     {
+        public const int ClassID = 114;
+
         public AssetPtr gameObject; // always zero AFAIK
         public int enabled;
         public AssetPtr script;
         public string name;
         public BehaviorData data;
+
+        public MonoBehaviorAssetData() {
+            gameObject = new AssetPtr(0,0);
+            enabled = 1;
+        }
 
         public MonoBehaviorAssetData(BinaryReader reader, int length) {
             int startOffset = (int)reader.BaseStream.Position;
@@ -52,13 +70,13 @@ namespace LibSaberPatch
             int headerLen = (int)reader.BaseStream.Position - startOffset;
 
             switch(script.pathID) {
-                case 644:
+                case LevelBehaviorData.PathID:
                     data = new LevelBehaviorData(reader, length - headerLen);
                     break;
-                case 762:
+                case LevelCollectionBehaviorData.PathID:
                     data = new LevelCollectionBehaviorData(reader, length - headerLen);
                     break;
-                case 1552:
+                case BeatmapDataBehaviorData.PathID:
                     data = new BeatmapDataBehaviorData(reader, length - headerLen);
                     break;
                 default:
@@ -74,10 +92,16 @@ namespace LibSaberPatch
             w.WriteAlignedString(name);
             data.WriteTo(w);
         }
+
+        public override int SharedAssetsTypeIndex() {
+            return data.SharedAssetsTypeIndex();
+        }
     }
 
     public class AudioClipAssetData : AssetData
     {
+        public const int ClassID = 83;
+
         public string name;
         public int loadType;
         public int channels;
@@ -139,6 +163,10 @@ namespace LibSaberPatch
             w.Write(offset);
             w.Write(size);
             w.Write(compressionFormat);
+        }
+
+        public override int SharedAssetsTypeIndex() {
+            return 5;
         }
     }
 }

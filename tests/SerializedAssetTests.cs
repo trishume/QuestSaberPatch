@@ -1,7 +1,10 @@
 using LibSaberPatch;
 using Xunit;
+using System;
 using System.IO;
 using System.IO.Compression;
+using System.Reflection;
+using Newtonsoft.Json;
 
 namespace TestApp
 {
@@ -9,29 +12,38 @@ namespace TestApp
     {
         private const string baseAPKPath = "/Users/tristan/BeatSaber/base_testing.apk";
 
-        private void TestRoundTrips(byte[] data, string name) {
-            File.WriteAllBytes($"../../../../testoutput/{name}.before.asset", data);
+        private string repoPath(string relativePath) {
+            return Path.Combine("../../../../", relativePath);
+        }
+
+        private SerializedAssets TestRoundTrips(byte[] data, string name) {
+            // File.WriteAllBytes($"../../../../testoutput/{name}.before.asset", data);
             SerializedAssets assets = SerializedAssets.FromBytes(data);
             Assert.NotEmpty(assets.types);
             Assert.NotEmpty(assets.objects);
             byte[] outData = assets.ToBytes();
-            File.WriteAllBytes($"../../../../testoutput/{name}.after.asset", outData);
+            // File.WriteAllBytes($"../../../../testoutput/{name}.after.asset", outData);
             Assert.True(System.Linq.Enumerable.SequenceEqual(data, outData));
+            return assets;
         }
 
         [Fact]
         public void TestBasicRoundTrip() {
-            using (ZipArchive archive = ZipFile.Open(baseAPKPath, ZipArchiveMode.Read)) {
-                byte[] data = ApkUtils.ReadEntireEntry(archive, "assets/bin/Data/3eb70b9e20363dd488f8c4841d7db87f");
+            using (Apk apk = new Apk(baseAPKPath)) {
+                byte[] data = apk.ReadEntireEntry("assets/bin/Data/3eb70b9e20363dd488f8c4841d7db87f");
                 TestRoundTrips(data, "basic");
             }
         }
 
         [Fact]
-        public void TestBigRoundTrip() {
-            using (ZipArchive archive = ZipFile.Open(baseAPKPath, ZipArchiveMode.Read)) {
-                byte[] data = ApkUtils.JoinedContents(archive, "assets/bin/Data/sharedassets17.assets");
-                TestRoundTrips(data, "big");
+        public void TestBigFile() {
+            using (Apk apk = new Apk(baseAPKPath)) {
+                byte[] data = apk.JoinedContents("assets/bin/Data/sharedassets17.assets");
+                var assets = TestRoundTrips(data, "big");
+
+                string json = File.ReadAllText(repoPath("testdata/bubble_tea_song/info.dat"));
+                JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(json);
+                level.AddToAssets(assets);
             }
         }
     }

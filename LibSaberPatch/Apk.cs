@@ -4,9 +4,19 @@ using System.IO.Compression;
 
 namespace LibSaberPatch
 {
-    public static class ApkUtils
+    public class Apk : IDisposable
     {
-        public static byte[] ReadEntireEntry(ZipArchive archive, string entryPath) {
+        private ZipArchive archive;
+
+        public Apk(string path) {
+            archive = ZipFile.Open(path, ZipArchiveMode.Update);
+        }
+
+        public void Dispose() {
+            archive.Dispose();
+        }
+
+        public byte[] ReadEntireEntry(string entryPath) {
             ZipArchiveEntry entry = archive.GetEntry(entryPath);
             if(entry == null) return null;
             byte[] buf = new byte[entry.Length];
@@ -16,7 +26,7 @@ namespace LibSaberPatch
             return buf;
         }
 
-        public static void WriteEntireEntry(ZipArchive archive, string entryPath, byte[] contents) {
+        public void WriteEntireEntry(string entryPath, byte[] contents) {
             ZipArchiveEntry entry = archive.GetEntry(entryPath);
             if(entry == null) throw new FileNotFoundException(entryPath);
             using (Stream stream = entry.Open()) {
@@ -24,7 +34,7 @@ namespace LibSaberPatch
             }
         }
 
-        public static byte[] JoinedContents(ZipArchive archive, string basePath) {
+        public byte[] JoinedContents(string basePath) {
             using (MemoryStream stream = new MemoryStream()) {
                 string splitBase = basePath + ".split";
                 for(int i = 0; ; i++) {
@@ -42,13 +52,13 @@ namespace LibSaberPatch
 
         private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
         private const int sigPatchLoc = 0x0109D074;
-        public static void PatchSignatureCheck(ZipArchive archive) {
+        public void PatchSignatureCheck() {
             byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
-            byte[] data = ApkUtils.ReadEntireEntry(archive, il2cppLibEntry);
+            byte[] data = ReadEntireEntry(il2cppLibEntry);
             for(int i = 0; i < sigPatch.Length; i++) {
                 data[sigPatchLoc + i] = sigPatch[i];
             }
-            ApkUtils.WriteEntireEntry(archive, il2cppLibEntry, data);
+            WriteEntireEntry(il2cppLibEntry, data);
         }
     }
 }

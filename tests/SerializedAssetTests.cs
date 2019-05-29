@@ -42,7 +42,9 @@ namespace TestApp
                 var assets = TestRoundTrips(data, "big");
 
                 // pass null as the apk so it doesn't get modified
-                assets.AppendLevelFromFolder(null, repoPath("testdata/bubble_tea_song/"));
+                AssetPtr levelPtr = assets.AppendLevelFromFolder(null, repoPath("testdata/bubble_tea_song/"));
+                LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
+                extrasCollection.levels.Add(levelPtr);
                 byte[] outData = assets.ToBytes();
                 File.WriteAllBytes($"../../../../testoutput/bubble_tea_mod.asset", outData);
             }

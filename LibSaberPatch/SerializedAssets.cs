@@ -293,5 +293,15 @@ namespace LibSaberPatch
             JsonLevel level = JsonConvert.DeserializeObject<JsonLevel>(infoJson);
             return level.AddToAssets(this, apk, folderPath);
         }
+
+        public LevelCollectionBehaviorData FindExtrasLevelCollection() {
+            AssetObject obj = objects[235]; // the index of the extras collection in sharedassets17
+            if(!(obj.data is MonoBehaviorAssetData))
+                throw new ParseException("Extras level collection not at normal spot");
+            MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+            if(monob.name != "ExtrasLevelCollection")
+                throw new ParseException("Extras level collection not at normal spot");
+            return (LevelCollectionBehaviorData)monob.data;
+        }
     }
 }

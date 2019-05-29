@@ -9,7 +9,6 @@ namespace LibSaberPatch
         public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
 
         private ZipArchive archive;
-        public SerializedAssets assets;
 
         public Apk(string path) {
             archive = ZipFile.Open(path, ZipArchiveMode.Update);

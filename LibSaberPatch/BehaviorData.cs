@@ -48,9 +48,9 @@ namespace LibSaberPatch
     {
         public const int PathID = 1552;
 
-        string jsonData;
-        byte[] signature;
-        byte[] projectedData;
+        public string jsonData;
+        public byte[] signature;
+        public byte[] projectedData;
 
         public BeatmapDataBehaviorData() {}
 

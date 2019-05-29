@@ -38,7 +38,7 @@ namespace TestApp
         [Fact]
         public void TestBigFile() {
             using (Apk apk = new Apk(baseAPKPath)) {
-                byte[] data = apk.JoinedContents(Apk.MainAssetsFile);
+                byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
                 var assets = TestRoundTrips(data, "big");
 
                 // pass null as the apk so it doesn't get modified
@@ -48,6 +48,46 @@ namespace TestApp
                 byte[] outData = assets.ToBytes();
                 File.WriteAllBytes($"../../../../testoutput/bubble_tea_mod.asset", outData);
             }
+        }
+
+        [Fact]
+        public void TestLoadBeatmap() {
+            using (Apk apk = new Apk(baseAPKPath)) {
+                byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
+                SerializedAssets assets = SerializedAssets.FromBytes(data);
+                SerializedAssets.AssetObject obj = assets.objects[62];
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                BeatmapDataBehaviorData beatmap = (BeatmapDataBehaviorData)monob.data;
+
+                using (Stream fileStream = new FileStream(repoPath("testoutput/beatmap_deflated.bin"), FileMode.Create)) {
+                    using (MemoryStream memoryStream = new MemoryStream(beatmap.projectedData)) {
+                        using (DeflateStream ds = new DeflateStream(memoryStream, CompressionMode.Decompress)) {
+                            ds.CopyTo(fileStream);
+                        }
+                    }
+                }
+
+
+                BeatmapSaveData saveData = BeatmapSaveData.DeserializeFromBinary(beatmap.projectedData);
+                Assert.NotEmpty(saveData._notes);
+                byte[] outData = saveData.SerializeToBinary(false);
+                File.WriteAllBytes(repoPath("testoutput/beatmap_roundtrip.bin"), outData);
+
+                BeatmapSaveData saveData2 = BeatmapSaveData.DeserializeFromBinary(outData, false);
+                Assert.NotEmpty(saveData._notes);
+                byte[] outData2 = saveData.SerializeToBinary(false);
+                File.WriteAllBytes(repoPath("testoutput/beatmap_roundtrip2.bin"), outData);
+            }
+        }
+
+        [Fact]
+        public void TestPackBeatmap() {
+            string beatmapFile = repoPath("testdata/bubble_tea_song/Hard.dat");
+            string jsonData = File.ReadAllText(beatmapFile);
+            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
+            Assert.NotEmpty(saveData._notes);
+            byte[] outData = saveData.SerializeToBinary(false);
+            File.WriteAllBytes(repoPath("testoutput/bubbletea_serialized.bin"), outData);
         }
     }
 }

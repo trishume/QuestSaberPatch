@@ -32,7 +32,7 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 
 ### Initial setup (do this once)
 
-1. Install .NET Core: <https://dotnet.microsoft.com/download> (for my patcher) and Java (for the signer, on Windows make sure it's 64-bit Java or the signer may not work). **If you're on macOS** you may be able to avoid installing dotNET by using the self-contained release on the [Releases page](https://github.com/trishume/QuestSaberPatch/releases) and following the instructions on the release, this may not have the newest code though.
+1. Install .NET Core: <https://dotnet.microsoft.com/download> (for my patcher) and Java (for the signer, on Windows make sure it's 64-bit Java or the signer may not work). You may be able to avoid installing dotNET by using one of the self-contained releases on the [Releases page](https://github.com/trishume/QuestSaberPatch/releases) and following the instructions on the release, this may not have the newest code though.
 2. Install `adb`: <https://developer.android.com/studio/command-line/adb>
 3. Put your Oculus Quest in Developer Mode by getting your Oculus account turned into a developer account.
 4. Use `adb pull /data/app/com.beatgames.beatsaber-1/base.apk {location you want to put it}` to grab the APK off the device

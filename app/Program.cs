@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Collections.Generic;
 using LibSaberPatch;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace app
 {
@@ -12,8 +13,13 @@ namespace app
         static void Main(string[] args)
         {
             if(args.Length < 1) {
-                Console.WriteLine("arguments: pathToAPKFileToModify levelFolders...");
+                Console.WriteLine("arguments: pathToAPKFileToModify [-r removeSongs] levelFolders...");
                 return;
+            }
+            bool removeSongs = false;
+            if (args.Contains("-r") || args.Contains("removeSongs"))
+            {
+                removeSongs = true;
             }
             string apkPath = args[0];
             using (Apk apk = new Apk(apkPath)) {
@@ -29,8 +35,24 @@ namespace app
                         try {
                             JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
                             string levelID = level.LevelID();
-                            if(existingLevels.Contains(levelID)) {
+                            var apkTxn = new Apk.Transaction();
+
+                            if (existingLevels.Contains(levelID)) {
                                 Console.WriteLine($"Present: {level._songName}");
+                                if (removeSongs)
+                                {
+                                    // Currently does not handle transactions (it half-supports them)
+                                    Console.WriteLine($"Removing: {level._songName}");
+                                    ulong levelPid = level.RemoveFromAssets(assets, apkTxn);
+                                    // We also don't _need_ to remove this from the existingLevels, but we probably _should_
+                                    if (existingLevels.Contains(levelID))
+                                    {
+                                        existingLevels.Remove(levelID);
+                                    }
+                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID == levelPid);
+
+                                    apkTxn.ApplyTo(apk);
+                                }
                             } else {
                                 Console.WriteLine($"Adding:  {level._songName}");
                                 // We use transactions here so if these throw
@@ -38,7 +60,6 @@ namespace app
                                 // invalid, then it doesn't modify the APK in
                                 // any way that might screw things up later.
                                 var assetsTxn = new SerializedAssets.Transaction(assets);
-                                var apkTxn = new Apk.Transaction();
                                 AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
 
                                 // Danger should be over, nothing here should fail

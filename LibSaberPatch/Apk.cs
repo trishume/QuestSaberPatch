@@ -60,6 +60,16 @@ namespace LibSaberPatch
             }
         }
 
+        /// <summary>
+        /// Deletes the given file from the APK, ASSUMING IT EXISTS!
+        /// </summary>
+        /// <param name="filePath">The file to delete in the APK</param>
+        public void RemoveFileAt(string filePath)
+        {
+            ZipArchiveEntry entry = archive.GetEntry(filePath);
+            entry.Delete();
+        }
+
         public byte[] JoinedContents(string basePath) {
             using (MemoryStream stream = new MemoryStream()) {
                 string splitBase = basePath + ".split";
@@ -98,9 +108,11 @@ namespace LibSaberPatch
 
         public class Transaction {
             List<(string, string)> copies;
+            List<string> deletions;
 
             public Transaction() {
                 copies = new List<(string,string)>();
+                deletions = new List<string>();
             }
 
             public void CopyFileInto(string sourceFilePath, string destEntryPath) {
@@ -110,9 +122,22 @@ namespace LibSaberPatch
                 copies.Add((sourceFilePath, destEntryPath));
             }
 
+            /// <summary>
+            /// Deletes the given file from the APK, ASSUMING IT EXISTS!
+            /// </summary>
+            /// <param name="filePath">The file to delete in the APK</param>
+            public void RemoveFileAt(string filePath)
+            {
+                deletions.Add(filePath);
+            }
+
             public void ApplyTo(Apk apk) {
                 foreach(var copy in copies) {
                     apk.CopyFileInto(copy.Item1, copy.Item2);
+                }
+                foreach(string item in deletions)
+                {
+                    apk.RemoveFileAt(item);
                 }
             }
         }

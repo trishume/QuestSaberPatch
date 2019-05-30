@@ -190,6 +190,26 @@ namespace LibSaberPatch
             return assets.AppendAsset(monob);
         }
 
+        public ulong RemoveFromAssets(SerializedAssets assets, Apk.Transaction apk)
+        {
+            // We want to find the level object in the assets list of objects so that we can remove it via PathID.
+            // Well, this is quite a messy solution... But it _should work_...
+            // What this is doing: Removing the asset that is a monobehavior, and the monobehavior's data equals this level.
+            // Then it casts that to a level behavior data.
+
+            // TODO Make this work with Transactions instead of an assets object.
+            ulong pid = assets.GetAsset(obj => obj.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && ((MonoBehaviorAssetData)obj.data).data.GetType().Equals(typeof(LevelBehaviorData))
+            && ((LevelBehaviorData)((MonoBehaviorAssetData)obj.data).data).Equals(this)).pathID;
+            MonoBehaviorAssetData data = (MonoBehaviorAssetData)assets.GetAssetAt(pid).data;
+            LevelBehaviorData o = data.data as LevelBehaviorData;
+
+            RemoveAudioAsset(apk, (AudioClipAssetData)assets.GetAssetAt(o.audioClip.pathID).data);
+            assets.RemoveAssetAt(o.coverImage.pathID);
+            assets.RemoveAssetAt(o.audioClip.pathID);
+            return pid;
+        }
+
         private AudioClipAssetData CreateAudioAsset(Apk.Transaction apk, string levelID) {
             string audioClipFile = Path.Combine(levelFolderPath, _songFilename);
             string sourceFileName = levelID+".ogg";
@@ -213,6 +233,11 @@ namespace LibSaberPatch
                 offset = 0,
                 size = fileSize,
             };
+        }
+
+        public void RemoveAudioAsset(Apk.Transaction apk, AudioClipAssetData data)
+        {
+            if (apk != null) apk.RemoveFileAt(data.source);
         }
     }
 }

@@ -291,6 +291,46 @@ namespace LibSaberPatch
             return new AssetPtr(0, pathID);
         }
 
+        public AssetObject RemoveAsset(Predicate<AssetObject> p)
+        {
+            // First, find matching AssetObj
+            int objI = objects.FindIndex(p);
+            AssetObject obj = objects[objI];
+            objects.RemoveAt(objI);
+            // Shift all remaining PathIDs by -1
+            for (int i = objI + 1; i < objects.Count; i++)
+            {
+                if (objects[i].pathID > obj.pathID)
+                {
+                    objects[i].pathID--;
+                }
+            }
+            // Now we need to find all assets that reference this asset's path ID.
+            // Alternatively, we can just let it crash, as I don't know how we would 
+            // know what to change those pointers to in order to avoid a crash
+            return obj;
+        }
+
+        public AssetObject GetAsset(Predicate<AssetObject> p)
+        {
+            return objects.Find(p);
+        }
+
+        public AssetObject RemoveAsset(AssetData data)
+        {
+            return RemoveAsset(d => d.data.Equals(data));
+        }
+
+        public AssetObject RemoveAssetAt(ulong pathID)
+        {
+            return RemoveAsset(d => d.pathID == pathID);
+        }
+
+        public AssetObject GetAssetAt(ulong pathID)
+        {
+            return objects.Find(d => d.pathID == pathID);
+        }
+
         public HashSet<string> ExistingLevelIDs() {
             var set = new HashSet<string>();
             foreach(AssetObject obj in objects) {
@@ -318,10 +358,12 @@ namespace LibSaberPatch
         public class Transaction {
             ulong lastPathID;
             List<AssetData> toAdd;
+            List<AssetData> toRemove;
 
             public Transaction(SerializedAssets assets) {
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
+                toRemove = new List<AssetData>();
             }
 
             public AssetPtr AppendAsset(AssetData data) {
@@ -330,10 +372,19 @@ namespace LibSaberPatch
                 return new AssetPtr(0, lastPathID);
             }
 
+            public void RemoveAsset(AssetData data)
+            {
+                toRemove.Add(data);
+            }
+
             public void ApplyTo(SerializedAssets assets) {
                 Debug.Assert((ulong)(assets.objects.Count + toAdd.Count) == lastPathID, "Can't add anything while transaction is live");
                 foreach(AssetData obj in toAdd) {
                     assets.AppendAsset(obj);
+                }
+                foreach(AssetData obj in toRemove)
+                {
+                    assets.RemoveAsset(obj);
                 }
             }
         }

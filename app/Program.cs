@@ -9,6 +9,10 @@ namespace app
     {
         static void Main(string[] args)
         {
+            if(args.Length < 1) {
+                Console.WriteLine("arguments: pathToAPKFileToModify levelFolders...");
+                return;
+            }
             string apkPath = args[0];
             using (Apk apk = new Apk(apkPath)) {
                 apk.PatchSignatureCheck();

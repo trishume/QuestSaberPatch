@@ -57,12 +57,10 @@ If you get unhandled exceptions when trying to patch, maybe something like `Syst
 
 Things I'm planning on doing but may or may not get around to include the following. I'd be open to accepting contributions or collaborating as long as you let me know what you want to work on so we don't collide. Not necessarily in order but approximately so:
 
-- Cover Art
 - Custom level collections
 - Doing my own BinaryFormatter output so that it's much faster
 - Support removing songs
 - Publish library as a NuGet package
-- Binary release
 - Testing with large numbers of added songs
 - GUI integration
 
@@ -72,6 +70,7 @@ Things I'm planning on doing but may or may not get around to include the follow
 - @emulamer's discovery that the beatmaps are formatted with DeflateStream and BinaryFormatter.
 - @emulamer's code for ideas on how to do various things. I didn't copy any of his code except for name/field and enum definitions for the Beat Saber types, and a couple single line snippets so that I can match his conventions for things like level IDs and asset names.
 - My own work to understand the Unity Assets file format used by Beat Saber, with heavy reference to the code of <https://github.com/Perfare/AssetStudio> to understand the different fields of the standard Unity parts, as well as copying some of their binary reader/writer extension methods (with citations in the code).
+- @raftario for setting up cross-platform CI builds
 - Many conversations with people on the Beat Saber modding Discord.
 
 

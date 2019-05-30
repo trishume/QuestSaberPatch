@@ -1,0 +1,12 @@
+image: Visual Studio 2017
+clone_folder: c:\projects\QuestSaberPatch
+before_build:
+  - cd c:\projects\QuestSaberPatch
+  - dotnet --version
+build_script:
+  - dotnet publish -c Release -r "win-x64" --self-contained true /p:useapphost=true
+after_build:
+  - dir /adh /s
+artifacts:
+  - path: .\app\bin\Release\netcoreapp2.2\win-x64\publish
+    type: zip

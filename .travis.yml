@@ -1,0 +1,20 @@
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      dotnet: 2.2
+    - os: osx
+      dotnet: 2.2.107
+language: csharp
+solution: QuestSaberPatch.sln
+mono: none
+dotnet: 2.2
+script:
+  - dotnet publish -c Release -r "${TRAVIS_OS_NAME}-x64" --self-contained true /p:useapphost=true
+after_success:
+  - ls -lAhR
+  - mkdir -p ./dist/
+  - tar -czvf "./dist/${TRAVIS_OS_NAME}-x64.tar.gz" "./app/bin/Release/netcoreapp2.2/${TRAVIS_OS_NAME}-x64/publish"
+  - wget --method PUT --body-file="./dist/${TRAVIS_OS_NAME}-x64.tar.gz" "https://transfer.sh/questsaberpatch-${TRAVIS_OS_NAME}-x64.tar.gz" -O - -nv
+  - ls -lAhR
+

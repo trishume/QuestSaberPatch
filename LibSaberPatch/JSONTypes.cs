@@ -134,8 +134,13 @@ namespace LibSaberPatch
         public AssetPtr AddToAssets(SerializedAssets assets, Apk apk) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             string levelID = LevelID();
+
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
+
+            string coverPath = Path.Combine(levelFolderPath, _coverImageFilename);
+            Texture2DAssetData cover = Texture2DAssetData.CoverFromImageFile(coverPath, levelID);
+            AssetPtr coverPtr = assets.AppendAsset(cover);
 
             AssetPtr environment = new AssetPtr(20, 1); // default environment
             switch(_environmentName) {
@@ -164,8 +169,7 @@ namespace LibSaberPatch
                 previewDuration = _previewDuration,
 
                 audioClip = audioClipPtr,
-                // TODO currently $100 bills only valid in sharedassets17
-                coverImage = new AssetPtr(0, 18),
+                coverImage = coverPtr,
                 environment = environment,
 
                 difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).Where(s => s!=null).ToList(),

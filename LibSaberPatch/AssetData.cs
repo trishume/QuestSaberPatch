@@ -176,35 +176,68 @@ namespace LibSaberPatch
     {
         public const int ClassID = 28;
 
-        string name;
-        int forcedFallbackFormat;
-        int downscaleFallback;
-        int width;
-        int height;
-        int completeImageSize;
-        int textureFormat;
-        int mipCount;
-        bool isReadable;
-        bool streamingMips;
+        public string name;
+        public int forcedFallbackFormat;
+        public int downscaleFallback;
+        public int width;
+        public int height;
+        public int completeImageSize;
+        public int textureFormat;
+        public int mipCount;
+        public bool isReadable;
+        public bool streamingMips;
 
-        int streamingMipsPriority;
-        int imageCount;
-        int textureDimension;
+        public int streamingMipsPriority;
+        public int imageCount;
+        public int textureDimension;
 
-        int filterMode;
-        int anisotropic;
-        float mipBias;
-        int wrapU;
-        int wrapV;
-        int wrapW;
+        public int filterMode;
+        public int anisotropic;
+        public float mipBias;
+        public int wrapU;
+        public int wrapV;
+        public int wrapW;
 
-        int lightmapFormat;
-        int colorSpace;
-        byte[] imageData;
+        public int lightmapFormat;
+        public int colorSpace;
+        public byte[] imageData;
 
-        int offset;
-        int size;
-        string path;
+        public int offset;
+        public int size;
+        public string path;
+
+        private const int CoverPowerOfTwo = 8;
+        public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID) {
+            int coverDim = 1 << CoverPowerOfTwo;
+            byte[] imageData = Utils.ImageFileToMipData(filePath, coverDim);
+            return new Texture2DAssetData() {
+                name = levelID + "Cover",
+                forcedFallbackFormat = 4,
+                downscaleFallback = 0,
+                width = coverDim,
+                height = coverDim,
+                completeImageSize = imageData.Length,
+                textureFormat = 3,
+                mipCount = CoverPowerOfTwo+1,
+                isReadable = false,
+                streamingMips = false,
+                streamingMipsPriority = 0,
+                imageCount = 1,
+                textureDimension = 2,
+                filterMode = 2,
+                anisotropic = 1,
+                mipBias = -1,
+                wrapU = 1,
+                wrapV = 1,
+                wrapW = 0,
+                lightmapFormat = 6,
+                colorSpace = 1,
+                imageData = imageData,
+                offset = 0,
+                size = 0,
+                path = "",
+            };
+        }
 
         public Texture2DAssetData() {}
 

@@ -7,9 +7,10 @@ A basic custom song patcher for Beat Saber on the Oculus Quest, written in C# an
 It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as well as patch the binary to not check the signature on levels. It's very similar to [emulamer's patcher](https://github.com/emulamer/QuestStopgap) with some differences:
 
 - My library is missing some features that @emulamer's patcher has:
-    - Cover Art
     - Adding a Custom Levels collection (mine puts it in "Extras")
+    - Automated batch file workflow to do all the steps.
 - I have a few extra features his doesn't (note this might be outdated if he adds them):
+    - Cover support with proper resizing and mip-mapping for smaller patched APKs and higher frame rate on the song menu screen.
     - Support for different environments as specified by the level: default, nice, triangle and big mirror
     - Recursively searches for levels in a folder, or pass multiple command line arguments for levels to add
 - My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is probably faster but I haven't tested.
@@ -32,7 +33,7 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 
 ### Initial setup (do this once)
 
-1. Install .NET Core: <https://dotnet.microsoft.com/download> (for my patcher) and Java (for the signer, on Windows make sure it's 64-bit Java or the signer may not work). You may be able to avoid installing dotNET by using one of the self-contained releases on the [Releases page](https://github.com/trishume/QuestSaberPatch/releases) and following the instructions on the release, this may not have the newest code though.
+1. Install .NET Core: <https://dotnet.microsoft.com/download> (for my patcher) and Java (for the signer, on Windows make sure it's 64-bit Java or the signer may not work). You may be able to avoid installing dotNET by using one of the self-contained releases on the [Releases page](https://github.com/trishume/QuestSaberPatch/releases) and following the instructions on the release, this may not have the newest features though.
 2. Install `adb`: <https://developer.android.com/studio/command-line/adb>
 3. Put your Oculus Quest in Developer Mode by getting your Oculus account turned into a developer account.
 4. Use `adb pull /data/app/com.beatgames.beatsaber-1/base.apk {location you want to put it}` to grab the APK off the device

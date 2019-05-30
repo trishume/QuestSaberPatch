@@ -95,5 +95,12 @@ namespace TestApp
             byte[] outData = saveData.SerializeToBinary(false);
             File.WriteAllBytes(repoPath("testoutput/bubbletea_serialized.bin"), outData);
         }
+
+        [Fact]
+        public void TestCreateCover() {
+            string imageFile = repoPath("testdata/bubble_tea_song/cover.jpg");
+            Texture2DAssetData cover = Texture2DAssetData.CoverFromImageFile(imageFile, "BUBBLETEA");
+            Assert.Equal(262143, cover.completeImageSize);
+        }
     }
 }

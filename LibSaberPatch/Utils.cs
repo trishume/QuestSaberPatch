@@ -31,21 +31,21 @@ namespace LibSaberPatch
 
             byte[] imageData = new byte[totalSize];
             Span<byte> imageDataSpan = imageData;
-            using(Stream stream = new FileStream(imagePath, FileMode.Open)) {
-                using (Image<Rgb24> image = Image.Load<Rgb24>(Configuration.Default, imagePath)) {
-                    int dataWriteIndex = 0;
-                    for(int dim = topDim; dim > 0; dim /= 2) {
-                        image.Mutate(x => x.Resize(dim, dim));
-                        for (int y = 0; y < image.Height; y++) {
-                            // need to do rows in reverse order to match what Unity wants
-                            Span<Rgb24> rowPixels = image.GetPixelRowSpan((image.Height-1)-y);
-                            Span<byte> rowData = MemoryMarshal.AsBytes(rowPixels);
-                            rowData.CopyTo(imageDataSpan.Slice(dataWriteIndex, rowData.Length));
-                            dataWriteIndex += rowData.Length;
-                        }
+            //using(Stream stream = new FileStream(imagePath, FileMode.Open)) {
+            using (Image<Rgb24> image = Image.Load<Rgb24>(Configuration.Default, imagePath)) {
+                int dataWriteIndex = 0;
+                for(int dim = topDim; dim > 0; dim /= 2) {
+                    image.Mutate(x => x.Resize(dim, dim));
+                    for (int y = 0; y < image.Height; y++) {
+                        // need to do rows in reverse order to match what Unity wants
+                        Span<Rgb24> rowPixels = image.GetPixelRowSpan((image.Height-1)-y);
+                        Span<byte> rowData = MemoryMarshal.AsBytes(rowPixels);
+                        rowData.CopyTo(imageDataSpan.Slice(dataWriteIndex, rowData.Length));
+                        dataWriteIndex += rowData.Length;
                     }
                 }
             }
+            //}
             return imageData;
         }
     }

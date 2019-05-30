@@ -20,6 +20,14 @@ namespace LibSaberPatch
         public List<SerializedAssets.Script> scripts;
         public List<SerializedAssets.External> externals;
 
+        private ulong resetPoint;
+        private bool _beginRemoval = false;
+        private bool beginRemoval
+        {
+            get { return _beginRemoval; }
+            set { _beginRemoval = value; if (value) resetPoint = objects[objects.Count - 1].pathID; }
+        }
+
         public class TypeRef {
             public int classID;
             bool isStripped;
@@ -303,8 +311,23 @@ namespace LibSaberPatch
             }
         }
 
+        public AssetObject GetAsset(Predicate<AssetObject> p)
+        {
+            return objects.Find(p);
+        }
+
+        /// <summary>
+        /// Indicates that you are done removing objects and to update PathIDs of all remaining objects.
+        /// </summary>
+        public void EndRemoval()
+        {
+            ShiftPathIDs(260, resetPoint);
+            beginRemoval = false;
+        }
+
         public AssetObject RemoveAsset(Predicate<AssetObject> p)
         {
+            if (!beginRemoval) beginRemoval = true;
             // First, find matching AssetObj
             int objI = objects.FindIndex(p);
             AssetObject obj = objects[objI];
@@ -316,18 +339,15 @@ namespace LibSaberPatch
             return obj;
         }
 
-        public AssetObject GetAsset(Predicate<AssetObject> p)
-        {
-            return objects.Find(p);
-        }
-
         public AssetObject RemoveAsset(AssetData data)
         {
+            if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(d => d.data.Equals(data));
         }
 
         public AssetObject RemoveAssetAt(ulong pathID)
         {
+            if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(d => d.pathID == pathID);
         }
 

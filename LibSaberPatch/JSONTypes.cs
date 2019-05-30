@@ -223,6 +223,7 @@ namespace LibSaberPatch
             RemoveAudioAsset(apk, (AudioClipAssetData)assets.RemoveAssetAt(o.audioClip.pathID).data);
             // Remove itself!
             assets.RemoveAssetAt(pid);
+            assets.EndRemoval();
             return pid;
         }
 

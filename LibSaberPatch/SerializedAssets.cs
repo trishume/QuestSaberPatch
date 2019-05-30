@@ -194,6 +194,9 @@ namespace LibSaberPatch
                     case AudioClipAssetData.ClassID:
                         obj.data = new AudioClipAssetData(reader, obj.size);
                         break;
+                    case Texture2DAssetData.ClassID:
+                        obj.data = new Texture2DAssetData(reader, obj.size);
+                        break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;

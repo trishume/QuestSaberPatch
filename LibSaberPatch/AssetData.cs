@@ -171,4 +171,111 @@ namespace LibSaberPatch
             return 5;
         }
     }
+
+    public class Texture2DAssetData : AssetData
+    {
+        public const int ClassID = 28;
+
+        string name;
+        int forcedFallbackFormat;
+        int downscaleFallback;
+        int width;
+        int height;
+        int completeImageSize;
+        int textureFormat;
+        int mipCount;
+        bool isReadable;
+        bool streamingMips;
+
+        int streamingMipsPriority;
+        int imageCount;
+        int textureDimension;
+
+        int filterMode;
+        int anisotropic;
+        float mipBias;
+        int wrapU;
+        int wrapV;
+        int wrapW;
+
+        int lightmapFormat;
+        int colorSpace;
+        byte[] imageData;
+
+        int offset;
+        int size;
+        string path;
+
+        public Texture2DAssetData() {}
+
+        public Texture2DAssetData(BinaryReader reader, int _length) {
+            name = reader.ReadAlignedString();
+            forcedFallbackFormat = reader.ReadInt32();
+            downscaleFallback = reader.ReadInt32();
+            width = reader.ReadInt32();
+            height = reader.ReadInt32();
+            completeImageSize = reader.ReadInt32();
+            textureFormat = reader.ReadInt32();
+            mipCount = reader.ReadInt32();
+            isReadable = reader.ReadBoolean();
+            streamingMips = reader.ReadBoolean();
+            reader.AlignStream();
+
+            streamingMipsPriority = reader.ReadInt32();
+            imageCount = reader.ReadInt32();
+            textureDimension = reader.ReadInt32();
+
+            filterMode = reader.ReadInt32();
+            anisotropic = reader.ReadInt32();
+            mipBias = reader.ReadSingle();
+            wrapU = reader.ReadInt32();
+            wrapV = reader.ReadInt32();
+            wrapW = reader.ReadInt32();
+
+            lightmapFormat = reader.ReadInt32();
+            colorSpace = reader.ReadInt32();
+            imageData = reader.ReadPrefixedBytes();
+
+            offset = reader.ReadInt32();
+            size = reader.ReadInt32();
+            path = reader.ReadAlignedString();
+        }
+
+        public override void WriteTo(BinaryWriter w) {
+            w.WriteAlignedString(name);
+            w.Write(forcedFallbackFormat);
+            w.Write(downscaleFallback);
+            w.Write(width);
+            w.Write(height);
+            w.Write(completeImageSize);
+            w.Write(textureFormat);
+            w.Write(mipCount);
+            w.Write(isReadable);
+            w.Write(streamingMips);
+            w.AlignStream();
+
+            w.Write(streamingMipsPriority);
+            w.Write(imageCount);
+            w.Write(textureDimension);
+
+            w.Write(filterMode);
+            w.Write(anisotropic);
+            w.Write(mipBias);
+            w.Write(wrapU);
+            w.Write(wrapV);
+            w.Write(wrapW);
+
+            w.Write(lightmapFormat);
+            w.Write(colorSpace);
+            w.WritePrefixedBytes(imageData);
+
+            w.Write(offset);
+            w.Write(size);
+            w.WriteAlignedString(path);
+        }
+
+        public override int SharedAssetsTypeIndex() {
+            return 2;
+        }
+    }
 }

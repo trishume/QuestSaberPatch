@@ -31,7 +31,6 @@ namespace LibSaberPatch
 
             byte[] imageData = new byte[totalSize];
             Span<byte> imageDataSpan = imageData;
-            //using(Stream stream = new FileStream(imagePath, FileMode.Open)) {
             using (Image<Rgb24> image = Image.Load<Rgb24>(Configuration.Default, imagePath)) {
                 int dataWriteIndex = 0;
                 for(int dim = topDim; dim > 0; dim /= 2) {
@@ -45,7 +44,6 @@ namespace LibSaberPatch
                     }
                 }
             }
-            //}
             return imageData;
         }
     }

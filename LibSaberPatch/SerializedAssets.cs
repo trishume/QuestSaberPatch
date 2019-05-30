@@ -309,6 +309,8 @@ namespace LibSaberPatch
                     objects[i].pathID--;
                 }
             }
+            // HOWEVER! THIS STILL DOESN'T SHIFT THE PATHIDS OF POINTERS THAT WERE POINTING TO THESE THINGS!
+            // THIS IS POSSIBLE THE LARGEST PROBLEM THAT REMAINS WITH DELETING SMOOTHLY AND QUICKLY!
         }
 
         public AssetObject GetAsset(Predicate<AssetObject> p)
@@ -332,7 +334,6 @@ namespace LibSaberPatch
             int objI = objects.FindIndex(p);
             AssetObject obj = objects[objI];
             objects.RemoveAt(objI);
-            //ShiftPathIDs(objI, obj.pathID);
             // Now we need to find all assets that reference this asset's path ID.
             // Alternatively, we can just let it crash, as I don't know how we would 
             // know what to change those pointers to in order to avoid a crash

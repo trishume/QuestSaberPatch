@@ -198,15 +198,31 @@ namespace LibSaberPatch
             // Then it casts that to a level behavior data.
 
             // TODO Make this work with Transactions instead of an assets object.
-            ulong pid = assets.GetAsset(obj => obj.data.GetType().Equals(typeof(MonoBehaviorAssetData))
-            && ((MonoBehaviorAssetData)obj.data).data.GetType().Equals(typeof(LevelBehaviorData))
-            && ((LevelBehaviorData)((MonoBehaviorAssetData)obj.data).data).Equals(this)).pathID;
+
+            var assetDatas = assets.objects.FindAll(obj => obj.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && ((MonoBehaviorAssetData)obj.data).data.GetType().Equals(typeof(LevelBehaviorData)));
+
+            var assetData = assetDatas.Find(ao => ((ao.data as MonoBehaviorAssetData).data as LevelBehaviorData).levelID == LevelID());
+
+            ulong pid = assetData.pathID;
             MonoBehaviorAssetData data = (MonoBehaviorAssetData)assets.GetAssetAt(pid).data;
             LevelBehaviorData o = data.data as LevelBehaviorData;
 
-            RemoveAudioAsset(apk, (AudioClipAssetData)assets.GetAssetAt(o.audioClip.pathID).data);
+            // Also remove difficulty beatmaps
+            foreach (BeatmapSet s in o.difficultyBeatmapSets)
+            {
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
+                {
+                    //Console.WriteLine($"Removing Difficulty: {d.difficulty} with characteristic PathID: {s.characteristic.pathID} with PathID: {d.beatmapData.pathID}");
+                    assets.RemoveAssetAt(d.beatmapData.pathID);
+                }
+            }
+            // Remove cover image
             assets.RemoveAssetAt(o.coverImage.pathID);
-            assets.RemoveAssetAt(o.audioClip.pathID);
+            // Remove the file for the audio asset and the audio clip
+            RemoveAudioAsset(apk, (AudioClipAssetData)assets.RemoveAssetAt(o.audioClip.pathID).data);
+            // Remove itself!
+            assets.RemoveAssetAt(pid);
             return pid;
         }
 
@@ -216,7 +232,7 @@ namespace LibSaberPatch
             apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
             ulong fileSize = (ulong)new FileInfo(audioClipFile).Length;
             NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile);
-            return new AudioClipAssetData() {
+            var dat = new AudioClipAssetData() {
                 name = levelID,
                 loadType = 1,
                 channels = v.Channels,
@@ -233,11 +249,13 @@ namespace LibSaberPatch
                 offset = 0,
                 size = fileSize,
             };
+            v.Dispose();
+            return dat;
         }
 
         public void RemoveAudioAsset(Apk.Transaction apk, AudioClipAssetData data)
         {
-            if (apk != null) apk.RemoveFileAt(data.source);
+            if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{data.source}");
         }
     }
 }

@@ -61,13 +61,13 @@ namespace LibSaberPatch
         }
 
         /// <summary>
-        /// Deletes the given file from the APK, ASSUMING IT EXISTS!
+        /// Deletes the given file from the APK
         /// </summary>
         /// <param name="filePath">The file to delete in the APK</param>
         public void RemoveFileAt(string filePath)
         {
             ZipArchiveEntry entry = archive.GetEntry(filePath);
-            entry.Delete();
+            if (entry != null) entry.Delete();
         }
 
         public byte[] JoinedContents(string basePath) {
@@ -132,6 +132,7 @@ namespace LibSaberPatch
             }
 
             public void ApplyTo(Apk apk) {
+
                 foreach(var copy in copies) {
                     apk.CopyFileInto(copy.Item1, copy.Item2);
                 }

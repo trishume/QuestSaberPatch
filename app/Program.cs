@@ -31,6 +31,10 @@ namespace app
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 for(int i = 1; i < args.Length; i++) {
+                    if (args[i] == "-r" || args[i] == "removeSongs")
+                    {
+                        continue;
+                    }
                     Utils.FindLevels(args[i], levelFolder => {
                         try {
                             JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
@@ -38,20 +42,20 @@ namespace app
                             var apkTxn = new Apk.Transaction();
 
                             if (existingLevels.Contains(levelID)) {
-                                Console.WriteLine($"Present: {level._songName}");
                                 if (removeSongs)
                                 {
                                     // Currently does not handle transactions (it half-supports them)
                                     Console.WriteLine($"Removing: {level._songName}");
                                     ulong levelPid = level.RemoveFromAssets(assets, apkTxn);
                                     // We also don't _need_ to remove this from the existingLevels, but we probably _should_
-                                    if (existingLevels.Contains(levelID))
-                                    {
-                                        existingLevels.Remove(levelID);
-                                    }
+                                    existingLevels.Remove(levelID);
+                                    
                                     extrasCollection.levels.RemoveAll(ptr => ptr.pathID == levelPid);
 
                                     apkTxn.ApplyTo(apk);
+                                } else
+                                {
+                                    Console.WriteLine($"Present: {level._songName}");
                                 }
                             } else {
                                 Console.WriteLine($"Adding:  {level._songName}");

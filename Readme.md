@@ -16,7 +16,7 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 - My patcher was developed on macOS and definitely works there, @emulamer's patcher might well work on macOS though, although any batch files won't. I haven't tested mine on Windows though but it should work.
 - My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is 40 lines, @emulamer's is 600.
 - My patcher uses fewer temporary buffers and does less copying, which may eventually lead to higher performance but right now everything is bottlenecked on beatmap serialization.
-- Mine has both read and write support for all asset constructs it supports, whereas @emulamer's is more of a program and somethings only have one direction of support.
+- Mine has both read and write support for all asset constructs it supports, whereas more things in @emulamer's only have one direction of support.
 - I think my code is cleaner, if you're interested in building on it you can take a look at both of our codebases and see which one you like.
 
 ## How to use it

@@ -14,10 +14,11 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
     - Support for different environments as specified by the level: default, nice, triangle and big mirror
     - Recursively searches for levels in a folder, or pass multiple command line arguments for levels to add
 - My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is probably faster but I haven't tested.
-- My patcher was developed on macOS and definitely works there, @emulamer's patcher might well work on macOS though, although any batch files won't. I haven't tested mine on Windows though but it should work.
 - My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is 40 lines, @emulamer's is 600.
+- I use a transaction-based design that (hopefully) should gracefully handle broken level data without messing up the APK and just skip over those songs.
 - My patcher uses fewer temporary buffers and does less copying, which may eventually lead to higher performance but right now everything is bottlenecked on beatmap serialization.
 - Mine has both read and write support for all asset constructs it supports, whereas more things in @emulamer's only have one direction of support.
+- My patcher was developed on macOS and definitely works there, @emulamer's patcher might well work on macOS though, although any batch files won't. I haven't tested mine on Windows though but it should work.
 - I think my code is cleaner, if you're interested in building on it you can take a look at both of our codebases and see which one you like.
 
 ## How to use it
@@ -47,6 +48,10 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 ### Removing songs
 
 Removing songs is fundamentally possible and not that hard to implement but I haven't done it yet. Right now if you want to remove songs just make a new COPY of your backup APK, patch that with all the songs you still want, and then install it.
+
+### It's throwing errors!
+
+If you get unhandled exceptions when trying to patch, maybe something like `System.IO.InvalidDataException: End of Central Directory record could not be found.`, this might happen sometimes and I'm not sure why, the recently added transactions feature might have fixed it but I'm not sure. Anyhow restoring your patching APK by making a **new copy** from your IMPORTANT ORIGINAL BACKUP COPY and patching that should hopefully fix the errors.
 
 ## Roadmap
 

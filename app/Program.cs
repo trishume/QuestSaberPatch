@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
 using LibSaberPatch;
+using Newtonsoft.Json;
 
 namespace app
 {
@@ -24,15 +26,31 @@ namespace app
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 for(int i = 1; i < args.Length; i++) {
                     Utils.FindLevels(args[i], levelFolder => {
-                        JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
-                        string levelID = level.LevelID();
-                        if(existingLevels.Contains(levelID)) {
-                            Console.WriteLine($"Present: {level._songName}");
-                        } else {
-                            Console.WriteLine($"Adding:  {level._songName}");
-                            AssetPtr levelPtr = level.AddToAssets(assets, apk);
-                            extrasCollection.levels.Add(levelPtr);
-                            existingLevels.Add(levelID);
+                        try {
+                            JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
+                            string levelID = level.LevelID();
+                            if(existingLevels.Contains(levelID)) {
+                                Console.WriteLine($"Present: {level._songName}");
+                            } else {
+                                Console.WriteLine($"Adding:  {level._songName}");
+                                // We use transactions here so if these throw
+                                // an exception, which happens when levels are
+                                // invalid, then it doesn't modify the APK in
+                                // any way that might screw things up later.
+                                var assetsTxn = new SerializedAssets.Transaction(assets);
+                                var apkTxn = new Apk.Transaction();
+                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
+
+                                // Danger should be over, nothing here should fail
+                                assetsTxn.ApplyTo(assets);
+                                extrasCollection.levels.Add(levelPtr);
+                                existingLevels.Add(levelID);
+                                apkTxn.ApplyTo(apk);
+                            }
+                        } catch (FileNotFoundException e) {
+                            Console.WriteLine("[SKIPPING] Missing file referenced by level: {0}", e.FileName);
+                        } catch (JsonReaderException e) {
+                            Console.WriteLine("[SKIPPING] Invalid level JSON: {0}", e.Message);
                         }
                     });
                 }

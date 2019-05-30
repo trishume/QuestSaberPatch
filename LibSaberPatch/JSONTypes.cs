@@ -28,7 +28,7 @@ namespace LibSaberPatch
         public string _beatmapFilename;
 
         public BeatmapDifficulty ToAssets(
-            SerializedAssets assets,
+            SerializedAssets.Transaction assets,
             string levelFolderPath,
             string levelID,
             Characteristic characteristic
@@ -78,7 +78,11 @@ namespace LibSaberPatch
         public List<JsonBeatmapDifficulty> _difficultyBeatmaps;
         public Characteristic _beatmapCharacteristicName;
 
-        public BeatmapSet ToAssets(SerializedAssets assets, string levelFolderPath, string levelID) {
+        public BeatmapSet ToAssets(
+            SerializedAssets.Transaction assets,
+            string levelFolderPath,
+            string levelID
+        ) {
             var set = new BeatmapSet();
             switch (_beatmapCharacteristicName)
             {
@@ -131,7 +135,7 @@ namespace LibSaberPatch
             return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
         }
 
-        public AssetPtr AddToAssets(SerializedAssets assets, Apk apk) {
+        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             string levelID = LevelID();
 
@@ -186,10 +190,10 @@ namespace LibSaberPatch
             return assets.AppendAsset(monob);
         }
 
-        private AudioClipAssetData CreateAudioAsset(Apk apk, string levelID) {
+        private AudioClipAssetData CreateAudioAsset(Apk.Transaction apk, string levelID) {
             string audioClipFile = Path.Combine(levelFolderPath, _songFilename);
             string sourceFileName = levelID+".ogg";
-            if(apk != null) apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
+            apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
             ulong fileSize = (ulong)new FileInfo(audioClipFile).Length;
             NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile);
             return new AudioClipAssetData() {

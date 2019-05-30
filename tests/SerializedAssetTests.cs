@@ -46,8 +46,12 @@ namespace TestApp
                 Assert.False(existing.Contains("BUBBLETEA"), "Run tests on a non-patched APK");
 
                 JsonLevel level = JsonLevel.LoadFromFolder(repoPath("testdata/bubble_tea_song/"));
-                // pass null as the apk so it doesn't get modified
-                AssetPtr levelPtr = level.AddToAssets(assets, null);
+
+                var assetsTxn = new SerializedAssets.Transaction(assets);
+                var apkTxn = new Apk.Transaction();
+                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
+                assetsTxn.ApplyTo(assets);
+                // don't apply apkTxn so our tests don't modify the APK
 
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 extrasCollection.levels.Add(levelPtr);

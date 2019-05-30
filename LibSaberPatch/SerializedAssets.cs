@@ -314,5 +314,28 @@ namespace LibSaberPatch
                 throw new ParseException("Extras level collection not at normal spot");
             return (LevelCollectionBehaviorData)monob.data;
         }
+
+        public class Transaction {
+            ulong lastPathID;
+            List<AssetData> toAdd;
+
+            public Transaction(SerializedAssets assets) {
+                lastPathID = (ulong)assets.objects.Count;
+                toAdd = new List<AssetData>();
+            }
+
+            public AssetPtr AppendAsset(AssetData data) {
+                toAdd.Add(data);
+                lastPathID += 1;
+                return new AssetPtr(0, lastPathID);
+            }
+
+            public void ApplyTo(SerializedAssets assets) {
+                Debug.Assert((ulong)(assets.objects.Count + toAdd.Count) == lastPathID, "Can't add anything while transaction is live");
+                foreach(AssetData obj in toAdd) {
+                    assets.AppendAsset(obj);
+                }
+            }
+        }
     }
 }

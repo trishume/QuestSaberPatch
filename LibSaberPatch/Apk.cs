@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Collections.Generic;
 
 namespace LibSaberPatch
 {
@@ -93,6 +94,27 @@ namespace LibSaberPatch
                 data[sigPatchLoc + i] = sigPatch[i];
             }
             WriteEntireEntry(il2cppLibEntry, data);
+        }
+
+        public class Transaction {
+            List<(string, string)> copies;
+
+            public Transaction() {
+                copies = new List<(string,string)>();
+            }
+
+            public void CopyFileInto(string sourceFilePath, string destEntryPath) {
+                // check that we can open the source file for reading
+                using (Stream fileStream = new FileStream(sourceFilePath, FileMode.Open)) {
+                }
+                copies.Add((sourceFilePath, destEntryPath));
+            }
+
+            public void ApplyTo(Apk apk) {
+                foreach(var copy in copies) {
+                    apk.CopyFileInto(copy.Item1, copy.Item2);
+                }
+            }
         }
     }
 }

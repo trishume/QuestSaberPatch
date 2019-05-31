@@ -8,6 +8,7 @@ namespace LibSaberPatch
     {
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
+        public abstract bool Equals(BehaviorData data);
     }
 
     public class UnknownBehaviorData : BehaviorData
@@ -23,6 +24,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             throw new ApplicationException("unknown type index");
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+                return bytes.Equals((data as UnknownBehaviorData).bytes);
+            return false;
         }
     }
 
@@ -41,6 +49,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             return 0x10;
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+                return levels.Equals((data as LevelCollectionBehaviorData).levels);
+            return false;
         }
     }
 
@@ -68,6 +83,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             return 0x0E;
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+                return projectedData.Equals((data as BeatmapDataBehaviorData).projectedData);
+            return false;
         }
     }
 
@@ -200,25 +222,29 @@ namespace LibSaberPatch
             // Remove the file for the audio asset and the audio clip
             Console.WriteLine(audioClip.pathID);
             Console.WriteLine(assets.objects.Count);
+            if (assets.GetAssetAt(audioClip.pathID).data != null)
+                Console.WriteLine($"{audioClip.pathID} has type: {assets.GetAssetAt(audioClip.pathID).data.GetType()}");
             var audioAsset = (assets.RemoveAssetAt(audioClip.pathID).data as AudioClipAssetData);
             if (audioAsset == null)
             {
-                Console.WriteLine(audioClip.pathID + " not found! Highest know PathID: " + assets.objects[assets.objects.Count - 1].pathID);
+                Console.WriteLine(audioClip.pathID + " not found as an AudioClip! Highest known PathID: " + assets.objects[assets.objects.Count - 1].pathID);
             }
             if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
-            audioAsset.RemoveFromAssets(assets);
             // Remove itself!
-            return assets.RemoveAsset(new MonoBehaviorAssetData()
-            {
-                script = new AssetPtr(1, PathID),
-                name = levelID + "Level",
-                data = this
-            }).pathID;
-            
+            ulong levelPathID = assets.RemoveScript(this).pathID;
+            assets.EndRemoval();
+            return levelPathID;
         }
 
         public override int SharedAssetsTypeIndex() {
             return 0x0F;
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+                return levelID == (data as LevelBehaviorData).levelID;
+            return false;
         }
     }
 }

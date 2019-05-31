@@ -182,11 +182,6 @@ namespace LibSaberPatch
             w.Write(compressionFormat);
         }
 
-        public void RemoveFromAssets(SerializedAssets assets)
-        {
-            assets.RemoveAsset(this);
-        }
-
         public override int SharedAssetsTypeIndex() {
             return 5;
         }

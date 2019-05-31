@@ -343,13 +343,20 @@ namespace LibSaberPatch
         public AssetObject RemoveAsset(AssetData data)
         {
             if (!beginRemoval) beginRemoval = true;
-            return RemoveAsset(d => d.data.GetType().Equals(data) && d.data.Equals(data));
+            return RemoveAsset(d => d.data.Equals(data));
         }
 
         public AssetObject RemoveAssetAt(ulong pathID)
         {
             if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(d => d.pathID == pathID);
+        }
+
+        public AssetObject RemoveScript(BehaviorData data)
+        {
+            if (!beginRemoval) beginRemoval = true;
+            return RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (ao.data as MonoBehaviorAssetData).data.Equals(data));
         }
 
         public AssetObject GetAssetAt(ulong pathID)

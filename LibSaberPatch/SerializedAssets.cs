@@ -343,7 +343,7 @@ namespace LibSaberPatch
         public AssetObject RemoveAsset(AssetData data)
         {
             if (!beginRemoval) beginRemoval = true;
-            return RemoveAsset(d => d.data.Equals(data));
+            return RemoveAsset(d => d.data.GetType().Equals(data) && d.data.Equals(data));
         }
 
         public AssetObject RemoveAssetAt(ulong pathID)
@@ -355,6 +355,14 @@ namespace LibSaberPatch
         public AssetObject GetAssetAt(ulong pathID)
         {
             return objects.Find(d => d.pathID == pathID);
+        }
+
+        public LevelBehaviorData GetLevelMatching(string levelID)
+        {
+            AssetObject obj = objects.Find(d => d.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (d.data as MonoBehaviorAssetData).data.GetType().Equals(typeof(LevelBehaviorData))
+            && ((d.data as MonoBehaviorAssetData).data as LevelBehaviorData).levelID == levelID);
+            return ((obj.data as MonoBehaviorAssetData).data as LevelBehaviorData);
         }
 
         public HashSet<string> ExistingLevelIDs() {

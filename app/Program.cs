@@ -46,7 +46,7 @@ namespace app
                                 {
                                     // Currently does not handle transactions (it half-supports them)
                                     Console.WriteLine($"Removing: {level._songName}");
-                                    ulong levelPid = level.RemoveFromAssets(assets, apkTxn);
+                                    ulong levelPid = assets.GetLevelMatching(levelID).RemoveFromAssets(assets, apkTxn);
                                     // We also don't _need_ to remove this from the existingLevels, but we probably _should_
                                     existingLevels.Remove(levelID);
                                     
@@ -79,7 +79,7 @@ namespace app
                         }
                     });
                 }
-
+                assets.EndRemoval();
                 byte[] outData = assets.ToBytes();
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
                 Console.WriteLine("Complete!");

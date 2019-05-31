@@ -175,6 +175,47 @@ namespace LibSaberPatch
             w.WritePrefixedList(difficultyBeatmapSets, x => x.WriteTo(w));
         }
 
+        public ulong RemoveFromAssets(SerializedAssets assets, Apk.Transaction apk)
+        {
+            // We want to find the level object in the assets list of objects so that we can remove it via PathID.
+            // Well, this is quite a messy solution... But it _should work_...
+            // What this is doing: Removing the asset that is a monobehavior, and the monobehavior's data equals this level.
+            // Then it casts that to a level behavior data.
+
+            // TODO Make this work with Transactions instead of an assets object.
+
+            //Console.WriteLine(assets.GetAssetAt(264).data.Equals(assets.GetAssetAt(audioClip.pathID)));
+
+            // Also remove difficulty beatmaps
+            foreach (BeatmapSet s in difficultyBeatmapSets)
+            {
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
+                {
+                    //Console.WriteLine($"Removing Difficulty: {d.difficulty} with characteristic PathID: {s.characteristic.pathID} with PathID: {d.beatmapData.pathID}");
+                    assets.RemoveAssetAt(d.beatmapData.pathID);
+                }
+            }
+            // Remove cover image
+            assets.RemoveAssetAt(coverImage.pathID);
+            // Remove the file for the audio asset and the audio clip
+            Console.WriteLine(audioClip.pathID);
+            Console.WriteLine(assets.objects.Count);
+            var audioAsset = (assets.RemoveAssetAt(audioClip.pathID).data as AudioClipAssetData);
+            if (audioAsset == null)
+            {
+                Console.WriteLine(audioClip.pathID + " not found! Highest know PathID: " + assets.objects[assets.objects.Count - 1].pathID);
+            }
+            if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
+            audioAsset.RemoveFromAssets(assets);
+            // Remove itself!
+            return assets.RemoveAsset(new MonoBehaviorAssetData()
+            {
+                script = new AssetPtr(1, PathID),
+                name = levelID + "Level",
+                data = this
+            }).pathID;
+            
+        }
 
         public override int SharedAssetsTypeIndex() {
             return 0x0F;

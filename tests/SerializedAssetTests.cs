@@ -49,7 +49,7 @@ namespace TestApp
 
                 var assetsTxn = new SerializedAssets.Transaction(assets);
                 var apkTxn = new Apk.Transaction();
-                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
+                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn, level.GenerateBasicLevelID());
                 assetsTxn.ApplyTo(assets);
                 // don't apply apkTxn so our tests don't modify the APK
 

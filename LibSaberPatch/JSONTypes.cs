@@ -195,24 +195,25 @@ namespace LibSaberPatch
             string sourceFileName = levelID+".ogg";
             apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
             ulong fileSize = (ulong)new FileInfo(audioClipFile).Length;
-            NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile);
-            return new AudioClipAssetData() {
-                name = levelID,
-                loadType = 1,
-                channels = v.Channels,
-                frequency = v.SampleRate,
-                bitsPerSample = 16,
-                length = (Single)v.TotalTime.TotalSeconds,
-                isTracker = false,
-                subsoundIndex = 0,
-                preloadAudio = false,
-                backgroundLoad = true,
-                legacy3D = true,
-                compressionFormat = 1, // vorbis
-                source = sourceFileName,
-                offset = 0,
-                size = fileSize,
-            };
+            using (NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile)) {
+                return new AudioClipAssetData() {
+                    name = levelID,
+                    loadType = 1,
+                    channels = v.Channels,
+                    frequency = v.SampleRate,
+                    bitsPerSample = 16,
+                    length = (Single)v.TotalTime.TotalSeconds,
+                    isTracker = false,
+                    subsoundIndex = 0,
+                    preloadAudio = false,
+                    backgroundLoad = true,
+                    legacy3D = true,
+                    compressionFormat = 1, // vorbis
+                    source = sourceFileName,
+                    offset = 0,
+                    size = fileSize,
+                };
+            }
         }
     }
 }

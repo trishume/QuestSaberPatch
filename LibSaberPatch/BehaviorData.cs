@@ -9,6 +9,8 @@ namespace LibSaberPatch
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
         public abstract bool Equals(BehaviorData data);
+        // Could maybe also make this method non-abstract using reflection
+        public abstract void Trace(Action<AssetPtr> action);
     }
 
     public class UnknownBehaviorData : BehaviorData
@@ -31,6 +33,11 @@ namespace LibSaberPatch
             if (GetType().Equals(data))
                 return bytes.Equals((data as UnknownBehaviorData).bytes);
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // Nothing is known, don't trace any AssetPtrs.
         }
     }
 
@@ -56,6 +63,14 @@ namespace LibSaberPatch
             if (GetType().Equals(data))
                 return levels.Equals((data as LevelCollectionBehaviorData).levels);
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            foreach (AssetPtr p in levels)
+            {
+                action(p);
+            }
         }
     }
 
@@ -90,6 +105,11 @@ namespace LibSaberPatch
             if (GetType().Equals(data))
                 return projectedData.Equals((data as BeatmapDataBehaviorData).projectedData);
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // No AssetPtrs to trace.
         }
     }
 
@@ -232,7 +252,6 @@ namespace LibSaberPatch
             if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
             // Remove itself!
             ulong levelPathID = assets.RemoveScript(this).pathID;
-            assets.EndRemoval();
             return levelPathID;
         }
 
@@ -245,6 +264,21 @@ namespace LibSaberPatch
             if (GetType().Equals(data))
                 return levelID == (data as LevelBehaviorData).levelID;
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            action(audioClip);
+            action(coverImage);
+            action(environment);
+            foreach (BeatmapSet s in difficultyBeatmapSets)
+            {
+                action(s.characteristic);
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
+                {
+                    action(d.beatmapData);
+                }
+            }
         }
     }
 }

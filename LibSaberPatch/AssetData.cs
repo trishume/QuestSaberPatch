@@ -29,6 +29,8 @@ namespace LibSaberPatch
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
         public abstract bool Equals(AssetData o);
+        // Could also maybe make this method an actual method, instead of abstract, and use reflection.
+        public abstract void Trace(Action<AssetPtr> action);
     }
 
     public class UnknownAssetData : AssetData
@@ -51,6 +53,11 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return bytes.Equals((o as UnknownAssetData).bytes);
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // No ptrs known, don't trace any of them.
         }
     }
 
@@ -110,6 +117,13 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return script.pathID == (o as MonoBehaviorAssetData).script.pathID && name == (o as MonoBehaviorAssetData).name;
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // So, we have AssetPtrs, however, we don't want to delete any of the pointers for Gameobject/Script
+            // We DO want to delete/call trace on all pointers that are in data.
+            data.Trace(action);
         }
     }
 
@@ -191,6 +205,11 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return source == (o as AudioClipAssetData).source && name == (o as AudioClipAssetData).name;
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // No AssetPtrs in this object, don't trace any of them.
         }
     }
 
@@ -338,6 +357,11 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return imageData.Equals((o as Texture2DAssetData).imageData);
             return false;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // No AssetPtrs in this object either.
         }
     }
 }

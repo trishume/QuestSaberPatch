@@ -38,7 +38,7 @@ namespace app
                     Utils.FindLevels(args[i], levelFolder => {
                         try {
                             JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
-                            string levelID = level.LevelID();
+                            string levelID = level.GenerateBasicLevelID();
                             var apkTxn = new Apk.Transaction();
 
                             if (existingLevels.Contains(levelID)) {
@@ -64,7 +64,7 @@ namespace app
                                 // invalid, then it doesn't modify the APK in
                                 // any way that might screw things up later.
                                 var assetsTxn = new SerializedAssets.Transaction(assets);
-                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
+                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn, levelID);
 
                                 // Danger should be over, nothing here should fail
                                 assetsTxn.ApplyTo(assets);

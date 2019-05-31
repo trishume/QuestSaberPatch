@@ -131,14 +131,12 @@ namespace LibSaberPatch
             return level;
         }
 
-        public string LevelID() {
+        public string GenerateBasicLevelID() {
             return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
         }
 
-        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk) {
+        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
-            string levelID = LevelID();
-
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
 
@@ -232,26 +230,25 @@ namespace LibSaberPatch
             string sourceFileName = levelID+".ogg";
             apk.CopyFileInto(audioClipFile, $"assets/bin/Data/{sourceFileName}");
             ulong fileSize = (ulong)new FileInfo(audioClipFile).Length;
-            NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile);
-            var dat = new AudioClipAssetData() {
-                name = levelID,
-                loadType = 1,
-                channels = v.Channels,
-                frequency = v.SampleRate,
-                bitsPerSample = 16,
-                length = (Single)v.TotalTime.TotalSeconds,
-                isTracker = false,
-                subsoundIndex = 0,
-                preloadAudio = false,
-                backgroundLoad = true,
-                legacy3D = true,
-                compressionFormat = 1, // vorbis
-                source = sourceFileName,
-                offset = 0,
-                size = fileSize,
-            };
-            v.Dispose();
-            return dat;
+            using (NVorbis.VorbisReader v = new NVorbis.VorbisReader(audioClipFile)) {
+                return new AudioClipAssetData() {
+                    name = levelID,
+                    loadType = 1,
+                    channels = v.Channels,
+                    frequency = v.SampleRate,
+                    bitsPerSample = 16,
+                    length = (Single)v.TotalTime.TotalSeconds,
+                    isTracker = false,
+                    subsoundIndex = 0,
+                    preloadAudio = false,
+                    backgroundLoad = true,
+                    legacy3D = true,
+                    compressionFormat = 1, // vorbis
+                    source = sourceFileName,
+                    offset = 0,
+                    size = fileSize,
+                };
+            }
         }
 
         public void RemoveAudioAsset(Apk.Transaction apk, AudioClipAssetData data)

@@ -28,7 +28,7 @@ namespace app
                     Utils.FindLevels(args[i], levelFolder => {
                         try {
                             JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
-                            string levelID = level.LevelID();
+                            string levelID = level.GenerateBasicLevelID();
                             if(existingLevels.Contains(levelID)) {
                                 Console.WriteLine($"Present: {level._songName}");
                             } else {
@@ -39,7 +39,7 @@ namespace app
                                 // any way that might screw things up later.
                                 var assetsTxn = new SerializedAssets.Transaction(assets);
                                 var apkTxn = new Apk.Transaction();
-                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn);
+                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn, levelID);
 
                                 // Danger should be over, nothing here should fail
                                 assetsTxn.ApplyTo(assets);

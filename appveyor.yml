@@ -7,6 +7,9 @@ build_script:
   - dotnet publish -c Release -r "win-x64" --self-contained true /p:useapphost=true
 after_build:
   - dir /adh /s
+  # I have no idea if Windows wildcards are zero or more or one or more so just drop the last letter
+  - xcopy .\jsonApp\bin\Release\netcoreapp2.2\win-x64\publish\jsonAp* .\app\bin\Release\netcoreapp2.2\win-x64\publish
+  - ren .\app\bin\Release\netcoreapp2.2\win-x64\publish .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch
 artifacts:
-  - path: .\app\bin\Release\netcoreapp2.2\win-x64\publish
+  - path: .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch
     type: zip

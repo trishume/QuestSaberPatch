@@ -28,6 +28,7 @@ namespace LibSaberPatch
     {
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
+        public abstract bool Equals(AssetData o);
     }
 
     public class UnknownAssetData : AssetData
@@ -43,6 +44,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             throw new ApplicationException("unknown type index");
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            if (GetType().Equals(o))
+                return bytes.Equals((o as UnknownAssetData).bytes);
+            return false;
         }
     }
 
@@ -95,6 +103,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             return data.SharedAssetsTypeIndex();
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            if (GetType().Equals(o))
+                return script.pathID == (o as MonoBehaviorAssetData).script.pathID && name == (o as MonoBehaviorAssetData).name;
+            return false;
         }
     }
 
@@ -167,8 +182,20 @@ namespace LibSaberPatch
             w.Write(compressionFormat);
         }
 
+        public void RemoveFromAssets(SerializedAssets assets)
+        {
+            assets.RemoveAsset(this);
+        }
+
         public override int SharedAssetsTypeIndex() {
             return 5;
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            if (GetType().Equals(o))
+                return source == (o as AudioClipAssetData).source && name == (o as AudioClipAssetData).name;
+            return false;
         }
     }
 
@@ -309,6 +336,13 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex() {
             return 2;
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            if (GetType().Equals(o))
+                return imageData.Equals((o as Texture2DAssetData).imageData);
+            return false;
         }
     }
 }

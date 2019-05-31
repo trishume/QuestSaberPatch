@@ -131,14 +131,12 @@ namespace LibSaberPatch
             return level;
         }
 
-        public string LevelID() {
+        public string GenerateBasicLevelID() {
             return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
         }
 
-        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk) {
+        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
-            string levelID = LevelID();
-
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
 

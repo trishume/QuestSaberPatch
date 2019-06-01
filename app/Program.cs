@@ -32,6 +32,7 @@ namespace app
                 if (args[1] == ("-s"))
                 {
                     offset = 3;
+                    // String copied from @emulamer's tool
                     string s = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
                     byte[] buffer = Convert.FromBase64String(s);
                     byte[] customSongsCover = File.ReadAllBytes(args[2]);
@@ -70,6 +71,7 @@ namespace app
                     }
                     var ptr = assets.AppendAsset(assetsTexture2D);
                     levelPack.coverImage = ptr;
+                    Console.WriteLine($"Created cover texture from file: {args[2]}");
                 }
 
                 for(int i = offset; i < args.Length; i++) {

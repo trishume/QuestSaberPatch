@@ -240,18 +240,16 @@ namespace LibSaberPatch
             // Remove cover image
             assets.RemoveAssetAt(coverImage.pathID);
             // Remove the file for the audio asset and the audio clip
-            Console.WriteLine(audioClip.pathID);
-            Console.WriteLine(assets.objects.Count);
-            if (assets.GetAssetAt(audioClip.pathID).data != null)
-                Console.WriteLine($"{audioClip.pathID} has type: {assets.GetAssetAt(audioClip.pathID).data.GetType()}");
             var audioAsset = (assets.RemoveAssetAt(audioClip.pathID).data as AudioClipAssetData);
             if (audioAsset == null)
             {
                 Console.WriteLine(audioClip.pathID + " not found as an AudioClip! Highest known PathID: " + assets.objects[assets.objects.Count - 1].pathID);
             }
             if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
+
             // Remove itself!
-            ulong levelPathID = assets.RemoveScript(this).pathID;
+            ulong levelPathID = assets.RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (ao.data as MonoBehaviorAssetData).name == levelID + "Level").pathID;
             return levelPathID;
         }
 

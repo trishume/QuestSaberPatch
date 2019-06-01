@@ -20,14 +20,6 @@ namespace LibSaberPatch
         public List<SerializedAssets.Script> scripts;
         public List<SerializedAssets.External> externals;
 
-        private ulong resetPoint;
-        private bool _beginRemoval = false;
-        private bool beginRemoval
-        {
-            get { return _beginRemoval; }
-            set { _beginRemoval = value; if (value) resetPoint = objects[objects.Count - 1].pathID; }
-        }
-
         public class TypeRef {
             public int classID;
             bool isStripped;
@@ -299,14 +291,27 @@ namespace LibSaberPatch
             return new AssetPtr(0, pathID);
         }
 
-        private void ShiftPathIDs(int startIndex, ulong startPathID)
+        private void ShiftPathIDs(int startIndex, ulong delta, ulong startPathID)
         {
-            // Shift all remaining PathIDs by -1
+            // Shift all remaining PathIDs by delta
+            Action<AssetPtr> shift = null;
+            shift = (ptr) =>
+            {
+                if (ptr.pathID > startPathID)
+                {
+                    ptr.pathID -= delta;
+                    var ast = GetAssetAt(ptr.pathID);
+                    if (ast == null) Console.WriteLine($"Could not find PathID: {ptr.pathID}");
+                    ast.data.Trace(shift);
+                }
+            };
+
             for (int i = startIndex; i < objects.Count; i++)
             {
+                objects[i].data.Trace(shift);
                 if (objects[i].pathID > startPathID)
                 {
-                    objects[i].pathID--;
+                    objects[i].pathID -= delta;
                 }
             }
             // HOWEVER! THIS STILL DOESN'T SHIFT THE PATHIDS OF POINTERS THAT WERE POINTING TO THESE THINGS!
@@ -318,21 +323,13 @@ namespace LibSaberPatch
             return objects.Find(p);
         }
 
-        /// <summary>
-        /// Indicates that you are done removing objects and to update PathIDs of all remaining objects.
-        /// </summary>
-        public void EndRemoval()
-        {
-            ShiftPathIDs(260, resetPoint);
-            beginRemoval = false;
-        }
-
         public AssetObject RemoveAsset(Predicate<AssetObject> p)
         {
-            if (!beginRemoval) beginRemoval = true;
             // First, find matching AssetObj
             int objI = objects.FindIndex(p);
+            Console.WriteLine($"{objects[objI].pathID} has type: {objects[objI].data.GetType()}");
             AssetObject obj = objects[objI];
+            ShiftPathIDs(objI, 1, obj.pathID);
             objects.RemoveAt(objI);
             // Now we need to find all assets that reference this asset's path ID.
             // Alternatively, we can just let it crash, as I don't know how we would 
@@ -342,19 +339,16 @@ namespace LibSaberPatch
 
         public AssetObject RemoveAsset(AssetData data)
         {
-            if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(d => d.data.Equals(data));
         }
 
         public AssetObject RemoveAssetAt(ulong pathID)
         {
-            if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(d => d.pathID == pathID);
         }
 
         public AssetObject RemoveScript(BehaviorData data)
         {
-            if (!beginRemoval) beginRemoval = true;
             return RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
             && (ao.data as MonoBehaviorAssetData).data.Equals(data));
         }

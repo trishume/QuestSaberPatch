@@ -53,7 +53,6 @@ namespace app
                                     extrasCollection.levels.RemoveAll(ptr => ptr.pathID == levelPid);
 
                                     apkTxn.ApplyTo(apk);
-                                    assets.EndRemoval();
                                 } else
                                 {
                                     Console.WriteLine($"Present: {level._songName}");

@@ -79,6 +79,9 @@ namespace LibSaberPatch
                 case BeatmapDataBehaviorData.PathID:
                     data = new BeatmapDataBehaviorData(reader, length - headerLen);
                     break;
+                case LevelPackBehaviorData.PathID:
+                    data = new LevelPackBehaviorData(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;

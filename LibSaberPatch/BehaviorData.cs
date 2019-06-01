@@ -44,6 +44,42 @@ namespace LibSaberPatch
         }
     }
 
+    public class LevelPackBehaviorData : BehaviorData
+    {
+        public const int PathID = 1480;
+
+        public string packID;
+        public string packName;
+        public AssetPtr coverImage;
+        public bool isPackAlwaysOwned;
+        public AssetPtr beatmapLevelCollection;
+
+        public LevelPackBehaviorData(BinaryReader reader, int length)
+        {
+            packID = reader.ReadAlignedString();
+            packName = reader.ReadAlignedString();
+            coverImage = new AssetPtr(reader);
+            isPackAlwaysOwned = Convert.ToBoolean(reader.ReadByte());
+            reader.AlignStream();
+            beatmapLevelCollection = new AssetPtr(reader);
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.WriteAlignedString(packID);
+            w.WriteAlignedString(packName);
+            coverImage.WriteTo(w);
+            w.Write(isPackAlwaysOwned);
+            w.AlignStream();
+            beatmapLevelCollection.WriteTo(w);
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x1C;
+        }
+    }
+
     public class BeatmapDataBehaviorData : BehaviorData
     {
         public const int PathID = 1552;

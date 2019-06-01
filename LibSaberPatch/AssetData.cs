@@ -94,6 +94,9 @@ namespace LibSaberPatch
                 case BeatmapDataBehaviorData.PathID:
                     data = new BeatmapDataBehaviorData(reader, length - headerLen);
                     break;
+                case LevelPackBehaviorData.PathID:
+                    data = new LevelPackBehaviorData(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;
@@ -362,6 +365,81 @@ namespace LibSaberPatch
         public override void Trace(Action<AssetPtr> action)
         {
             // No AssetPtrs in this object either.
+        }
+    }
+
+    // Code copied from @emulamer's tool. Thanks!
+    public class Sprite : AssetData
+    {
+        private const int PathID = 2;
+        public Texture2DAssetData texture2d;
+        public byte[] spriteBytes;
+
+        public Sprite(byte[] customSongsCover)
+        {
+            string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
+            spriteBytes = Convert.FromBase64String(spriteData);
+            texture2d = new Texture2DAssetData()
+            {
+                name = "CustomSongsCover",
+                forcedFallbackFormat = 4,
+                downscaleFallback = 0,
+                width = 1024,
+                height = 1024,
+                completeImageSize = customSongsCover.Length,
+                textureFormat = 34,
+                mipCount = 11,
+                isReadable = false,
+                streamingMips = false,
+                streamingMipsPriority = 0,
+                imageCount = 1,
+                textureDimension = 2,
+                filterMode = 2,
+                mipBias = -1f,
+                anisotropic = 0,
+                wrapU = 1,
+                wrapV = 1,
+                wrapW = 0,
+                lightmapFormat = 6,
+                colorSpace = 1,
+                imageData = customSongsCover,
+                offset = 0,
+                size = 0,
+                path = ""
+            };
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            byte[] finalBytes;
+            using (MemoryStream ms = new MemoryStream(spriteBytes))
+            {
+                ms.Seek(116, SeekOrigin.Begin);
+                using (BinaryWriter writer = new BinaryWriter(ms))
+                    texture2d.WriteTo(writer);
+
+                finalBytes = ms.ToArray();
+            }
+            var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
+            Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
+            w.Write(finalBytes);
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            if (GetType().Equals(o))
+                return texture2d.Equals((o as Sprite).texture2d);
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0xD5;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            // No AssetPtrs to change.
         }
     }
 }

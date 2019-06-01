@@ -35,6 +35,49 @@ namespace app
                     {
                         continue;
                     }
+                    if (args[i] == "-s")
+                    {
+                        string cusomCoverFile = args[i + 1];
+                        try
+                        {
+                            Texture2DAssetData dat = assets.GetAssetAt(45).data as Texture2DAssetData;
+                            byte[] customSongsCover = File.ReadAllBytes(args[i + 1]);
+                            dat = new Texture2DAssetData()
+                            {
+                                name = "CustomSongsCover",
+                                forcedFallbackFormat = 4,
+                                downscaleFallback = 0,
+                                width = 1024,
+                                height = 1024,
+                                completeImageSize = customSongsCover.Length,
+                                textureFormat = 34,
+                                mipCount = 11,
+                                isReadable = false,
+                                streamingMips = false,
+                                streamingMipsPriority = 0,
+                                imageCount = 1,
+                                textureDimension = 2,
+                                filterMode = 2,
+                                mipBias = -1f,
+                                anisotropic = 0,
+                                wrapU = 1,
+                                wrapV = 1,
+                                wrapW = 0,
+                                lightmapFormat = 6,
+                                colorSpace = 1,
+                                imageData = customSongsCover,
+                                offset = 0,
+                                size = 0,
+                                path = ""
+                            };
+
+                        } catch (FileNotFoundException)
+                        {
+                            Console.WriteLine($"[ERROR] Custom cover file does not exist: {args[i+1]}");
+                        }
+                        i++;
+                        continue;
+                    }
                     Utils.FindLevels(args[i], levelFolder => {
                         try {
                             JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);

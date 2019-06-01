@@ -390,6 +390,17 @@ namespace LibSaberPatch
             return (LevelCollectionBehaviorData)monob.data;
         }
 
+        public LevelPackBehaviorData FindExtrasLevelPack()
+        {
+            AssetObject obj = objects[236]; // the index of the extras collection in sharedassets17
+            if (!(obj.data is MonoBehaviorAssetData))
+                throw new ParseException("Extras level pack not at normal spot (not monob)");
+            MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+            if (monob.name != "ExtrasLevelPack")
+                throw new ParseException("Extras level pack not at normal spot");
+            return (LevelPackBehaviorData)monob.data;
+        }
+
         public class Transaction {
             ulong lastPathID;
             List<AssetData> toAdd;

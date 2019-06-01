@@ -71,6 +71,8 @@ namespace app
                                 path = ""
                             };
 
+                            Console.WriteLine($"Replacing Texture at PathID: {45} with new Texture2D from file: {args[i + 1]}");
+
                         } catch (FileNotFoundException)
                         {
                             Console.WriteLine($"[ERROR] Custom cover file does not exist: {args[i+1]}");

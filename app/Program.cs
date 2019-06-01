@@ -126,6 +126,7 @@ namespace app
                 }
                 byte[] outData = assets.ToBytes();
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
+                apk.WriteJoins("assets/bin/Data/sharedassets17.assets");
                 Console.WriteLine("Complete!");
             }
         }

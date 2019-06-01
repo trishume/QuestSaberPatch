@@ -70,6 +70,25 @@ namespace LibSaberPatch
             if (entry != null) entry.Delete();
         }
 
+        public void WriteJoins(string basePath)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                string split = basePath + ".split";
+                for (int i = 0; ; i++)
+                {
+                    ZipArchiveEntry entry = archive.CreateEntry(split + i);
+                    if (i * 1024 >= stream.Length) break;
+                    using (Stream fileStream = entry.Open())
+                    {
+                        byte[] buf = new byte[stream.Length - stream.Position < 1024 ? (int) (stream.Length - stream.Position) : 1024];
+                        stream.Read(buf, i * 1024, stream.Length - stream.Position < 1024 ? (int) (stream.Length - stream.Position) : 1024);
+                        fileStream.Write(buf, 0, buf.Length);
+                    }
+                }
+            }
+        }
+
         public byte[] JoinedContents(string basePath) {
             using (MemoryStream stream = new MemoryStream()) {
                 string splitBase = basePath + ".split";

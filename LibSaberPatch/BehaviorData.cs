@@ -278,14 +278,11 @@ namespace LibSaberPatch
 
             // TODO Make this work with Transactions instead of an assets object.
 
-            //Console.WriteLine(assets.GetAssetAt(264).data.Equals(assets.GetAssetAt(audioClip.pathID)));
-
             // Also remove difficulty beatmaps
             foreach (BeatmapSet s in difficultyBeatmapSets)
             {
                 foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
                 {
-                    //Console.WriteLine($"Removing Difficulty: {d.difficulty} with characteristic PathID: {s.characteristic.pathID} with PathID: {d.beatmapData.pathID}");
                     assets.RemoveAssetAt(d.beatmapData.pathID);
                 }
             }
@@ -295,7 +292,7 @@ namespace LibSaberPatch
             var audioAsset = (assets.RemoveAssetAt(audioClip.pathID).data as AudioClipAssetData);
             if (audioAsset == null)
             {
-                Console.WriteLine(audioClip.pathID + " not found as an AudioClip! Highest known PathID: " + assets.objects[assets.objects.Count - 1].pathID);
+                throw new ApplicationException($"Could not find audio asset at PathID: {audioClip.pathID}");
             }
             if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
 

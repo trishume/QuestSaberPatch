@@ -68,7 +68,6 @@ namespace LibSaberPatch
                 offset = reader.ReadInt32();
                 size = reader.ReadInt32();
                 typeID = reader.ReadInt32();
-                // Console.WriteLine((pathID, offset, size, typeID));
             }
 
             // returns the location to patch the offsets
@@ -304,7 +303,7 @@ namespace LibSaberPatch
                 if (ptr.fileID == 0 && ptr.pathID > startPathID) {
                     ptr.pathID -= delta;
                     var ast = GetAssetAt(ptr.pathID);
-                    if (ast == null) Console.WriteLine($"Could not find PathID: {ptr.pathID}");
+                    if (ast == null) throw new ApplicationException($"Could not find PathID: {ptr.pathID}");
                     ast.data.Trace(shift);
                 }
             };

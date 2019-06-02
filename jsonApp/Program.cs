@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
+using System.ComponentModel;
 using LibSaberPatch;
 using Newtonsoft.Json;
 
@@ -17,11 +18,16 @@ namespace jsonApp
         public Dictionary<string, string> ensureInstalled;
         public bool exitAfterward;
 
+        [DefaultValue(false)]
+        public bool sign;
+
         #pragma warning restore 0649
     }
 
     class InvocationResult {
         public bool didSignatureCheckPatch;
+        public bool didSign;
+
         public List<string> presentLevels;
         public List<string> installedLevels;
         public Dictionary<string,string> installSkipped;
@@ -29,6 +35,7 @@ namespace jsonApp
 
         public InvocationResult() {
             didSignatureCheckPatch = false;
+            didSign = false;
             installSkipped = new Dictionary<string, string>();
             installedLevels = new List<string>();
         }
@@ -68,6 +75,11 @@ namespace jsonApp
                     }
 
                     res.presentLevels = existingLevels.ToList();
+                }
+
+                if(inv.sign) {
+                    Signer.Sign(inv.apkPath);
+                    res.didSign = true;
                 }
             } catch(Exception e) {
                 res.error = e.ToString();

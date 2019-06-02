@@ -18,6 +18,21 @@ namespace LibSaberPatch
             pathID = reader.ReadUInt64();
         }
 
+        public AssetData Follow(SerializedAssets assets)
+        {
+            return assets.objects.FindLast(ao => ao.pathID == pathID).data;
+        }
+
+        public T Follow<T>(SerializedAssets assets) where T : AssetData
+        {
+            return (T)Follow(assets);
+        }
+
+        public T FollowToScript<T>(SerializedAssets assets) where T : BehaviorData
+        {
+            return (T)Follow<MonoBehaviorAssetData>(assets).data;
+        }
+
         public void WriteTo(BinaryWriter w) {
             w.Write(fileID);
             w.Write(pathID);

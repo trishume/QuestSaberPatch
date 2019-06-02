@@ -387,7 +387,12 @@ namespace LibSaberPatch
 
         public T FindScript<T>(Predicate<T> condition) where T : BehaviorData
         {
-            foreach (AssetObject a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))))
+            return FindScript(ao => true, condition);
+        }
+
+        public T FindScript<T>(Predicate<MonoBehaviorAssetData> cond, Predicate<T> condition) where T : BehaviorData
+        {
+            foreach (AssetObject a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData)) && cond((MonoBehaviorAssetData)ao.data)))
             {
                 MonoBehaviorAssetData monob = (MonoBehaviorAssetData)a.data;
                 if (monob.data.GetType().Equals(typeof(T)) && condition((T)monob.data))

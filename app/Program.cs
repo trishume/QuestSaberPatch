@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
@@ -147,13 +147,20 @@ namespace app
                             if (existingLevels.Contains(levelID)) {
                                 if (removeSongs)
                                 {
-                                    // Currently does not handle transactions (it half-supports them)
+                                    // Currently does not handle transactions
                                     Console.WriteLine($"Removing: {level._songName}");
-                                    ulong levelPid = assets.GetLevelMatching(levelID).RemoveFromAssets(assets, apkTxn);
-                                    // We also don't _need_ to remove this from the existingLevels, but we probably _should_
                                     existingLevels.Remove(levelID);
-                                    
-                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID == levelPid);
+
+                                    var l = assets.GetLevelMatching(levelID);
+                                    var ao = assets.GetAssetObjectFromScript<LevelBehaviorData>(p => p.levelID == l.levelID);
+
+                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID == ao.pathID);
+                                    foreach (string s in l.OwnedFiles(assets))
+                                    {
+                                        if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{s}");
+                                    }
+
+                                    Utils.RemoveLevel(assets, l);
 
                                     apkTxn.ApplyTo(apk);
                                 } else

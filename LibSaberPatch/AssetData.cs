@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace LibSaberPatch
@@ -47,6 +48,11 @@ namespace LibSaberPatch
             }
             return false;
         }
+
+        public override int GetHashCode()
+        {
+            return (int)pathID + 65535 * fileID;
+        }
     }
 
     public abstract class AssetData
@@ -58,6 +64,15 @@ namespace LibSaberPatch
         public virtual void Trace(Action<AssetPtr> action)
         {
             // Defaults to nothing.
+        }
+        /// <summary>
+        /// Returns a list of all owned files of this AssetData, it also checks its AssetPtrs.
+        /// </summary>
+        /// <param name="action">Returns a list of all owned files.</param>
+        public virtual List<string> OwnedFiles(SerializedAssets assets)
+        {
+            // Default to return no owned files
+            return new List<string>();
         }
     }
 
@@ -157,6 +172,11 @@ namespace LibSaberPatch
             // We DO want to delete/call trace on all pointers that are in data.
             data.Trace(action);
         }
+
+        public override List<string> OwnedFiles(SerializedAssets assets)
+        {
+            return data.OwnedFiles(assets);
+        }
     }
 
     public class AudioClipAssetData : AssetData
@@ -237,6 +257,11 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return source == (o as AudioClipAssetData).source && name == (o as AudioClipAssetData).name;
             return false;
+        }
+
+        public override List<string> OwnedFiles(SerializedAssets assets)
+        {
+            return new List<string>() { source };
         }
     }
 

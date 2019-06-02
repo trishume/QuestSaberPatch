@@ -46,5 +46,37 @@ namespace LibSaberPatch
             }
             return imageData;
         }
+        
+        public static ulong RemoveLevel(SerializedAssets assets, LevelBehaviorData level)
+        {
+            // We want to find the level object in the assets list of objects so that we can remove it via PathID.
+            // Well, this is quite a messy solution... But it _should work_...
+            // What this is doing: Removing the asset that is a monobehavior, and the monobehavior's data equals this level.
+            // Then it casts that to a level behavior data.
+
+            // TODO Make this work with Transactions instead of an assets object.
+
+            // Also remove difficulty beatmaps
+            foreach (BeatmapSet s in level.difficultyBeatmapSets)
+            {
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
+                {
+                    assets.RemoveAssetAt(d.beatmapData.pathID);
+                }
+            }
+            // Remove cover image
+            assets.RemoveAssetAt(level.coverImage.pathID);
+            // Remove the file for the audio asset and the audio clip
+            var audioAsset = assets.RemoveAssetAt(level.audioClip.pathID).data as AudioClipAssetData;
+            if (audioAsset == null)
+            {
+                throw new ApplicationException($"Could not find audio asset at PathID: {level.audioClip.pathID}");
+            }
+
+            // Remove itself!
+            ulong levelPathID = assets.RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (ao.data as MonoBehaviorAssetData).name == level.levelID + "Level").pathID;
+            return levelPathID;
+        }
     }
 }

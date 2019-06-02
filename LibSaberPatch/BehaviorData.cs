@@ -10,9 +10,22 @@ namespace LibSaberPatch
         public abstract int SharedAssetsTypeIndex();
         public abstract bool Equals(BehaviorData data);
         // Could maybe also make this method non-abstract using reflection
+        /// <summary>
+        /// Traces all AssetPtrs owned by this BehaviorData and calls the action on all of them.
+        /// </summary>
+        /// <param name="action">The action to run on each AssetPtr.</param>
         public virtual void Trace(Action<AssetPtr> action)
         {
             // Default to trace nothing
+        }
+        /// <summary>
+        /// Returns a list of all owned files of this BehaviorData, it also checks its AssetPtrs.
+        /// </summary>
+        /// <param name="action">Returns a list of all owned files.</param>
+        public virtual List<string> OwnedFiles(SerializedAssets assets)
+        {
+            // Default to return no owned files
+            return new List<string>();
         }
     }
 
@@ -36,11 +49,6 @@ namespace LibSaberPatch
             if (GetType().Equals(data))
                 return bytes.Equals((data as UnknownBehaviorData).bytes);
             return false;
-        }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // Nothing is known, don't trace any AssetPtrs.
         }
     }
 
@@ -158,11 +166,6 @@ namespace LibSaberPatch
                 return projectedData.Equals((data as BeatmapDataBehaviorData).projectedData);
             return false;
         }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // No AssetPtrs to trace.
-        }
     }
 
     public class BeatmapDifficulty
@@ -269,39 +272,6 @@ namespace LibSaberPatch
             w.WritePrefixedList(difficultyBeatmapSets, x => x.WriteTo(w));
         }
 
-        public ulong RemoveFromAssets(SerializedAssets assets, Apk.Transaction apk)
-        {
-            // We want to find the level object in the assets list of objects so that we can remove it via PathID.
-            // Well, this is quite a messy solution... But it _should work_...
-            // What this is doing: Removing the asset that is a monobehavior, and the monobehavior's data equals this level.
-            // Then it casts that to a level behavior data.
-
-            // TODO Make this work with Transactions instead of an assets object.
-
-            // Also remove difficulty beatmaps
-            foreach (BeatmapSet s in difficultyBeatmapSets)
-            {
-                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
-                {
-                    assets.RemoveAssetAt(d.beatmapData.pathID);
-                }
-            }
-            // Remove cover image
-            assets.RemoveAssetAt(coverImage.pathID);
-            // Remove the file for the audio asset and the audio clip
-            var audioAsset = (assets.RemoveAssetAt(audioClip.pathID).data as AudioClipAssetData);
-            if (audioAsset == null)
-            {
-                throw new ApplicationException($"Could not find audio asset at PathID: {audioClip.pathID}");
-            }
-            if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{audioAsset.source}");
-
-            // Remove itself!
-            ulong levelPathID = assets.RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
-            && (ao.data as MonoBehaviorAssetData).name == levelID + "Level").pathID;
-            return levelPathID;
-        }
-
         public override int SharedAssetsTypeIndex() {
             return 0x0F;
         }
@@ -326,6 +296,13 @@ namespace LibSaberPatch
                     action(d.beatmapData);
                 }
             }
+        }
+
+        public override List<string> OwnedFiles(SerializedAssets assets)
+        {
+            var l = new List<string>();
+            l.AddRange(audioClip.Follow<AudioClipAssetData>(assets).OwnedFiles(assets));
+            return l;
         }
     }
     public class Saber : BehaviorData

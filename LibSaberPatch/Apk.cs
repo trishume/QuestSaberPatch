@@ -72,7 +72,9 @@ namespace LibSaberPatch
 
         public void WriteSplits(string basePath)
         {
-            using (Stream stream = archive.GetEntry(basePath).Open())
+            var mainAssetsEntry = archive.GetEntry(basePath);
+            if (mainAssetsEntry == null) throw new ArgumentException("The original .assets file must exist!");
+            using (Stream stream = mainAssetsEntry.Open())
             {
                 string split = basePath + ".split";
                 int splitSize = 1024 * 1024;
@@ -83,7 +85,6 @@ namespace LibSaberPatch
                     using (Stream fileStream = entry.Open())
                     {
                         int size = stream.Length - stream.Position < splitSize ? (int)(stream.Length - stream.Position) : splitSize;
-                        // Console.WriteLine($"Creating Split File {split + i} with size: {size}");
                         byte[] buf = new byte[size];
                         stream.Seek(i * splitSize, SeekOrigin.Begin);
                         stream.Read(buf, 0, size);
@@ -91,6 +92,7 @@ namespace LibSaberPatch
                     }
                 }
             }
+            mainAssetsEntry.Delete();
         }
 
         public byte[] JoinedContents(string basePath) {

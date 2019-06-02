@@ -141,6 +141,10 @@ namespace LibSaberPatch
                 case SimpleColor.PathID:
                     data = new SimpleColor(reader, length - headerLen);
                     break;
+                case Saber.PathID:
+                    // Saber is special, because we want to access data on the GameObject, too.
+                    data = new Saber(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;
@@ -176,6 +180,87 @@ namespace LibSaberPatch
         public override List<string> OwnedFiles(SerializedAssets assets)
         {
             return data.OwnedFiles(assets);
+        }
+    }
+
+    public class MeshFilter : AssetData
+    {
+        public const int ClassID = 33;
+
+        public AssetPtr gameObject;
+        public AssetPtr mesh;
+
+        // 16, 19, 33, 36
+
+        public MeshFilter(BinaryReader reader, int _length)
+        {
+            gameObject = new AssetPtr(reader);
+            mesh = new AssetPtr(reader);
+        }
+        public override bool Equals(AssetData o)
+        {
+            //TODO Implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 4;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            gameObject.WriteTo(w);
+            mesh.WriteTo(w);
+        }
+    }
+
+    public class GameObjectAssetData : AssetData
+    {
+        public const int ClassID = 1; //TODO Fix!
+
+        public AssetPtr[] components;
+        public uint layer;
+        public string name;
+        public ushort tag;
+        public bool isActive;
+
+        public GameObjectAssetData(BinaryReader reader, int _length)
+        {
+            int size = reader.ReadInt32();
+            components = new AssetPtr[size];
+            for (int i = 0; i < size; i++)
+            {
+                components[i] = new AssetPtr(reader);
+            }
+            layer = reader.ReadUInt32();
+            name = reader.ReadAlignedString();
+            tag = reader.ReadUInt16();
+            isActive = reader.ReadBoolean();
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            //TODO Implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.Write(components.Length);
+            foreach (AssetPtr p in components)
+            {
+                p.WriteTo(w);
+            }
+            w.Write(layer);
+            w.WriteAlignedString(name);
+            w.Write(tag);
+            w.Write(isActive);
         }
     }
 

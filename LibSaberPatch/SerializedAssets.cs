@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -199,6 +199,12 @@ namespace LibSaberPatch
                         break;
                     case Texture2DAssetData.ClassID:
                         obj.data = new Texture2DAssetData(reader, obj.size);
+                        break;
+                    case GameObjectAssetData.ClassID:
+                        obj.data = new GameObjectAssetData(reader, obj.size);
+                        break;
+                    case MeshFilter.ClassID:
+                        obj.data = new MeshFilter(reader, obj.size);
                         break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
@@ -423,6 +429,22 @@ namespace LibSaberPatch
                 }
             }
             return null;
+        }
+
+        public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> obj)
+        {
+            foreach (var a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(GameObjectAssetData)))) {
+                if (obj(a.data as GameObjectAssetData))
+                {
+                    return a.data as GameObjectAssetData;
+                }
+            }
+            return null;
+        }
+
+        public GameObjectAssetData FindGameObject(string name)
+        {
+            return FindGameObject(g => g.name == name);
         }
 
         public LevelCollectionBehaviorData FindExtrasLevelCollection() {

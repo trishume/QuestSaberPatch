@@ -95,6 +95,23 @@ namespace app
                         i += 4;
                         continue;
                     }
+                    if (args[i] == "-g")
+                    {
+                        string path = "assets/bin/Data/level11";
+                        SerializedAssets a = SerializedAssets.FromBytes(apk.ReadEntireEntry(path));
+                        var gameobject = a.FindGameObject("LeftSaber");
+                        var script = gameobject.components[4].FollowToScript<Saber>(a);
+                        Console.WriteLine($"GameObject: {gameobject}");
+                        foreach (AssetPtr p in gameobject.components)
+                        {
+                            Console.WriteLine($"Component: {p.pathID} followed: {p.Follow(a)}");
+                        }
+                        Console.WriteLine($"Left saber script: {script}");
+                        // Find all objects that have the GameObject: LeftSaber (pathID = 20, fileID = 0 (142))
+                        
+
+                        continue;
+                    }
                     if (args[i] == "-s")
                     {
                         string cusomCoverFile = args[i + 1];

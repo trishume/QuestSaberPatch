@@ -40,15 +40,23 @@ namespace app
                     }
                     if (args[i] == "-c1" || args[i] == "-c2")
                     {
-                        if (i + 1 >= args.Length || args[i + 1] == "-c1" || args[i + 1] == "-c2")
+                        if (i + 1 >= args.Length)
                         {
                             // There is nothing after the color
                             // Reset it.
                             Utils.ResetColors(colorAssets);
-                            
                             apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
-
                             continue;
+                        }
+                        else
+                        {
+                            if (!args[i + 1].StartsWith("("))
+                            {
+                                // Reset it.
+                                Utils.ResetColors(colorAssets);
+                                apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
+                                continue;
+                            }
                         }
                         if (i + 4 >= args.Length)
                         {

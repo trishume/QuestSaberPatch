@@ -83,7 +83,7 @@ namespace LibSaberPatch
                     using (Stream fileStream = entry.Open())
                     {
                         int size = stream.Length - stream.Position < splitSize ? (int)(stream.Length - stream.Position) : splitSize;
-                        Console.WriteLine($"Creating Split File {split + i} with size: {size}");
+                        // Console.WriteLine($"Creating Split File {split + i} with size: {size}");
                         byte[] buf = new byte[size];
                         stream.Seek(i * splitSize, SeekOrigin.Begin);
                         stream.Read(buf, 0, size);

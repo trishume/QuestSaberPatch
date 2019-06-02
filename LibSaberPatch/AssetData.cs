@@ -30,7 +30,10 @@ namespace LibSaberPatch
         public abstract int SharedAssetsTypeIndex();
         public abstract bool Equals(AssetData o);
         // Could also maybe make this method an actual method, instead of abstract, and use reflection.
-        public abstract void Trace(Action<AssetPtr> action);
+        public virtual void Trace(Action<AssetPtr> action)
+        {
+            // Defaults to nothing.
+        }
     }
 
     public class UnknownAssetData : AssetData
@@ -53,11 +56,6 @@ namespace LibSaberPatch
             if (GetType().Equals(o))
                 return bytes.Equals((o as UnknownAssetData).bytes);
             return false;
-        }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // No ptrs known, don't trace any of them.
         }
     }
 
@@ -209,11 +207,6 @@ namespace LibSaberPatch
                 return source == (o as AudioClipAssetData).source && name == (o as AudioClipAssetData).name;
             return false;
         }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // No AssetPtrs in this object, don't trace any of them.
-        }
     }
 
     public class Texture2DAssetData : AssetData
@@ -361,85 +354,149 @@ namespace LibSaberPatch
                 return imageData.Equals((o as Texture2DAssetData).imageData);
             return false;
         }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // No AssetPtrs in this object either.
-        }
     }
 
     // Code copied from @emulamer's tool. Thanks!
-    public class Sprite : AssetData
+    public class SpriteAssetData : AssetData
     {
         private const int PathID = 2;
-        public Texture2DAssetData texture2d;
-        public byte[] spriteBytes;
 
-        public Sprite(byte[] customSongsCover)
+        //public string name;
+        //public Rectf rect;
+        //public Vector2f offset;
+        //public Vector4f border;
+        //public float pixelsToUnits;
+        //public Vector2f pivot;
+        //public uint extrude;
+        //public bool isPolygon;
+        //public Pair renderDataKey;
+        //public Vector atlasTags;
+        //public AssetPtr spriteAtlas;
+        //public SpriteRenderData renderData;
+        //public Vector physicsShape;
+        //public Vector bones;
+
+        public byte[] bytesBeforeTexture;
+        public Texture2DAssetData texture;
+        public byte[] bytesAfterTexture;
+
+        public class Rectf : AssetData
         {
-            string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
-            spriteBytes = Convert.FromBase64String(spriteData);
-            texture2d = new Texture2DAssetData()
+            public float x;
+            public float y;
+            public float width;
+            public float height;
+
+            public Rectf(BinaryReader reader)
             {
-                name = "CustomSongsCover",
-                forcedFallbackFormat = 4,
-                downscaleFallback = 0,
-                width = 1024,
-                height = 1024,
-                completeImageSize = customSongsCover.Length,
-                textureFormat = 34,
-                mipCount = 11,
-                isReadable = false,
-                streamingMips = false,
-                streamingMipsPriority = 0,
-                imageCount = 1,
-                textureDimension = 2,
-                filterMode = 2,
-                mipBias = -1f,
-                anisotropic = 0,
-                wrapU = 1,
-                wrapV = 1,
-                wrapW = 0,
-                lightmapFormat = 6,
-                colorSpace = 1,
-                imageData = customSongsCover,
-                offset = 0,
-                size = 0,
-                path = ""
-            };
+                //TODO
+            }
+
+            public override bool Equals(AssetData o)
+            {
+                return GetType().Equals(o) && (o as Rectf).x == x && (o as Rectf).y == y && (o as Rectf).width == width && (o as Rectf).height == height;
+            }
+
+            public override int SharedAssetsTypeIndex()
+            {
+                // It doesn't actually have a TypeIndex, it just exists because it helps.
+                return -1;
+            }
+
+            public override void WriteTo(BinaryWriter w)
+            {
+                w.Write(x);
+                w.Write(y);
+                w.Write(width);
+                w.Write(height);
+            }
         }
+
+        public class Vector2f
+        {
+            public float x;
+            public float y;
+        }
+
+        public class Vector4f
+        {
+            public float x;
+            public float y;
+            public float z;
+            public float w;
+        }
+
+        public struct Vector
+        {
+            public uint[] data;
+        }
+
+        public struct Pair
+        {
+            public byte[] first;
+            public long second;
+        }
+
+        //public SpriteAssetData(BinaryReader reader)
+        //{
+        //    string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
+        //    spriteBytes = Convert.FromBase64String(spriteData);
+        //    texture2d = new Texture2DAssetData()
+        //    {
+        //        name = "CustomSongsCover",
+        //        forcedFallbackFormat = 4,
+        //        downscaleFallback = 0,
+        //        width = 1024,
+        //        height = 1024,
+        //        completeImageSize = customSongsCover.Length,
+        //        textureFormat = 34,
+        //        mipCount = 11,
+        //        isReadable = false,
+        //        streamingMips = false,
+        //        streamingMipsPriority = 0,
+        //        imageCount = 1,
+        //        textureDimension = 2,
+        //        filterMode = 2,
+        //        mipBias = -1f,
+        //        anisotropic = 0,
+        //        wrapU = 1,
+        //        wrapV = 1,
+        //        wrapW = 0,
+        //        lightmapFormat = 6,
+        //        colorSpace = 1,
+        //        imageData = customSongsCover,
+        //        offset = 0,
+        //        size = 0,
+        //        path = ""
+        //    };
+        //}
 
         public override void WriteTo(BinaryWriter w)
         {
-            byte[] finalBytes;
-            using (MemoryStream ms = new MemoryStream(spriteBytes))
-            {
-                ms.Seek(116, SeekOrigin.Begin);
-                using (BinaryWriter writer = new BinaryWriter(ms))
-                    texture2d.WriteTo(writer);
+            //byte[] finalBytes;
+            //using (MemoryStream ms = new MemoryStream(bytesBeforeTexture))
+            //{
+            //    ms.Seek(116, SeekOrigin.Begin);
+            //    using (BinaryWriter writer = new BinaryWriter(ms))
+            //        texture2d.WriteTo(writer);
 
-                finalBytes = ms.ToArray();
-            }
-            var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
-            Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
-            w.Write(finalBytes);
+            //    finalBytes = ms.ToArray();
+            //}
+            //var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
+            //Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
+            //w.Write(finalBytes);
         }
 
         public override bool Equals(AssetData o)
         {
             if (GetType().Equals(o))
-                return texture2d.Equals((o as Sprite).texture2d);
+                return texture.Equals((o as SpriteAssetData).texture);
             return false;
         }
 
         public override int SharedAssetsTypeIndex()
         {
             return 0xD5;
-        }
-
-        public override void Trace(Action<AssetPtr> action)
-        {
-            // No AssetPtrs to change.
         }
     }
 }

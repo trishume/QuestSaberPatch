@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
@@ -126,6 +126,8 @@ namespace app
                                 size = 0,
                                 path = ""
                             };
+
+                            assets.SetAssetAt(45, dat);
 
                             Console.WriteLine($"Replacing Texture at PathID: {45} with new Texture2D from file: {args[i + 1]}");
 

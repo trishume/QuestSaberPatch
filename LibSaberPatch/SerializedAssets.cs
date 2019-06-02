@@ -323,6 +323,20 @@ namespace LibSaberPatch
             return objects.Find(p);
         }
 
+        public AssetObject GetAssetObjectFromScript<T>(Predicate<T> cond) where T : BehaviorData
+        {
+            var list = objects.FindAll(d => d.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (d.data as MonoBehaviorAssetData).data.GetType().Equals(typeof(T)));
+            foreach (AssetObject d in list)
+            {
+                if (cond((T)((MonoBehaviorAssetData)d.data).data))
+                {
+                    return d;
+                }
+            }
+            return null;
+        }
+
         public AssetObject RemoveAsset(Predicate<AssetObject> p)
         {
             // First, find matching AssetObj
@@ -358,11 +372,24 @@ namespace LibSaberPatch
             return objects.Find(d => d.pathID == pathID);
         }
 
+        public AssetObject SetAssetAt(ulong pathID, AssetData data)
+        {
+            int ind = objects.FindIndex(d => d.pathID == pathID);
+            objects[ind] = new AssetObject()
+            {
+                pathID = pathID,
+                typeID = data.SharedAssetsTypeIndex(),
+                data = data,
+                paddingLen = 0,
+            };
+            // Shift offsets of all other objects by the delta size of this, 
+            // should get taken care of automatically.
+            return objects[ind];
+        }
+
         public LevelBehaviorData GetLevelMatching(string levelID)
         {
-            AssetObject obj = objects.Find(d => d.data.GetType().Equals(typeof(MonoBehaviorAssetData))
-            && (d.data as MonoBehaviorAssetData).data.GetType().Equals(typeof(LevelBehaviorData))
-            && ((d.data as MonoBehaviorAssetData).data as LevelBehaviorData).levelID == levelID);
+            AssetObject obj = GetAssetObjectFromScript<LevelBehaviorData>(p => p.levelID == levelID);
             return ((obj.data as MonoBehaviorAssetData).data as LevelBehaviorData);
         }
 

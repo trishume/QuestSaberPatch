@@ -9,7 +9,9 @@ after_build:
   - dir /adh /s
   # I have no idea if Windows wildcards are zero or more or one or more so just drop the last letter
   - xcopy .\jsonApp\bin\Release\netcoreapp2.2\win-x64\publish\jsonAp* .\app\bin\Release\netcoreapp2.2\win-x64\publish
-  - ren .\app\bin\Release\netcoreapp2.2\win-x64\publish questsaberpatch
+  - md .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch
+  - move .\app\bin\Release\netcoreapp2.2\win-x64\publish .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch
+  - ren .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch\publish questsaberpatch
 artifacts:
   - path: .\app\bin\Release\netcoreapp2.2\win-x64\questsaberpatch
     type: zip

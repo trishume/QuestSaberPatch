@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -387,7 +387,7 @@ namespace LibSaberPatch
 
         public T FindScript<T>(Predicate<T> condition) where T : BehaviorData
         {
-            foreach (AssetObject a in objects.FindAll(ao => ao.GetType().Equals(typeof(MonoBehaviorAssetData))))
+            foreach (AssetObject a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))))
             {
                 MonoBehaviorAssetData monob = (MonoBehaviorAssetData)a.data;
                 if (monob.data.GetType().Equals(typeof(T)) && condition((T)monob.data))

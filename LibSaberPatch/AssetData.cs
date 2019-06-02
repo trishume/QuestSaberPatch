@@ -22,6 +22,16 @@ namespace LibSaberPatch
             w.Write(fileID);
             w.Write(pathID);
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj != null && obj.GetType().Equals(this))
+            {
+                var o = obj as AssetPtr;
+                return fileID == o.fileID && pathID == o.pathID;
+            }
+            return false;
+        }
     }
 
     public abstract class AssetData

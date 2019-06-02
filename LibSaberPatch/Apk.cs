@@ -81,6 +81,8 @@ namespace LibSaberPatch
                 for (int i = 0; ; i++)
                 {
                     if (i * splitSize >= stream.Length) break;
+                    var existingEntry = archive.GetEntry(split + i);
+                    if (existingEntry != null) existingEntry.Delete();
                     ZipArchiveEntry entry = archive.CreateEntry(split + i);
                     using (Stream fileStream = entry.Open())
                     {

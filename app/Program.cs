@@ -10,6 +10,19 @@ namespace app
 {
     class Program
     {
+        static ColorManager CreateColor(SerializedAssets assets, SimpleColor c)
+        {
+            Console.WriteLine($"Creating CustomColor with r: {c.r} g: {c.g} b: {c.b} a: {c.a}");
+
+            var dat = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
+            //var dat = ((MonoBehaviorAssetData)assets.GetAssetAt(52).data).data as ColorManager;
+            if (dat.colorA.pathID != 54)
+            {
+                Console.WriteLine($"Removed existing CustomColor at PathID: {dat.colorA.pathID}");
+                assets.RemoveAssetAt(dat.colorA.pathID);
+            }
+            return dat;
+        }
         static void Main(string[] args)
         {
             if(args.Length < 1) {
@@ -33,6 +46,49 @@ namespace app
                 for(int i = 1; i < args.Length; i++) {
                     if (args[i] == "-r" || args[i] == "removeSongs")
                     {
+                        continue;
+                    }
+                    if (args[i] == "-c1" || args[i] == "-c2")
+                    {
+                        if (i + 4 >= args.Length)
+                        {
+                            Console.WriteLine($"[ERROR] Cannot parse color, not enough colors! Please copy paste a series of floats");
+                            i += 4;
+                            continue;
+                        }
+
+                        string colorPath = "assets/bin/Data/sharedassets1.assets";
+                        SerializedAssets colorAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(colorPath));
+
+                        SimpleColor c = new SimpleColor
+                        {
+                            r = Convert.ToSingle(args[i + 1].Split(',')[0].Replace('(', '0')),
+                            g = Convert.ToSingle(args[i + 2].Split(',')[0].Replace('(', '0')),
+                            b = Convert.ToSingle(args[i + 3].Split(',')[0].Replace(')', '0')),
+                            a = Convert.ToSingle(args[i + 4].Split(',')[0].Replace(')', '.'))
+                        };
+
+                        ColorManager dat = CreateColor(colorAssets, c);
+
+                        var ptr = colorAssets.AppendAsset(new MonoBehaviorAssetData()
+                        {
+                            data = c,
+                            name = "CustomColor" + args[i][args[i].Length - 1],
+                            script = new AssetPtr(1, 423),
+                        });
+                        Console.WriteLine($"Created new CustomColor for colorA at PathID: {ptr.pathID}");
+                        if (args[i] == "-c1")
+                        {
+                            dat.colorA = ptr;
+                        } else
+                        {
+                            dat.colorB = ptr;
+                        }
+
+                        apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
+                        apk.WriteSplits(colorPath);
+
+                        i += 4;
                         continue;
                     }
                     if (args[i] == "-s")

@@ -10,7 +10,10 @@ namespace LibSaberPatch
         public abstract int SharedAssetsTypeIndex();
         public abstract bool Equals(BehaviorData data);
         // Could maybe also make this method non-abstract using reflection
-        public abstract void Trace(Action<AssetPtr> action);
+        public virtual void Trace(Action<AssetPtr> action)
+        {
+            // Default to trace nothing
+        }
     }
 
     public class UnknownBehaviorData : BehaviorData
@@ -326,6 +329,163 @@ namespace LibSaberPatch
                     action(d.beatmapData);
                 }
             }
+        }
+    }
+    public class Saber : BehaviorData
+    {
+        public const int PathID = 549;
+
+        public override bool Equals(BehaviorData data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x07;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class SaberManager : BehaviorData
+    {
+        public const int PathID = 1210;
+
+        public override bool Equals(BehaviorData data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0xE3;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class TMP_Text : BehaviorData
+    {
+        // Teiko Medium SDF No Glow: PathID 57, FileID 3 (unity-builtin-extra)
+        // Teiko Medium SDF: PathID 58, FileID 3
+
+        public override bool Equals(BehaviorData data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0xFB;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ColorManager : BehaviorData
+    {
+        public const int PathID = 297;
+
+        public AssetPtr playerModel;
+        public AssetPtr colorA;
+        public AssetPtr colorB;
+
+        public ColorManager(BinaryReader reader, int _length)
+        {
+            playerModel = new AssetPtr(reader);
+            colorA = new AssetPtr(reader);
+            colorB = new AssetPtr(reader);
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+            {
+                var cm = data as ColorManager;
+                return playerModel.Equals(cm.playerModel) && colorA.Equals(cm.colorA) && colorB.Equals(cm.colorB);
+            }
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x0E;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            action(playerModel);
+            action(colorA);
+            action(colorB);
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            playerModel.WriteTo(w);
+            colorA.WriteTo(w);
+            colorB.WriteTo(w);
+        }
+    }
+
+    public class SimpleColor : BehaviorData
+    {
+        public const int PathID = 423;
+
+        public float r;
+        public float g;
+        public float b;
+        public float a;
+
+        public SimpleColor() { }
+
+        public SimpleColor(BinaryReader reader, int _length)
+        {
+            r = reader.ReadSingle();
+            g = reader.ReadSingle();
+            b = reader.ReadSingle();
+            a = reader.ReadSingle();
+        }
+        public override bool Equals(BehaviorData data)
+        {
+            if (GetType().Equals(data))
+            {
+                SimpleColor c = data as SimpleColor;
+                return r == c.r && g == c.g && b == c.b && a == c.a;
+            }
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 13;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.Write(r);
+            w.Write(g);
+            w.Write(b);
+            w.Write(a);
         }
     }
 }

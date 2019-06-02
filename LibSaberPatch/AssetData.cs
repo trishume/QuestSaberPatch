@@ -95,6 +95,12 @@ namespace LibSaberPatch
                 case LevelPackBehaviorData.PathID:
                     data = new LevelPackBehaviorData(reader, length - headerLen);
                     break;
+                case ColorManager.PathID:
+                    data = new ColorManager(reader, length - headerLen);
+                    break;
+                case SimpleColor.PathID:
+                    data = new SimpleColor(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;

@@ -187,6 +187,11 @@ namespace LibSaberPatch
                     throw new ParseException("Objects aren't in order");
                 }
                 long startOffset = reader.BaseStream.Position;
+                if (types.Count <= obj.typeID)
+                {
+                    Console.WriteLine($"[ERROR] Could not find typeID: {obj.typeID}, maximum is: {types.Count}");
+                    Console.WriteLine($"TypeID of SimpleColor: {objects[52].typeID} with type: {objects[52].data.GetType()}");
+                }
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
                         obj.data = new MonoBehaviorAssetData(reader, obj.size);
@@ -378,6 +383,19 @@ namespace LibSaberPatch
                 set.Add(levelData.levelID);
             }
             return set;
+        }
+
+        public T FindScript<T>(Predicate<T> condition) where T : BehaviorData
+        {
+            foreach (AssetObject a in objects.FindAll(ao => ao.GetType().Equals(typeof(MonoBehaviorAssetData))))
+            {
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)a.data;
+                if (monob.data.GetType().Equals(typeof(T)) && condition((T)monob.data))
+                {
+                    return (T)monob.data;
+                }
+            }
+            return null;
         }
 
         public LevelCollectionBehaviorData FindExtrasLevelCollection() {

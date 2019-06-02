@@ -70,19 +70,23 @@ namespace LibSaberPatch
             if (entry != null) entry.Delete();
         }
 
-        public void WriteJoins(string basePath)
+        public void WriteSplits(string basePath)
         {
-            using (MemoryStream stream = new MemoryStream())
+            using (Stream stream = archive.GetEntry(basePath).Open())
             {
                 string split = basePath + ".split";
+                int splitSize = 1024 * 1024;
                 for (int i = 0; ; i++)
                 {
+                    if (i * splitSize >= stream.Length) break;
                     ZipArchiveEntry entry = archive.CreateEntry(split + i);
-                    if (i * 1024 >= stream.Length) break;
                     using (Stream fileStream = entry.Open())
                     {
-                        byte[] buf = new byte[stream.Length - stream.Position < 1024 ? (int) (stream.Length - stream.Position) : 1024];
-                        stream.Read(buf, i * 1024, stream.Length - stream.Position < 1024 ? (int) (stream.Length - stream.Position) : 1024);
+                        int size = stream.Length - stream.Position < splitSize ? (int)(stream.Length - stream.Position) : splitSize;
+                        Console.WriteLine($"Creating Split File {split + i} with size: {size}");
+                        byte[] buf = new byte[size];
+                        stream.Seek(i * splitSize, SeekOrigin.Begin);
+                        stream.Read(buf, 0, size);
                         fileStream.Write(buf, 0, buf.Length);
                     }
                 }

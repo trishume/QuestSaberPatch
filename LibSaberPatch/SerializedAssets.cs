@@ -187,10 +187,9 @@ namespace LibSaberPatch
                     throw new ParseException("Objects aren't in order");
                 }
                 long startOffset = reader.BaseStream.Position;
-                if (types.Count <= obj.typeID)
-                {
-                    Console.WriteLine($"[ERROR] Could not find typeID: {obj.typeID}, maximum is: {types.Count}");
-                    Console.WriteLine($"TypeID of SimpleColor: {objects[52].typeID} with type: {objects[52].data.GetType()}");
+                if (types.Count <= obj.typeID) {
+                    // Console.WriteLine($"TypeID of SimpleColor: {objects[52].typeID} with type: {objects[52].data.GetType()}");
+                    throw new ParseException($"Could not find typeID: {obj.typeID}, maximum is: {types.Count}");
                 }
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
@@ -302,8 +301,7 @@ namespace LibSaberPatch
             Action<AssetPtr> shift = null;
             shift = (ptr) =>
             {
-                if (ptr.pathID > startPathID)
-                {
+                if (ptr.fileID == 0 && ptr.pathID > startPathID) {
                     ptr.pathID -= delta;
                     var ast = GetAssetAt(ptr.pathID);
                     if (ast == null) Console.WriteLine($"Could not find PathID: {ptr.pathID}");
@@ -319,8 +317,6 @@ namespace LibSaberPatch
                     objects[i].pathID -= delta;
                 }
             }
-            // HOWEVER! THIS STILL DOESN'T SHIFT THE PATHIDS OF POINTERS THAT WERE POINTING TO THESE THINGS!
-            // THIS IS POSSIBLE THE LARGEST PROBLEM THAT REMAINS WITH DELETING SMOOTHLY AND QUICKLY!
         }
 
         public AssetObject GetAsset(Predicate<AssetObject> p)
@@ -332,12 +328,12 @@ namespace LibSaberPatch
         {
             // First, find matching AssetObj
             int objI = objects.FindIndex(p);
-            Console.WriteLine($"{objects[objI].pathID} has type: {objects[objI].data.GetType()}");
+            // Console.WriteLine($"{objects[objI].pathID} has type: {objects[objI].data.GetType()}");
             AssetObject obj = objects[objI];
             ShiftPathIDs(objI, 1, obj.pathID);
             objects.RemoveAt(objI);
             // Now we need to find all assets that reference this asset's path ID.
-            // Alternatively, we can just let it crash, as I don't know how we would 
+            // Alternatively, we can just let it crash, as I don't know how we would
             // know what to change those pointers to in order to avoid a crash
             return obj;
         }

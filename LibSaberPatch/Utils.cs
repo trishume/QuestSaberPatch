@@ -78,5 +78,41 @@ namespace LibSaberPatch
             && (ao.data as MonoBehaviorAssetData).name == level.levelID + "Level").pathID;
             return levelPathID;
         }
+
+        public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c)
+        {
+            Console.WriteLine($"Creating CustomColor with r: {c.r} g: {c.g} b: {c.b} a: {c.a}");
+
+            var dat = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
+            //var dat = ((MonoBehaviorAssetData)assets.GetAssetAt(52).data).data as ColorManager;
+            if (dat.colorA.pathID != 54)
+            {
+                Console.WriteLine($"Removed existing CustomColor at PathID: {dat.colorA.pathID}");
+                assets.RemoveAssetAt(dat.colorA.pathID);
+            }
+            if (dat.colorB.pathID != 53)
+            {
+                Console.WriteLine($"Removing existing CustomColor at PathID: {dat.colorB.pathID}");
+                assets.RemoveAssetAt(dat.colorB.pathID);
+            }
+            return dat;
+        }
+
+        public static void ResetColors(SerializedAssets assets)
+        {
+            ColorManager manager = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
+            if (manager.colorA.pathID != 54)
+            {
+                Console.WriteLine($"Removing CustomColor at PathID: {manager.colorA.pathID}");
+                assets.RemoveAssetAt(manager.colorA.pathID);
+                manager.colorA.pathID = 54;
+            }
+            if (manager.colorB.pathID != 53)
+            {
+                Console.WriteLine($"Removing CustomColor at PathID: {manager.colorB.pathID}");
+                assets.RemoveAssetAt(manager.colorB.pathID);
+                manager.colorB.pathID = 53;
+            }
+        }
     }
 }

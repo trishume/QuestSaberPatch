@@ -10,19 +10,6 @@ namespace app
 {
     class Program
     {
-        static ColorManager CreateColor(SerializedAssets assets, SimpleColor c)
-        {
-            Console.WriteLine($"Creating CustomColor with r: {c.r} g: {c.g} b: {c.b} a: {c.a}");
-
-            var dat = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
-            //var dat = ((MonoBehaviorAssetData)assets.GetAssetAt(52).data).data as ColorManager;
-            if (dat.colorA.pathID != 54)
-            {
-                Console.WriteLine($"Removed existing CustomColor at PathID: {dat.colorA.pathID}");
-                assets.RemoveAssetAt(dat.colorA.pathID);
-            }
-            return dat;
-        }
         static void Main(string[] args)
         {
             if(args.Length < 1) {
@@ -41,6 +28,9 @@ namespace app
                 byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
                 SerializedAssets assets = SerializedAssets.FromBytes(data);
 
+                string colorPath = "assets/bin/Data/sharedassets1.assets";
+                SerializedAssets colorAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(colorPath));
+
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
                 for(int i = 1; i < args.Length; i++) {
@@ -50,15 +40,22 @@ namespace app
                     }
                     if (args[i] == "-c1" || args[i] == "-c2")
                     {
+                        if (i + 1 >= args.Length || args[i + 1] == "-c1" || args[i + 1] == "-c2")
+                        {
+                            // There is nothing after the color
+                            // Reset it.
+                            Utils.ResetColors(colorAssets);
+                            
+                            apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
+
+                            continue;
+                        }
                         if (i + 4 >= args.Length)
                         {
-                            Console.WriteLine($"[ERROR] Cannot parse color, not enough colors! Please copy paste a series of floats");
+                            Console.WriteLine($"[ERROR] Cannot parse color, not enough colors! Please copy-paste a series of floats");
                             i += 4;
                             continue;
                         }
-
-                        string colorPath = "assets/bin/Data/sharedassets1.assets";
-                        SerializedAssets colorAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(colorPath));
 
                         SimpleColor c = new SimpleColor
                         {
@@ -68,7 +65,7 @@ namespace app
                             a = Convert.ToSingle(args[i + 4].Split(',')[0].Replace(')', '.'))
                         };
 
-                        ColorManager dat = CreateColor(colorAssets, c);
+                        ColorManager dat = Utils.CreateColor(colorAssets, c);
 
                         var ptr = colorAssets.AppendAsset(new MonoBehaviorAssetData()
                         {
@@ -102,8 +99,8 @@ namespace app
                                 name = "CustomSongsCover",
                                 forcedFallbackFormat = 4,
                                 downscaleFallback = 0,
-                                width = 1024,
-                                height = 1024,
+                                width = 500, //TODO MAGIC NUMBER
+                                height = 486, //TODO MAGIC NUMBER
                                 completeImageSize = customSongsCover.Length,
                                 textureFormat = 34,
                                 mipCount = 11,
@@ -153,7 +150,11 @@ namespace app
                                     var l = assets.GetLevelMatching(levelID);
                                     var ao = assets.GetAssetObjectFromScript<LevelBehaviorData>(p => p.levelID == l.levelID);
 
-                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID == ao.pathID);
+                                    ulong lastLegitPathID = 201;
+
+                                    // Currently, this removes all songs the very first time it runs, so it is useless to run this
+                                    // every iteration
+                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID > lastLegitPathID);
                                     foreach (string s in l.OwnedFiles(assets))
                                     {
                                         if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{s}");

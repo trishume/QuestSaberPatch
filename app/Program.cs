@@ -194,6 +194,9 @@ namespace app
                 apk.WriteSplits("assets/bin/Data/sharedassets17.assets");
                 Console.WriteLine("Complete!");
             }
+
+            Console.WriteLine("Signing APK...");
+            Signer.Sign(apkPath);
         }
     }
 }

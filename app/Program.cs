@@ -58,6 +58,9 @@ namespace app
                 byte[] outData = assets.ToBytes();
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
             }
+
+            Console.WriteLine("Signing APK...");
+            Signer.Sign(apkPath);
         }
     }
 }

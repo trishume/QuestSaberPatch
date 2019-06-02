@@ -89,11 +89,24 @@ namespace LibSaberPatch
         private const int sigPatchLoc = 0x0109D074;
         public void PatchSignatureCheck() {
             byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
+            byte[] toReplace = {0x8B, 0xD8, 0xFE, 0xEB};
             byte[] data = ReadEntireEntry(il2cppLibEntry);
+            // Check if already done
+            if(bytesEqualAtOffset(data, sigPatch, sigPatchLoc)) return;
+            if(!bytesEqualAtOffset(data, toReplace, sigPatchLoc))
+                throw new ApplicationException("Trying to patch different version of code");
+
             for(int i = 0; i < sigPatch.Length; i++) {
                 data[sigPatchLoc + i] = sigPatch[i];
             }
             WriteEntireEntry(il2cppLibEntry, data);
+        }
+
+        private static bool bytesEqualAtOffset(byte[] data, byte[] patch, int offset) {
+            for(int i = 0; i < patch.Length; i++) {
+                if(data[offset + i] != patch[i]) return false;
+            }
+            return true;
         }
 
         public class Transaction {

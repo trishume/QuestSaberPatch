@@ -1,2 +1,2 @@
 {"apkPath":"/Users/tristan/BeatSaber/base_testing.apk","patchSignatureCheck":true,"ensureInstalled":{},"exitAfterward":false}
-{"apkPath":"/Users/tristan/BeatSaber/base_testing.apk","patchSignatureCheck":false,"ensureInstalled":{"BUBBLETEA":"testdata/bubble_tea_song"},"exitAfterward":true}
+{"apkPath":"/Users/tristan/BeatSaber/base_testing.apk","patchSignatureCheck":false,"ensureInstalled":{"BUBBLETEA":"testdata/bubble_tea_song"},"exitAfterward":true, "sign": true}

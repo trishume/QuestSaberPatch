@@ -86,7 +86,6 @@ namespace app
                         }
 
                         apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
-                        apk.WriteSplits(colorPath);
 
                         i += 4;
                         continue;
@@ -191,7 +190,6 @@ namespace app
                 }
                 byte[] outData = assets.ToBytes();
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
-                apk.WriteSplits("assets/bin/Data/sharedassets17.assets");
                 Console.WriteLine("Complete!");
             }
 

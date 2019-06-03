@@ -203,12 +203,12 @@ namespace LibSaberPatch
                     case SpriteAssetData.ClassID:
                         obj.data = new SpriteAssetData(reader, obj.size);
                         break;
-                    case GameObjectAssetData.ClassID:
-                        obj.data = new GameObjectAssetData(reader, obj.size);
-                        break;
-                    case MeshFilter.ClassID:
-                        obj.data = new MeshFilter(reader, obj.size);
-                        break;
+                    //case GameObjectAssetData.ClassID:
+                    //    obj.data = new GameObjectAssetData(reader, obj.size);
+                    //    break;
+                    //case MeshFilter.ClassID:
+                    //    obj.data = new MeshFilter(reader, obj.size);
+                    //    break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;

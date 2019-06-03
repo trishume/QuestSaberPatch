@@ -42,7 +42,7 @@ namespace app
                 ulong customPackPathID = assets.GetAssetObjectFromScript<LevelPackBehaviorData>(mob => mob.name == "CustomLevelPack", b => true).pathID;
 
                 for (int i = 1; i < args.Length; i++) {
-                    if (args[i] == "-r" || args[i] == "removeSongs")
+                    if (args[i] == "-r" || args[i] == "removeSongs" || args[i] == "-e")
                     {
                         continue;
                     }

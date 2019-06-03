@@ -211,7 +211,7 @@ namespace LibSaberPatch
 
         public static void ApplyWatermark(List<string> localeValues)
         {
-            int ind = localeValues.FindIndex(item => item == "CREDITS_CONTENT");
+            int ind = localeValues.FindIndex(item => item == "CREDITS_CONTENT") + 2;
             string value = localeValues[ind];
             localeValues[ind] = value.Remove(value.Length - 1) + ", Sc2ad, trishume" + '"';
         }

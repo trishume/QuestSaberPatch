@@ -15,7 +15,6 @@ namespace LibSaberPatch.BehaviorDataObjects
         public bool isPackAlwaysOwned;
         public AssetPtr beatmapLevelCollection;
 
-
         public LevelPackBehaviorData()
         {
             isPackAlwaysOwned = true;
@@ -42,7 +41,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 
         public override int SharedAssetsTypeIndex()
         {
-            return 0x1C;
+            return 0x11;
         }
 
         public override bool Equals(BehaviorData data)

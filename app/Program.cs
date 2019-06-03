@@ -36,20 +36,20 @@ namespace app
                 LevelPackBehaviorData customPack = assets.FindCustomLevelPack();
                 ulong customPackPathID = assets.GetAssetObjectFromScript<LevelPackBehaviorData>(mob => mob.name == "CustomLevelPack", b => true).pathID;
 
-                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
-                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
+                //string mainPackFile = "assets/bin/Data/sharedassets19.assets";
+                //SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
 
-                // Modify image to be CustomLevelPack image?
-                //customPack.coverImage = new AssetPtr(assets.externals.FindIndex(e => e.pathName == "sharedassets19.assets"))
-                // Adds custom pack to the set of all packs
-                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
-                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
-                if (!mainLevelPack.beatmapLevelPacks.Any(ptr => ptr.fileID == fileI && ptr.pathID == customPackPathID))
-                {
-                    mainLevelPack.beatmapLevelPacks.Add(new AssetPtr(fileI, customPackPathID));
-                }
-                Console.WriteLine($"Added CustomLevelPack to {mainPackFile}");
-                apk.ReplaceAssetsFile(mainPackFile, mainPackAssets.ToBytes());
+                //// Modify image to be CustomLevelPack image?
+                ////customPack.coverImage = new AssetPtr(assets.externals.FindIndex(e => e.pathName == "sharedassets19.assets"))
+                //// Adds custom pack to the set of all packs
+                //int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+                //var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
+                //if (!mainLevelPack.beatmapLevelPacks.Any(ptr => ptr.fileID == fileI && ptr.pathID == customPackPathID))
+                //{
+                //    mainLevelPack.beatmapLevelPacks.Add(new AssetPtr(fileI, customPackPathID));
+                //}
+                //Console.WriteLine($"Added CustomLevelPack to {mainPackFile}");
+                //apk.ReplaceAssetsFile(mainPackFile, mainPackAssets.ToBytes());
 
                 for(int i = 1; i < args.Length; i++) {
                     if (args[i] == "-r" || args[i] == "removeSongs")

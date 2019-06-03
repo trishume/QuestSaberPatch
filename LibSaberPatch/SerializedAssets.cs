@@ -210,6 +210,9 @@ namespace LibSaberPatch
                     case MeshFilter.ClassID:
                         obj.data = new MeshFilter(reader, obj.size);
                         break;
+                    case TextAsset.ClassID:
+                        obj.data = new TextAsset(reader, obj.size);
+                        break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;
@@ -530,7 +533,7 @@ namespace LibSaberPatch
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()
         {
-            // This file needs to be sharedassets17.assets for the MainLevelPackCollection
+            // This file needs to be sharedassets19.assets for the MainLevelPackCollection
             return FindScript<BeatmapLevelPackCollection>(a => true); // Should only be one.
         }
 

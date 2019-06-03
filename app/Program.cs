@@ -37,6 +37,10 @@ namespace app
                 string colorPath = "assets/bin/Data/sharedassets1.assets";
                 SerializedAssets colorAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(colorPath));
 
+                //string textAssetsPath = "assets/bin/Data/c4dc0d059266d8d47862f46460cf8f31";
+                string textAssetsPath = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
+                SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(textAssetsPath));
+
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData customCollection = assets.FindCustomLevelCollection();
                 LevelPackBehaviorData customPack = assets.FindCustomLevelPack();
@@ -45,6 +49,35 @@ namespace app
                 for (int i = 1; i < args.Length; i++) {
                     if (args[i] == "-r" || args[i] == "removeSongs" || args[i] == "-e")
                     {
+                        continue;
+                    }
+                    if (args[i] == "-t")
+                    {
+                        if (i + 2 >= args.Length)
+                        {
+                            // There is not enough data after the text
+                            // Reset it.
+                            //continue;
+                        }
+                        var ao = textAssets.GetAssetAt(1);
+                        TextAsset ta = ao.data as TextAsset;
+                        string key = args[i + 1].ToUpper();
+
+                        var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });
+
+                        //segments.ToList().ForEach(a => Console.Write(a.Trim() + ","));
+                        int index = segments.FindIndex(item => item.Trim() == key);
+                        if (index == -1)
+                        {
+                            Console.WriteLine($"[ERROR] Could not find key: {key} in text!");
+                        }
+                        Console.WriteLine($"Found key at index: {index} with key: {segments[index]} and value: {segments[index + 2]}");
+                        segments[index + 2] = args[i + 2];
+                        Console.WriteLine($"New value: {args[i + 2]}");
+                        ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
+                        i += 2;
+                        apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());
+                        //Console.WriteLine((a.data as TextAsset).script);
                         continue;
                     }
                     if (args[i] == "-c1" || args[i] == "-c2")
@@ -57,15 +90,12 @@ namespace app
                             apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
                             continue;
                         }
-                        else
+                        if (!args[i + 1].StartsWith("("))
                         {
-                            if (!args[i + 1].StartsWith("("))
-                            {
-                                // Reset it.
-                                Utils.ResetColors(colorAssets);
-                                apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
-                                continue;
-                            }
+                            // Reset it.
+                            Utils.ResetColors(colorAssets);
+                            apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
+                            continue;
                         }
                         if (i + 4 >= args.Length)
                         {

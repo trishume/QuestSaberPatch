@@ -7,6 +7,8 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using LibSaberPatch.BehaviorDataObjects;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LibSaberPatch
 {
@@ -171,6 +173,51 @@ namespace LibSaberPatch
                 spriteAtlas = sprite.spriteAtlas,
                 bytesAfterTexture = sprite.bytesAfterTexture
             };
+        }
+
+        public static List<string> ReadLocaleText(string text, List<char> seps)
+        {
+            //string keyName = "STRING ID";
+            //string descName = "DESCRIPTION";
+            //string valueName = "ENGLISH";
+            //string nextName = "LANGUAGE_CODE";
+            //List<char> seps = new List<char>();
+            //seps.Add(text[keyName.Length]);
+            //seps.Add(text[text.IndexOf(valueName) - 1]);
+            //seps.Add(text[text.IndexOf(nextName) - 1]);
+
+            var segments = new List<string>();
+
+            string temp = "";
+            bool quote = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (seps.Contains(text[i]) && !quote)
+                {
+                    // Seperator. Let us separate
+                    segments.Add(temp);
+                    temp = "";
+                    continue;
+                }
+                temp += text[i];
+                if (text[i] == '"')
+                {
+                    quote = !quote;
+                }
+            }
+            segments.Add(temp);
+            return segments;
+        }
+
+        public static string WriteLocaleText(List<string> values, List<char> seps)
+        {
+            string temp = "";
+            for (int i = 0; i < values.Count - 1; i++)
+            {
+                temp += values[i] + seps[i % seps.Count];
+            }
+            temp += values[values.Count - 1];
+            return temp;
         }
     }
 }

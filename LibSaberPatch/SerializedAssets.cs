@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using LibSaberPatch.BehaviorDataObjects;
 
 namespace LibSaberPatch
 {

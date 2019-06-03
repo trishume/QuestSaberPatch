@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using LibSaberPatch;
 using Newtonsoft.Json;
 using System.Linq;
+using LibSaberPatch.BehaviorDataObjects;
 
 namespace app
 {

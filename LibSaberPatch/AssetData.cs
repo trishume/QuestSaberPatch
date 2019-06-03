@@ -141,10 +141,10 @@ namespace LibSaberPatch
                 case SimpleColor.PathID:
                     data = new SimpleColor(reader, length - headerLen);
                     break;
-                case Saber.PathID:
-                    // Saber is special, because we want to access data on the GameObject, too.
-                    data = new Saber(reader, length - headerLen);
-                    break;
+                //case Saber.PathID:
+                //    // Saber is special, because we want to access data on the GameObject, too.
+                //    data = new Saber(reader, length - headerLen);
+                //    break;
                 case BeatmapLevelPackCollection.PathID:
                     data = new BeatmapLevelPackCollection(reader, length - headerLen);
                     break;

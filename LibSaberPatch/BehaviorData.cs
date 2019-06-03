@@ -441,14 +441,251 @@ namespace LibSaberPatch
         }
     }
 
-    public class TMP_Text : BehaviorData
+    public class PersistentCalls : BehaviorData
     {
-        // Teiko Medium SDF No Glow: PathID 57, FileID 3 (unity-builtin-extra)
-        // Teiko Medium SDF: PathID 58, FileID 3
+        public List<byte[]> calls;
+        public string typeName;
+
+        public PersistentCalls(BinaryReader reader, int _length)
+        {
+            // Number of bytes in calls:
+            int b = 0;
+            calls = reader.ReadPrefixedList(r => r.ReadBytes(b));
+            typeName = reader.ReadAlignedString();
+        }
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            // No type for local data
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.WritePrefixedList(calls, b => w.Write(b));
+            w.WriteAlignedString(typeName);
+        }
+    }
+
+    public class LocalizationDocument : BehaviorData
+    {
+        public string docsID;
+        public string sheetID;
+        public int format;
+        public AssetPtr textAsset;
+        public bool downloadOnStart;
+
+        public LocalizationDocument(BinaryReader reader, int _length)
+        {
+            docsID = reader.ReadAlignedString();
+            sheetID = reader.ReadAlignedString();
+            format = reader.ReadInt32();
+            textAsset = new AssetPtr(reader);
+            downloadOnStart = reader.ReadBoolean();
+            reader.AlignStream();
+        }
 
         public override bool Equals(BehaviorData data)
         {
-            throw new NotImplementedException();
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            // No type for local data
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.WriteAlignedString(docsID);
+            w.WriteAlignedString(sheetID);
+            w.Write(format);
+            textAsset.WriteTo(w);
+            w.Write(downloadOnStart);
+            w.AlignStream();
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            action(textAsset);
+        }
+    }
+
+    public class LocalizationAsset : BehaviorData
+    {
+        public AssetPtr textAsset;
+        public int format;
+
+        public LocalizationAsset(BinaryReader reader, int _length)
+        {
+            textAsset = new AssetPtr(reader);
+            format = reader.ReadInt32();
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            // No type for local data
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            textAsset.WriteTo(w);
+            w.Write(format);
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            action(textAsset);
+        }
+    }
+
+    public class Localization : BehaviorData
+    {
+        // Localization: 4, 1 (0f74782e1b8b9d744b2e1b71fdbc68af)
+        public const int PathID = 1697;
+
+        public LocalizationDocument polyglotDocument;
+        public LocalizationDocument customDocument;
+        public List<LocalizationAsset> inputFiles;
+        public List<int> supportedLanguages;
+        public int selectedLanguage;
+        public int fallbackLanguage;
+        public PersistentCalls localize;
+
+        public Localization(BinaryReader reader, int _length)
+        {
+            polyglotDocument = new LocalizationDocument(reader, -1); // Length unknown
+            customDocument = new LocalizationDocument(reader, -1); // Length unknown
+            inputFiles = reader.ReadPrefixedList(r => new LocalizationAsset(r, -1)); // Length unknown
+            supportedLanguages = reader.ReadPrefixedList(r => r.ReadInt32());
+            selectedLanguage = reader.ReadInt32();
+            fallbackLanguage = reader.ReadInt32();
+            localize = new PersistentCalls(reader, -1); // Length unknown
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x0F;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            polyglotDocument.WriteTo(w);
+            customDocument.WriteTo(w);
+            w.WritePrefixedList(inputFiles, f => f.WriteTo(w));
+            w.Write(selectedLanguage);
+            w.Write(fallbackLanguage);
+            localize.WriteTo(w);
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            polyglotDocument.Trace(action);
+            customDocument.Trace(action);
+            foreach (LocalizationAsset a in inputFiles)
+            {
+                a.Trace(action);
+            }
+        }
+    }
+
+    public class LocalizedTextMeshProUGUI : BehaviorData
+    {
+        // Restart Button Text: 142, 129 (level11)
+        public const int PathID = 345;
+
+        public AssetPtr text;
+        public byte maintainTextAlignment;
+        public string key;
+
+        public LocalizedTextMeshProUGUI(BinaryReader reader, int _length)
+        {
+            text = new AssetPtr(reader);
+            maintainTextAlignment = reader.ReadByte();
+            reader.AlignStream();
+            key = reader.ReadAlignedString();
+        }
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x0A;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            text.WriteTo(w);
+            w.Write(maintainTextAlignment);
+            w.AlignStream();
+            w.WriteAlignedString(key);
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            action(text);
+        }
+    }
+
+    public class TextMeshPro : BehaviorData
+    {
+        public const int PathID = 1065;
+        // Teiko Medium SDF No Glow: PathID 57, FileID 3 (unity-builtin-extra)
+        // Teiko Medium SDF: PathID 58, FileID 3
+        // 0, 283
+        // Quit: 130, 26 (level1, 26)
+        // Skip: 131, 24 (level2, 24)
+
+
+        public AssetPtr material;
+        public SimpleColor color;
+        public byte raycastTarget;
+        public PersistentCalls cullState;
+        public string text;
+        public byte rightToLeft;
+        public AssetPtr fontAsset;
+        public byte[] remainingData;
+        public TextMeshPro(BinaryReader reader, int _length)
+        {
+            long start = reader.BaseStream.Position;
+            material = new AssetPtr(reader);
+            color = new SimpleColor(reader, 16);
+            raycastTarget = reader.ReadByte();
+            reader.AlignStream();
+            cullState = new PersistentCalls(reader, -1); // Unknown length
+            text = reader.ReadAlignedString();
+            rightToLeft = reader.ReadByte();
+            reader.AlignStream();
+            fontAsset = new AssetPtr(reader);
+            remainingData = reader.ReadBytes(_length - (int)(reader.BaseStream.Position - start));
+        }
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO Implement
+            return false;
         }
 
         public override int SharedAssetsTypeIndex()
@@ -458,12 +695,23 @@ namespace LibSaberPatch
 
         public override void Trace(Action<AssetPtr> action)
         {
-            throw new NotImplementedException();
+            action(material);
+            color.Trace(action);
+            action(fontAsset);
         }
 
         public override void WriteTo(BinaryWriter w)
         {
-            throw new NotImplementedException();
+            material.WriteTo(w);
+            color.WriteTo(w);
+            w.Write(raycastTarget);
+            w.AlignStream();
+            cullState.WriteTo(w);
+            w.WriteAlignedString(text);
+            w.Write(rightToLeft);
+            w.AlignStream();
+            fontAsset.WriteTo(w);
+            w.Write(remainingData);
         }
     }
 

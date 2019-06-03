@@ -141,12 +141,20 @@ namespace LibSaberPatch
                 case SimpleColor.PathID:
                     data = new SimpleColor(reader, length - headerLen);
                     break;
+                case TextMeshPro.PathID:
+                    data = new TextMeshPro(reader, length - headerLen);
+                    break;
                 case Saber.PathID:
-                    // Saber is special, because we want to access data on the GameObject, too.
                     data = new Saber(reader, length - headerLen);
                     break;
                 case BeatmapLevelPackCollection.PathID:
                     data = new BeatmapLevelPackCollection(reader, length - headerLen);
+                    break;
+                case LocalizedTextMeshProUGUI.PathID:
+                    data = new LocalizedTextMeshProUGUI(reader, length - headerLen);
+                    break;
+                case Localization.PathID:
+                    data = new Localization(reader, length - headerLen);
                     break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);

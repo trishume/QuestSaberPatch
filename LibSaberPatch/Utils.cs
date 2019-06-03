@@ -114,5 +114,62 @@ namespace LibSaberPatch
                 manager.colorB.pathID = 53;
             }
         }
+
+        public static Texture2DAssetData CreateTexture(byte[] customSongsCover)
+        {
+            return new Texture2DAssetData()
+            {
+                name = "CustomPackCoverTexture",
+                forcedFallbackFormat = 4,
+                downscaleFallback = 0,
+                width = 1024,
+                height = 1024,
+                completeImageSize = customSongsCover.Length,
+                textureFormat = 34,
+                mipCount = 11,
+                isReadable = false,
+                streamingMips = false,
+                streamingMipsPriority = 0,
+                imageCount = 1,
+                textureDimension = 2,
+                filterMode = 2,
+                mipBias = -1f,
+                anisotropic = 0,
+                wrapU = 1,
+                wrapV = 1,
+                wrapW = 0,
+                lightmapFormat = 6,
+                colorSpace = 1,
+                imageData = customSongsCover,
+                offset = 0,
+                size = 0,
+                path = ""
+            };
+        }
+
+        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture)
+        {
+            // Default Sprite
+            ulong pd = 45;
+            var sp = assets.GetAssetAt(pd);
+            if (!sp.data.GetType().Equals(typeof(SpriteAssetData)))
+            {
+                Console.WriteLine($"[ERROR] Default Sprite data does not exist at PathID: {pd} instead it has Type {sp.data.GetType()} with TypeID: {sp.typeID} and classid: {assets.types[sp.typeID].classID}");
+            }
+            var sprite = sp.data as SpriteAssetData;
+            return new SpriteAssetData()
+            {
+                name = "CustomPackCover",
+                texture = customTexture,
+                atlasTags = sprite.atlasTags,
+                extrude = sprite.extrude,
+                floats = sprite.floats,
+                guid = sprite.guid,
+                isPolygon = sprite.isPolygon,
+                second = sprite.second,
+                spriteAtlas = sprite.spriteAtlas,
+                bytesAfterTexture = sprite.bytesAfterTexture
+            };
+        }
     }
 }

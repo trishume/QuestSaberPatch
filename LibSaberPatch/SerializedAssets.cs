@@ -200,6 +200,9 @@ namespace LibSaberPatch
                     case Texture2DAssetData.ClassID:
                         obj.data = new Texture2DAssetData(reader, obj.size);
                         break;
+                    case SpriteAssetData.ClassID:
+                        obj.data = new SpriteAssetData(reader, obj.size);
+                        break;
                     case GameObjectAssetData.ClassID:
                         obj.data = new GameObjectAssetData(reader, obj.size);
                         break;
@@ -494,28 +497,34 @@ namespace LibSaberPatch
         public LevelPackBehaviorData FindCustomLevelPack()
         {
             var col = FindScript<LevelPackBehaviorData>(mb => mb.name == "CustomLevelPack", l => true);
-            var COVER_IMAGE_SPRITE = GetAssetAt(45);
+            
             if (col == null)
             {
                 // Make sure the CustomLevelCollection exists.
                 _ = FindCustomLevelCollection();
-                var ptr = AppendAsset(new MonoBehaviorAssetData()
-                {
-                    data = new LevelPackBehaviorData()
-                    {
-                        packName = "Custom Songs",
-                        packID = "CustomPack",
-                        isPackAlwaysOwned = true,
-                        beatmapLevelCollection = new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID),
-                        coverImage = new AssetPtr(0, COVER_IMAGE_SPRITE.pathID)
-                    },
-                    name = "CustomLevelPack",
-                    script = new AssetPtr(1, LevelPackBehaviorData.PathID)
-                });
+                var ptr = CreateCustomLevelPack();
 
                 col = ptr.FollowToScript<LevelPackBehaviorData>(this);
             }
             return col;
+        }
+
+        public AssetPtr CreateCustomLevelPack()
+        {
+            var ptr = AppendAsset(new MonoBehaviorAssetData()
+            {
+                data = new LevelPackBehaviorData()
+                {
+                    packName = "Custom Songs",
+                    packID = "CustomPack",
+                    isPackAlwaysOwned = true,
+                    beatmapLevelCollection = new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID),
+                    coverImage = new AssetPtr(0, 45) // Default
+                },
+                name = "CustomLevelPack",
+                script = new AssetPtr(1, LevelPackBehaviorData.PathID)
+            });
+            return ptr;
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()

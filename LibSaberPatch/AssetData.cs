@@ -500,135 +500,69 @@ namespace LibSaberPatch
         }
     }
 
-    // Code copied from @emulamer's tool. Thanks!
     public class SpriteAssetData : AssetData
     {
-        private const int PathID = 2;
+        public const int ClassID = 0xD5;
 
-        //public string name;
-        //public Rectf rect;
-        //public Vector2f offset;
-        //public Vector4f border;
-        //public float pixelsToUnits;
-        //public Vector2f pivot;
-        //public uint extrude;
-        //public bool isPolygon;
-        //public Pair renderDataKey;
-        //public Vector atlasTags;
-        //public AssetPtr spriteAtlas;
-        //public SpriteRenderData renderData;
-        //public Vector physicsShape;
-        //public Vector bones;
-
-        public byte[] bytesBeforeTexture;
-        public Texture2DAssetData texture;
+        public string name;
+        public float[] floats;
+        public uint extrude;
+        public bool isPolygon;
+        public uint[] guid;
+        public long second;
+        public List<AssetPtr> atlasTags;
+        public AssetPtr spriteAtlas;
+        public AssetPtr texture;
         public byte[] bytesAfterTexture;
 
-        public class Rectf : AssetData
+        public SpriteAssetData(BinaryReader reader, int _length)
         {
-            public float x;
-            public float y;
-            public float width;
-            public float height;
-
-            public Rectf(BinaryReader reader)
+            long start = reader.BaseStream.Position;
+            name = reader.ReadAlignedString();
+            // Rect, Vector2, Vector4, float, Vector2
+            floats = new float[13];
+            for (int i = 0; i < floats.Length; i++)
             {
-                //TODO
+                floats[i] = reader.ReadSingle();
             }
-
-            public override bool Equals(AssetData o)
+            extrude = reader.ReadUInt32();
+            isPolygon = reader.ReadBoolean();
+            reader.AlignStream();
+            guid = new uint[4];
+            for (int i = 0; i < guid.Length; i++)
             {
-                return GetType().Equals(o) && (o as Rectf).x == x && (o as Rectf).y == y && (o as Rectf).width == width && (o as Rectf).height == height;
+                guid[i] = reader.ReadUInt32();
             }
-
-            public override int SharedAssetsTypeIndex()
-            {
-                // It doesn't actually have a TypeIndex, it just exists because it helps.
-                return -1;
-            }
-
-            public override void WriteTo(BinaryWriter w)
-            {
-                w.Write(x);
-                w.Write(y);
-                w.Write(width);
-                w.Write(height);
-            }
+            second = reader.ReadInt64();
+            atlasTags = reader.ReadPrefixedList(r => new AssetPtr(r));
+            spriteAtlas = new AssetPtr(reader); // SpriteAtlas
+            texture = new AssetPtr(reader);
+            bytesAfterTexture = reader.ReadBytes((int)(_length - (reader.BaseStream.Position - start)));
         }
 
-        public class Vector2f
+        public SpriteAssetData()
         {
-            public float x;
-            public float y;
         }
-
-        public class Vector4f
-        {
-            public float x;
-            public float y;
-            public float z;
-            public float w;
-        }
-
-        public struct Vector
-        {
-            public uint[] data;
-        }
-
-        public struct Pair
-        {
-            public byte[] first;
-            public long second;
-        }
-
-        //public SpriteAssetData(BinaryReader reader)
-        //{
-        //    string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
-        //    spriteBytes = Convert.FromBase64String(spriteData);
-        //    texture2d = new Texture2DAssetData()
-        //    {
-        //        name = "CustomSongsCover",
-        //        forcedFallbackFormat = 4,
-        //        downscaleFallback = 0,
-        //        width = 1024,
-        //        height = 1024,
-        //        completeImageSize = customSongsCover.Length,
-        //        textureFormat = 34,
-        //        mipCount = 11,
-        //        isReadable = false,
-        //        streamingMips = false,
-        //        streamingMipsPriority = 0,
-        //        imageCount = 1,
-        //        textureDimension = 2,
-        //        filterMode = 2,
-        //        mipBias = -1f,
-        //        anisotropic = 0,
-        //        wrapU = 1,
-        //        wrapV = 1,
-        //        wrapW = 0,
-        //        lightmapFormat = 6,
-        //        colorSpace = 1,
-        //        imageData = customSongsCover,
-        //        offset = 0,
-        //        size = 0,
-        //        path = ""
-        //    };
-        //}
 
         public override void WriteTo(BinaryWriter w)
         {
-            //byte[] finalBytes;
-            //using (MemoryStream ms = new MemoryStream(bytesBeforeTexture))
-            //{
-            //    ms.Seek(116, SeekOrigin.Begin);
-            //    using (BinaryWriter writer = new BinaryWriter(ms))
-            //        texture2d.WriteTo(writer);
-
-            //    finalBytes = ms.ToArray();
-            //}
-            //var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
-            //Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
-            //w.Write(finalBytes);
+            w.WriteAlignedString(name);
+            foreach (float f in floats)
+            {
+                w.Write(f);
+            }
+            w.Write(extrude);
+            w.Write(isPolygon);
+            w.AlignStream();
+            foreach (uint i in guid)
+            {
+                w.Write(i);
+            }
+            w.Write(second);
+            w.WritePrefixedList(atlasTags, a => a.WriteTo(w));
+            spriteAtlas.WriteTo(w);
+            texture.WriteTo(w);
+            w.Write(bytesAfterTexture);
         }
 
         public override bool Equals(AssetData o)
@@ -640,7 +574,17 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex()
         {
-            return 0xD5;
+            return 0x06;
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            foreach (AssetPtr p in atlasTags)
+            {
+                action(p);
+            }
+            action(spriteAtlas);
+            action(texture);
         }
     }
 }

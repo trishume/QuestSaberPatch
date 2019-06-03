@@ -126,7 +126,6 @@ namespace app
                         }
                         Console.WriteLine($"Left saber script: {script}");
                         // Find all objects that have the GameObject: LeftSaber (pathID = 20, fileID = 0 (142))
-                        
 
                         continue;
                     }
@@ -137,39 +136,14 @@ namespace app
                         {
                             Texture2DAssetData dat = assets.GetAssetAt(14).data as Texture2DAssetData;
                             byte[] customSongsCover = File.ReadAllBytes(args[i + 1]);
-                            dat = new Texture2DAssetData()
-                            {
-                                name = "CustomSongsCover",
-                                forcedFallbackFormat = 4,
-                                downscaleFallback = 0,
-                                width = 500, //TODO MAGIC NUMBER
-                                height = 486, //TODO MAGIC NUMBER
-                                completeImageSize = customSongsCover.Length,
-                                textureFormat = 34,
-                                mipCount = 11,
-                                isReadable = false,
-                                streamingMips = false,
-                                streamingMipsPriority = 0,
-                                imageCount = 1,
-                                textureDimension = 2,
-                                filterMode = 2,
-                                mipBias = -1f,
-                                anisotropic = 0,
-                                wrapU = 1,
-                                wrapV = 1,
-                                wrapW = 0,
-                                lightmapFormat = 6,
-                                colorSpace = 1,
-                                imageData = customSongsCover,
-                                offset = 0,
-                                size = 0,
-                                path = ""
-                            };
 
-                            assets.SetAssetAt(14, dat);
+                            //assets.SetAssetAt(14, dat);
+                            var ptr = assets.AppendAsset(Utils.CreateTexture(customSongsCover));
+                            Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
+                            var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
+                            Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
 
-                            Console.WriteLine($"Replacing Texture at PathID: {14} with new Texture2D from file: {args[i + 1]}");
-
+                            customPack.coverImage = sPtr;
                         } catch (FileNotFoundException)
                         {
                             Console.WriteLine($"[ERROR] Custom cover file does not exist: {args[i+1]}");

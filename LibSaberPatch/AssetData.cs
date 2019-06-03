@@ -145,6 +145,9 @@ namespace LibSaberPatch
                     // Saber is special, because we want to access data on the GameObject, too.
                     data = new Saber(reader, length - headerLen);
                     break;
+                case BeatmapLevelPackCollection.PathID:
+                    data = new BeatmapLevelPackCollection(reader, length - headerLen);
+                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;

@@ -32,7 +32,25 @@ namespace app
                 SerializedAssets colorAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(colorPath));
 
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
-                LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
+                LevelCollectionBehaviorData customCollection = assets.FindCustomLevelCollection();
+                LevelPackBehaviorData customPack = assets.FindCustomLevelPack();
+                ulong customPackPathID = assets.GetAssetObjectFromScript<LevelPackBehaviorData>(mob => mob.name == "CustomLevelPack", b => true).pathID;
+
+                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
+                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
+
+                // Modify image to be CustomLevelPack image?
+                //customPack.coverImage = new AssetPtr(assets.externals.FindIndex(e => e.pathName == "sharedassets19.assets"))
+                // Adds custom pack to the set of all packs
+                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
+                if (!mainLevelPack.beatmapLevelPacks.Any(ptr => ptr.fileID == fileI && ptr.pathID == customPackPathID))
+                {
+                    mainLevelPack.beatmapLevelPacks.Add(new AssetPtr(fileI, customPackPathID));
+                }
+                Console.WriteLine($"Added CustomLevelPack to {mainPackFile}");
+                apk.ReplaceAssetsFile(mainPackFile, mainPackAssets.ToBytes());
+
                 for(int i = 1; i < args.Length; i++) {
                     if (args[i] == "-r" || args[i] == "removeSongs")
                     {
@@ -79,7 +97,7 @@ namespace app
                         {
                             data = c,
                             name = "CustomColor" + args[i][args[i].Length - 1],
-                            script = new AssetPtr(1, 423),
+                            script = new AssetPtr(1, SimpleColor.PathID),
                         });
                         Console.WriteLine($"Created new CustomColor for colorA at PathID: {ptr.pathID}");
                         if (args[i] == "-c1")
@@ -117,7 +135,7 @@ namespace app
                         string cusomCoverFile = args[i + 1];
                         try
                         {
-                            Texture2DAssetData dat = assets.GetAssetAt(45).data as Texture2DAssetData;
+                            Texture2DAssetData dat = assets.GetAssetAt(14).data as Texture2DAssetData;
                             byte[] customSongsCover = File.ReadAllBytes(args[i + 1]);
                             dat = new Texture2DAssetData()
                             {
@@ -148,9 +166,9 @@ namespace app
                                 path = ""
                             };
 
-                            assets.SetAssetAt(45, dat);
+                            assets.SetAssetAt(14, dat);
 
-                            Console.WriteLine($"Replacing Texture at PathID: {45} with new Texture2D from file: {args[i + 1]}");
+                            Console.WriteLine($"Replacing Texture at PathID: {14} with new Texture2D from file: {args[i + 1]}");
 
                         } catch (FileNotFoundException)
                         {
@@ -179,7 +197,7 @@ namespace app
 
                                     // Currently, this removes all songs the very first time it runs, so it is useless to run this
                                     // every iteration
-                                    extrasCollection.levels.RemoveAll(ptr => ptr.pathID > lastLegitPathID);
+                                    customCollection.levels.RemoveAll(ptr => ptr.pathID > lastLegitPathID);
                                     foreach (string s in l.OwnedFiles(assets))
                                     {
                                         if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{s}");
@@ -203,7 +221,7 @@ namespace app
 
                                 // Danger should be over, nothing here should fail
                                 assetsTxn.ApplyTo(assets);
-                                extrasCollection.levels.Add(levelPtr);
+                                customCollection.levels.Add(levelPtr);
                                 existingLevels.Add(levelID);
                                 apkTxn.ApplyTo(apk);
                             }

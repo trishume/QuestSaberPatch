@@ -55,7 +55,13 @@ namespace LibSaberPatch
     public class LevelCollectionBehaviorData : BehaviorData
     {
         public const int PathID = 762;
+
         public List<AssetPtr> levels;
+
+        public LevelCollectionBehaviorData()
+        {
+            levels = new List<AssetPtr>();
+        }
 
         public LevelCollectionBehaviorData(BinaryReader reader, int length) {
             levels = reader.ReadPrefixedList(r => new AssetPtr(r));
@@ -95,6 +101,11 @@ namespace LibSaberPatch
         public bool isPackAlwaysOwned;
         public AssetPtr beatmapLevelCollection;
 
+
+        public LevelPackBehaviorData()
+        {
+            isPackAlwaysOwned = true;
+        }
         public LevelPackBehaviorData(BinaryReader reader, int length)
         {
             packID = reader.ReadAlignedString();
@@ -131,6 +142,49 @@ namespace LibSaberPatch
         {
             action(coverImage);
             action(beatmapLevelCollection);
+        }
+    }
+
+    public class BeatmapLevelPackCollection : BehaviorData
+    {
+        public const int PathID = 1530;
+
+        public List<AssetPtr> beatmapLevelPacks;
+        public List<AssetPtr> previewBeatmapLevelPack;
+
+        public BeatmapLevelPackCollection(BinaryReader reader, int _length)
+        {
+            beatmapLevelPacks = reader.ReadPrefixedList(r => new AssetPtr(r));
+            previewBeatmapLevelPack = reader.ReadPrefixedList(r => new AssetPtr(r));
+        }
+
+        public override bool Equals(BehaviorData data)
+        {
+            //TODO Implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return 0x01;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.WritePrefixedList(beatmapLevelPacks, a => a.WriteTo(w));
+            w.WritePrefixedList(previewBeatmapLevelPack, a => a.WriteTo(w));
+        }
+
+        public override void Trace(Action<AssetPtr> action)
+        {
+            foreach (AssetPtr p in beatmapLevelPacks)
+            {
+                action(p);
+            }
+            foreach (AssetPtr p in previewBeatmapLevelPack)
+            {
+                action(p);
+            }
         }
     }
 

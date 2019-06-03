@@ -100,10 +100,10 @@ namespace LibSaberPatch
         }
 
         public class External {
-            string tempEmpty;
-            byte[] guid;
-            int type;
-            string pathName;
+            public string tempEmpty;
+            public byte[] guid;
+            public int type;
+            public string pathName;
 
             public External(BinaryReader reader) {
                 tempEmpty = reader.ReadStringToNull();
@@ -331,11 +331,17 @@ namespace LibSaberPatch
 
         public AssetObject GetAssetObjectFromScript<T>(Predicate<T> cond) where T : BehaviorData
         {
+            return GetAssetObjectFromScript<T>(mob => true, cond);
+        }
+
+        public AssetObject GetAssetObjectFromScript<T>(Predicate<MonoBehaviorAssetData> mob, Predicate<T> cond) where T : BehaviorData
+        {
             var list = objects.FindAll(d => d.data.GetType().Equals(typeof(MonoBehaviorAssetData))
             && (d.data as MonoBehaviorAssetData).data.GetType().Equals(typeof(T)));
             foreach (AssetObject d in list)
             {
-                if (cond((T)((MonoBehaviorAssetData)d.data).data))
+                var m = (MonoBehaviorAssetData)d.data;
+                if (mob(m) && cond((T)(m).data))
                 {
                     return d;
                 }
@@ -457,6 +463,23 @@ namespace LibSaberPatch
             return (LevelCollectionBehaviorData)monob.data;
         }
 
+        public LevelCollectionBehaviorData FindCustomLevelCollection()
+        {
+            var col = FindScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", l => true);
+            if (col == null)
+            {
+                var ptr = AppendAsset(new MonoBehaviorAssetData()
+                {
+                    data = new LevelCollectionBehaviorData(),
+                    name = "CustomLevelCollection",
+                    script = new AssetPtr(1, LevelCollectionBehaviorData.PathID)
+                });
+
+                col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
+            }
+            return col;
+        }
+
         public LevelPackBehaviorData FindExtrasLevelPack()
         {
             AssetObject obj = objects[236]; // the index of the extras collection in sharedassets17
@@ -466,6 +489,39 @@ namespace LibSaberPatch
             if (monob.name != "ExtrasLevelPack")
                 throw new ParseException("Extras level pack not at normal spot");
             return (LevelPackBehaviorData)monob.data;
+        }
+
+        public LevelPackBehaviorData FindCustomLevelPack()
+        {
+            var col = FindScript<LevelPackBehaviorData>(mb => mb.name == "CustomLevelPack", l => true);
+            var COVER_IMAGE_SPRITE = GetAssetAt(45);
+            if (col == null)
+            {
+                // Make sure the CustomLevelCollection exists.
+                _ = FindCustomLevelCollection();
+                var ptr = AppendAsset(new MonoBehaviorAssetData()
+                {
+                    data = new LevelPackBehaviorData()
+                    {
+                        packName = "Custom Songs",
+                        packID = "CustomPack",
+                        isPackAlwaysOwned = true,
+                        beatmapLevelCollection = new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID),
+                        coverImage = new AssetPtr(0, COVER_IMAGE_SPRITE.pathID)
+                    },
+                    name = "CustomLevelPack",
+                    script = new AssetPtr(1, LevelPackBehaviorData.PathID)
+                });
+
+                col = ptr.FollowToScript<LevelPackBehaviorData>(this);
+            }
+            return col;
+        }
+
+        public BeatmapLevelPackCollection FindMainLevelPackCollection()
+        {
+            // This file needs to be sharedassets17.assets for the MainLevelPackCollection
+            return FindScript<BeatmapLevelPackCollection>(a => true); // Should only be one.
         }
 
         public class Transaction {

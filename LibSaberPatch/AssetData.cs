@@ -229,7 +229,7 @@ namespace LibSaberPatch
 
     public class GameObjectAssetData : AssetData
     {
-        public const int ClassID = 1; //TODO Fix!
+        public const int ClassID = 1;
 
         public AssetPtr[] components;
         public uint layer;
@@ -273,6 +273,118 @@ namespace LibSaberPatch
             w.WriteAlignedString(name);
             w.Write(tag);
             w.Write(isActive);
+        }
+    }
+
+    public class AssetVector3 : AssetData
+    {
+        public float x;
+        public float y;
+        public float z;
+
+        public AssetVector3(BinaryReader reader, int _length)
+        {
+            x = reader.ReadSingle();
+            y = reader.ReadSingle();
+            z = reader.ReadSingle();
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            // No type for local data
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.Write(x);
+            w.Write(y);
+            w.Write(z);
+        }
+    }
+
+    public class AssetVector4 : AssetData
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+
+        public AssetVector4(BinaryReader reader, int _length)
+        {
+            x = reader.ReadSingle();
+            y = reader.ReadSingle();
+            z = reader.ReadSingle();
+            w = reader.ReadSingle();
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            // No type for local data
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            w.Write(x);
+            w.Write(y);
+            w.Write(z);
+            w.Write(this.w);
+        }
+    }
+
+    public class TransformAssetData : AssetData
+    {
+        public const int ClassID = 4;
+
+        public AssetPtr gameObject;
+        public AssetVector4 localRotation;
+        public AssetVector3 localPosition;
+        public AssetVector3 localScale;
+        public List<AssetPtr> children;
+        public AssetPtr parent;
+
+        public TransformAssetData(BinaryReader reader, int _length)
+        {
+            gameObject = new AssetPtr(reader);
+            localRotation = new AssetVector4(reader, 16);
+            localPosition = new AssetVector3(reader, 12);
+            localScale = new AssetVector3(reader, 12);
+            children = reader.ReadPrefixedList(r => new AssetPtr(r));
+            parent = new AssetPtr(reader);
+        }
+
+        public override bool Equals(AssetData o)
+        {
+            //TODO implement
+            return false;
+        }
+
+        public override int SharedAssetsTypeIndex()
+        {
+            return -1;
+        }
+
+        public override void WriteTo(BinaryWriter w)
+        {
+            gameObject.WriteTo(w);
+            localRotation.WriteTo(w);
+            localPosition.WriteTo(w);
+            localScale.WriteTo(w);
+            w.WritePrefixedList(children, c => c.WriteTo(w));
+            parent.WriteTo(w);
         }
     }
 

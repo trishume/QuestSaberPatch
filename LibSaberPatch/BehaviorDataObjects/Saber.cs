@@ -7,6 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class Saber : BehaviorData
     {
+        // LeftSaber: (142, 20) GO, Transform: (142, 54)
         public const int PathID = 549;
 
         public AssetPtr topPos;
@@ -18,6 +19,10 @@ namespace LibSaberPatch.BehaviorDataObjects
         // Here is the list of components of the Saber's GameObject:
         // Transform, VRController, BoxCollider, Rigidbody, Saber (this), SaberTypeObject, SaberModelContainer
         // MeshFilters of importance: no idea
+        // Children: 2
+        // Transforms: (142, 77), (142, 76)
+        // GameObjects: (142, 34): Top, (142, 38): Bottom
+        // To insert custom saber, should just need to add new gameobject, set that object's parent to saber, disable all old mesh filters in top/bottom
 
         public Saber(BinaryReader reader, int _length)
         {

@@ -74,6 +74,7 @@ namespace app
                         Console.WriteLine($"Found key at index: {index} with key: {segments[index]} and value: {segments[index + 2]}");
                         segments[index + 2] = args[i + 2];
                         Console.WriteLine($"New value: {args[i + 2]}");
+                        Utils.ApplyWatermark(segments);
                         ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
                         i += 2;
                         apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());

@@ -209,6 +209,13 @@ namespace LibSaberPatch
             return segments;
         }
 
+        public static void ApplyWatermark(List<string> localeValues)
+        {
+            int ind = localeValues.FindIndex(item => item == "CREDITS_CONTENT");
+            string value = localeValues[ind];
+            localeValues[ind] = value.Remove(value.Length - 1) + ", Sc2ad, trishume" + '"';
+        }
+
         public static string WriteLocaleText(List<string> values, List<char> seps)
         {
             string temp = "";

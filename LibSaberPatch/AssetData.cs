@@ -509,18 +509,19 @@ namespace LibSaberPatch
         public string path;
 
         private const int CoverPowerOfTwo = 8;
-        public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID, int forceWidth = -1, int forceHeight = -1) {
+        private const int PackCoverPowerOfTwo = 2;
+        public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID, bool isPackCover) {
             int coverDim = 1 << CoverPowerOfTwo;
             byte[] imageData = Utils.ImageFileToMipData(filePath, coverDim);
             return new Texture2DAssetData() {
                 name = levelID + "Cover",
                 forcedFallbackFormat = 4,
                 downscaleFallback = 0,
-                width = /*forceWidth > 0 ? forceWidth : */coverDim,
-                height = /*forceHeight > 0 ? forceHeight : */coverDim,
+                width = coverDim,
+                height = coverDim,
                 completeImageSize = imageData.Length,
                 textureFormat = 3,
-                mipCount = CoverPowerOfTwo+1,
+                mipCount = isPackCover ? PackCoverPowerOfTwo + 1 : CoverPowerOfTwo+1,
                 isReadable = false,
                 streamingMips = false,
                 streamingMipsPriority = 0,

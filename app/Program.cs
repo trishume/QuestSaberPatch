@@ -159,7 +159,7 @@ namespace app
                             Texture2DAssetData dat = assets.GetAssetAt(14).data as Texture2DAssetData;
 
                             //assets.SetAssetAt(14, dat);
-                            var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs"));
+                            var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", 1024, 1024));
                             Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
                             var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
                             Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
@@ -190,9 +190,9 @@ namespace app
 
                                     ulong lastLegitPathID = 201;
 
-                                    // Currently, this removes all songs the very first time it runs, so it is useless to run this
-                                    // every iteration
-                                    customCollection.levels.RemoveAll(ptr => ptr.pathID > lastLegitPathID);
+                                    // Currently, this removes all songs matching the song 
+                                    // the very first time it runs
+                                    customCollection.levels.RemoveAll(ptr => ptr.pathID > lastLegitPathID && ao.pathID == ptr.pathID);
                                     foreach (string s in l.OwnedFiles(assets))
                                     {
                                         if (apk != null) apk.RemoveFileAt($"assets/bin/Data/{s}");

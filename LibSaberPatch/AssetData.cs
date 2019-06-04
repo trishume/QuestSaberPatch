@@ -510,7 +510,7 @@ namespace LibSaberPatch
 
         private const int CoverPowerOfTwo = 8;
         private const int PackCoverPowerOfTwo = 2;
-        public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID, bool isPackCover) {
+        public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID, bool isPackCover = false) {
             int coverDim = 1 << CoverPowerOfTwo;
             byte[] imageData = Utils.ImageFileToMipData(filePath, coverDim);
             return new Texture2DAssetData() {

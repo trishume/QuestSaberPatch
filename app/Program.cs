@@ -157,10 +157,9 @@ namespace app
                         try
                         {
                             Texture2DAssetData dat = assets.GetAssetAt(14).data as Texture2DAssetData;
-                            byte[] customSongsCover = File.ReadAllBytes(args[i + 1]);
 
                             //assets.SetAssetAt(14, dat);
-                            var ptr = assets.AppendAsset(Utils.CreateTexture(customSongsCover));
+                            var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs"));
                             Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
                             var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
                             Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");

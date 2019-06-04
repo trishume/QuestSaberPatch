@@ -150,12 +150,5 @@ namespace LibSaberPatch.AssetDataObjects
         {
             return 2;
         }
-
-        public override bool Equals(AssetData o)
-        {
-            if (GetType().Equals(o))
-                return imageData.Equals((o as Texture2DAssetData).imageData);
-            return false;
-        }
     }
 }

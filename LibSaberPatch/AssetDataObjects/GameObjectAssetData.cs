@@ -29,12 +29,6 @@ namespace LibSaberPatch.AssetDataObjects
             isActive = reader.ReadBoolean();
         }
 
-        public override bool Equals(AssetData o)
-        {
-            //TODO Implement
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return 0;

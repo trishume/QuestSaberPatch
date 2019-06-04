@@ -81,13 +81,6 @@ namespace LibSaberPatch.AssetDataObjects
             return 5;
         }
 
-        public override bool Equals(AssetData o)
-        {
-            if (GetType().Equals(o))
-                return source == (o as AudioClipAssetData).source && name == (o as AudioClipAssetData).name;
-            return false;
-        }
-
         public override List<string> OwnedFiles(SerializedAssets assets)
         {
             return new List<string>() { source };

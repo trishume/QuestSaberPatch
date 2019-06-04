@@ -19,11 +19,6 @@ namespace LibSaberPatch.AssetDataObjects
             name = reader.ReadAlignedString();
             script = reader.ReadAlignedString();
         }
-        public override bool Equals(AssetData o)
-        {
-            //TODO implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

@@ -61,13 +61,6 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(bytesAfterTexture);
         }
 
-        public override bool Equals(AssetData o)
-        {
-            if (GetType().Equals(o))
-                return texture.Equals((o as SpriteAssetData).texture);
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return 0x06;

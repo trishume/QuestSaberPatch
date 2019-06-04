@@ -26,12 +26,6 @@ namespace LibSaberPatch.AssetDataObjects
             parent = new AssetPtr(reader);
         }
 
-        public override bool Equals(AssetData o)
-        {
-            //TODO implement
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return -1; // TODO

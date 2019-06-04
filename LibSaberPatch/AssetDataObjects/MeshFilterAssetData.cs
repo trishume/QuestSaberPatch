@@ -19,11 +19,6 @@ namespace LibSaberPatch.AssetDataObjects
             gameObject = new AssetPtr(reader);
             mesh = new AssetPtr(reader);
         }
-        public override bool Equals(AssetData o)
-        {
-            //TODO Implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

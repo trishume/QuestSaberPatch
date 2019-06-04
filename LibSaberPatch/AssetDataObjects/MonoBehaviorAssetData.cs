@@ -86,13 +86,6 @@ namespace LibSaberPatch.AssetDataObjects
             return data.SharedAssetsTypeIndex();
         }
 
-        public override bool Equals(AssetData o)
-        {
-            if (GetType().Equals(o))
-                return script.pathID == (o as MonoBehaviorAssetData).script.pathID && name == (o as MonoBehaviorAssetData).name;
-            return false;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             // So, we have AssetPtrs, however, we don't want to delete any of the pointers for Gameobject/Script

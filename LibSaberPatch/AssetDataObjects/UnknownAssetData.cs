@@ -22,12 +22,5 @@ namespace LibSaberPatch.AssetDataObjects
         {
             throw new ApplicationException("unknown type index");
         }
-
-        public override bool Equals(AssetData o)
-        {
-            if (GetType().Equals(o))
-                return bytes.Equals((o as UnknownAssetData).bytes);
-            return false;
-        }
     }
 }

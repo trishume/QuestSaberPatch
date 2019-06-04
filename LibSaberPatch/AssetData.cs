@@ -61,7 +61,6 @@ namespace LibSaberPatch
     {
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
-        public abstract bool Equals(AssetData o);
         // Could also maybe make this method an actual method, instead of abstract, and use reflection.
         /// <summary>
         /// Traces all AssetPtrs owned by this AssetData and calls the action on all of them.

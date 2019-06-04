@@ -174,9 +174,8 @@ namespace LibSaberPatch
                 }
             }
             segments.Add(temp);
-            Console.WriteLine(segments.Count);
             Dictionary<string, List<string>> o = new Dictionary<string, List<string>>();
-            for (int i = 0; i < segments.Count - seps.Count; i += seps.Count)
+            for (int i = 0; i < segments.Count - seps.Count + 1; i += seps.Count)
             {
                 List<string> segs = new List<string>();
                 for (int j = 1; j < seps.Count; j++)
@@ -190,11 +189,18 @@ namespace LibSaberPatch
 
         public static void ApplyWatermark(Dictionary<string, List<string>> localeValues)
         {
-            string people = ", Sc2ad, trishume";
+            string header = "\n<size=150%><color=#EC1C24FF>Quest Modders</color></size>";
+            string sc2ad = "<color=#EDCE21FF>Sc2ad</color>";
+            string trishume = "<color=#40E0D0FF>trishume</color>";
+            string emulamer = "<color=#5402CEFF>emulamer</color>";
+            string trueavid = "<color=#FF8897FF>Trueavid</color>";
+
+            string message = header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + trueavid;
+
             var value = localeValues["CREDITS_CONTENT"];
             string item = value[value.Count - 1];
-            if (item.Contains(people)) return;
-            localeValues["CREDITS_CONTENT"][value.Count - 1] = item.Remove(item.Length - 2) + people + '"';
+            if (item.Contains(message)) return;
+            localeValues["CREDITS_CONTENT"][value.Count - 1] = item.Remove(item.Length - 2) + message + '"';
         }
 
         public static string WriteLocaleText(Dictionary<string, List<string>> values, List<char> seps)

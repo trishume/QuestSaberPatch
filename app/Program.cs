@@ -6,6 +6,7 @@ using LibSaberPatch;
 using Newtonsoft.Json;
 using System.Linq;
 using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace app
 {
@@ -60,7 +61,7 @@ namespace app
                             //continue;
                         }
                         var ao = textAssets.GetAssetAt(1);
-                        TextAsset ta = ao.data as TextAsset;
+                        TextAssetAssetData ta = ao.data as TextAssetAssetData;
                         string key = args[i + 1].ToUpper();
 
                         var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });

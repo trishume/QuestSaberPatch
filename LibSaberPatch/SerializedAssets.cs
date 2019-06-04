@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -207,11 +208,11 @@ namespace LibSaberPatch
                     case GameObjectAssetData.ClassID:
                         obj.data = new GameObjectAssetData(reader, obj.size);
                         break;
-                    case MeshFilter.ClassID:
-                        obj.data = new MeshFilter(reader, obj.size);
+                    case MeshFilterAssetData.ClassID:
+                        obj.data = new MeshFilterAssetData(reader, obj.size);
                         break;
-                    case TextAsset.ClassID:
-                        obj.data = new TextAsset(reader, obj.size);
+                    case TextAssetAssetData.ClassID:
+                        obj.data = new TextAssetAssetData(reader, obj.size);
                         break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
@@ -365,11 +366,6 @@ namespace LibSaberPatch
             // Alternatively, we can just let it crash, as I don't know how we would
             // know what to change those pointers to in order to avoid a crash
             return obj;
-        }
-
-        public AssetObject RemoveAsset(AssetData data)
-        {
-            return RemoveAsset(d => d.data.Equals(data));
         }
 
         public AssetObject RemoveAssetAt(ulong pathID)

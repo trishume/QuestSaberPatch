@@ -276,7 +276,7 @@ namespace LibSaberPatch
         }
     }
 
-    public class AssetVector3 : AssetData
+    public class AssetVector3
     {
         public float x;
         public float y;
@@ -289,19 +289,7 @@ namespace LibSaberPatch
             z = reader.ReadSingle();
         }
 
-        public override bool Equals(AssetData o)
-        {
-            //TODO implement
-            return false;
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            // No type for local data
-            return -1;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public void WriteTo(BinaryWriter w)
         {
             w.Write(x);
             w.Write(y);
@@ -309,7 +297,7 @@ namespace LibSaberPatch
         }
     }
 
-    public class AssetVector4 : AssetData
+    public class AssetVector4
     {
         public float x;
         public float y;
@@ -324,19 +312,7 @@ namespace LibSaberPatch
             w = reader.ReadSingle();
         }
 
-        public override bool Equals(AssetData o)
-        {
-            //TODO implement
-            return false;
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            // No type for local data
-            return -1;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public void WriteTo(BinaryWriter w)
         {
             w.Write(x);
             w.Write(y);
@@ -374,7 +350,7 @@ namespace LibSaberPatch
 
         public override int SharedAssetsTypeIndex()
         {
-            return -1;
+            return -1; // TODO
         }
 
         public override void WriteTo(BinaryWriter w)
@@ -511,7 +487,8 @@ namespace LibSaberPatch
         private const int CoverPowerOfTwo = 8;
         private const int PackCoverPowerOfTwo = 10;
         public static Texture2DAssetData CoverFromImageFile(string filePath, string levelID, bool isPackCover = false) {
-            int coverDim = isPackCover ? 1 << PackCoverPowerOfTwo : 1 << CoverPowerOfTwo;
+            int powerOfTwo = isPackCover ? PackCoverPowerOfTwo : CoverPowerOfTwo;
+            int coverDim = 1 << powerOfTwo;
             byte[] imageData = Utils.ImageFileToMipData(filePath, coverDim);
             return new Texture2DAssetData() {
                 name = levelID + "Cover",
@@ -521,7 +498,7 @@ namespace LibSaberPatch
                 height = coverDim,
                 completeImageSize = imageData.Length,
                 textureFormat = 3,
-                mipCount = isPackCover ? PackCoverPowerOfTwo + 1 : CoverPowerOfTwo + 1,
+                mipCount = powerOfTwo + 1,
                 isReadable = false,
                 streamingMips = false,
                 streamingMipsPriority = 0,
@@ -630,7 +607,7 @@ namespace LibSaberPatch
         public float[] floats;
         public uint extrude;
         public bool isPolygon;
-        public uint[] guid;
+        public byte[] guid;
         public long second;
         public List<AssetPtr> atlasTags;
         public AssetPtr spriteAtlas;
@@ -650,11 +627,7 @@ namespace LibSaberPatch
             extrude = reader.ReadUInt32();
             isPolygon = reader.ReadBoolean();
             reader.AlignStream();
-            guid = new uint[4];
-            for (int i = 0; i < guid.Length; i++)
-            {
-                guid[i] = reader.ReadUInt32();
-            }
+            guid = reader.ReadBytes(16);
             second = reader.ReadInt64();
             atlasTags = reader.ReadPrefixedList(r => new AssetPtr(r));
             spriteAtlas = new AssetPtr(reader); // SpriteAtlas
@@ -662,9 +635,7 @@ namespace LibSaberPatch
             bytesAfterTexture = reader.ReadBytes((int)(_length - (reader.BaseStream.Position - start)));
         }
 
-        public SpriteAssetData()
-        {
-        }
+        public SpriteAssetData() {}
 
         public override void WriteTo(BinaryWriter w)
         {
@@ -676,10 +647,7 @@ namespace LibSaberPatch
             w.Write(extrude);
             w.Write(isPolygon);
             w.AlignStream();
-            foreach (uint i in guid)
-            {
-                w.Write(i);
-            }
+            w.Write(guid);
             w.Write(second);
             w.WritePrefixedList(atlasTags, a => a.WriteTo(w));
             spriteAtlas.WriteTo(w);

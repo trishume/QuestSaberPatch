@@ -23,19 +23,19 @@ namespace LibSaberPatch.BehaviorDataObjects
         public byte rightToLeft;
         public AssetPtr fontAsset;
         public byte[] remainingData;
-        public TextMeshPro(BinaryReader reader, int _length)
+        public TextMeshPro(BinaryReader reader, int length)
         {
             long start = reader.BaseStream.Position;
             material = new AssetPtr(reader);
             color = new SimpleColor(reader, 16);
             raycastTarget = reader.ReadByte();
             reader.AlignStream();
-            cullState = new PersistentCalls(reader, -1); // Unknown length
+            cullState = new PersistentCalls(reader);
             text = reader.ReadAlignedString();
             rightToLeft = reader.ReadByte();
             reader.AlignStream();
             fontAsset = new AssetPtr(reader);
-            remainingData = reader.ReadBytes(_length - (int)(reader.BaseStream.Position - start));
+            remainingData = reader.ReadBytes(length - (int)(reader.BaseStream.Position - start));
         }
         public override bool Equals(BehaviorData data)
         {

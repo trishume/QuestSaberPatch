@@ -136,7 +136,7 @@ namespace LibSaberPatch
             }
 
             /// <summary>
-            /// Deletes the given file from the APK, ASSUMING IT EXISTS!
+            /// Deletes the given file from the APK, if it exists.
             /// </summary>
             /// <param name="filePath">The file to delete in the APK</param>
             public void RemoveFileAt(string filePath)

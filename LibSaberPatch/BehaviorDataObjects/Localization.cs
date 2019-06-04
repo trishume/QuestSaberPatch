@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.BehaviorDataObjects
 {
-    public class LocalizationDocument : BehaviorData
+    public class LocalizationDocument
     {
         public string docsID;
         public string sheetID;
@@ -13,7 +13,7 @@ namespace LibSaberPatch.BehaviorDataObjects
         public AssetPtr textAsset;
         public bool downloadOnStart;
 
-        public LocalizationDocument(BinaryReader reader, int _length)
+        public LocalizationDocument(BinaryReader reader)
         {
             docsID = reader.ReadAlignedString();
             sheetID = reader.ReadAlignedString();
@@ -23,19 +23,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             reader.AlignStream();
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO implement
-            return false;
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            // No type for local data
-            return -1;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public void WriteTo(BinaryWriter w)
         {
             w.WriteAlignedString(docsID);
             w.WriteAlignedString(sheetID);
@@ -45,42 +33,30 @@ namespace LibSaberPatch.BehaviorDataObjects
             w.AlignStream();
         }
 
-        public override void Trace(Action<AssetPtr> action)
+        public void Trace(Action<AssetPtr> action)
         {
             action(textAsset);
         }
     }
 
-    public class LocalizationAsset : BehaviorData
+    public class LocalizationAsset
     {
         public AssetPtr textAsset;
         public int format;
 
-        public LocalizationAsset(BinaryReader reader, int _length)
+        public LocalizationAsset(BinaryReader reader)
         {
             textAsset = new AssetPtr(reader);
             format = reader.ReadInt32();
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO implement
-            return false;
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            // No type for local data
-            return -1;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public void WriteTo(BinaryWriter w)
         {
             textAsset.WriteTo(w);
             w.Write(format);
         }
 
-        public override void Trace(Action<AssetPtr> action)
+        public void Trace(Action<AssetPtr> action)
         {
             action(textAsset);
         }
@@ -101,13 +77,13 @@ namespace LibSaberPatch.BehaviorDataObjects
 
         public Localization(BinaryReader reader, int _length)
         {
-            polyglotDocument = new LocalizationDocument(reader, -1); // Length unknown
-            customDocument = new LocalizationDocument(reader, -1); // Length unknown
-            inputFiles = reader.ReadPrefixedList(r => new LocalizationAsset(r, -1)); // Length unknown
+            polyglotDocument = new LocalizationDocument(reader);
+            customDocument = new LocalizationDocument(reader);
+            inputFiles = reader.ReadPrefixedList(r => new LocalizationAsset(r));
             supportedLanguages = reader.ReadPrefixedList(r => r.ReadInt32());
             selectedLanguage = reader.ReadInt32();
             fallbackLanguage = reader.ReadInt32();
-            localize = new PersistentCalls(reader, -1); // Length unknown
+            localize = new PersistentCalls(reader);
         }
 
         public override bool Equals(BehaviorData data)

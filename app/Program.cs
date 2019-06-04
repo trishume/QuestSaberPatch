@@ -66,13 +66,13 @@ namespace app
                         var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });
 
                         //segments.ToList().ForEach(a => Console.Write(a.Trim() + ","));
-                        int index = segments.FindIndex(item => item.Trim() == key);
-                        if (index == -1)
+                        List<string> value;
+                        if (!segments.TryGetValue(key.Trim(), out value))
                         {
                             Console.WriteLine($"[ERROR] Could not find key: {key} in text!");
                         }
-                        Console.WriteLine($"Found key at index: {index} with key: {segments[index]} and value: {segments[index + 2]}");
-                        segments[index + 2] = args[i + 2];
+                        Console.WriteLine($"Found key at index: {key.Trim()} with value: {value[value.Count - 1]}");
+                        segments[key.Trim()][value.Count - 1] = args[i + 2];
                         Console.WriteLine($"New value: {args[i + 2]}");
                         Utils.ApplyWatermark(segments);
                         ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });

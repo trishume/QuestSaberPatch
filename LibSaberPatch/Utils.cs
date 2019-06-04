@@ -175,7 +175,7 @@ namespace LibSaberPatch
             };
         }
 
-        public static List<string> ReadLocaleText(string text, List<char> seps)
+        public static Dictionary<string, List<string>> ReadLocaleText(string text, List<char> seps)
         {
             //string keyName = "STRING ID";
             //string descName = "DESCRIPTION";
@@ -206,24 +206,42 @@ namespace LibSaberPatch
                 }
             }
             segments.Add(temp);
-            return segments;
+            Console.WriteLine(segments.Count);
+            Dictionary<string, List<string>> o = new Dictionary<string, List<string>>();
+            for (int i = 0; i < segments.Count - seps.Count; i += seps.Count)
+            {
+                List<string> segs = new List<string>();
+                for (int j = 1; j < seps.Count; j++)
+                {
+                    segs.Add(segments[i + j]);
+                }
+                o.Add(segments[i], segs);
+            }
+            return o;
         }
 
-        public static void ApplyWatermark(List<string> localeValues)
+        public static void ApplyWatermark(Dictionary<string, List<string>> localeValues)
         {
-            int ind = localeValues.FindIndex(item => item == "CREDITS_CONTENT") + 2;
-            string value = localeValues[ind];
-            localeValues[ind] = value.Remove(value.Length - 1) + ", Sc2ad, trishume" + '"';
+            string people = ", Sc2ad, trishume";
+            var value = localeValues["CREDITS_CONTENT"];
+            string item = value[value.Count - 1];
+            if (item.Contains(people)) return;
+            localeValues["CREDITS_CONTENT"][value.Count - 1] = item.Remove(item.Length - 2) + people + '"';
         }
 
-        public static string WriteLocaleText(List<string> values, List<char> seps)
+        public static string WriteLocaleText(Dictionary<string, List<string>> values, List<char> seps)
         {
             string temp = "";
-            for (int i = 0; i < values.Count - 1; i++)
+            foreach (string s in values.Keys)
             {
-                temp += values[i] + seps[i % seps.Count];
+                temp += s + seps[0];
+                for (int i = 1; i < seps.Count; i++)
+                {
+                    temp += values[s][i - 1];
+                    temp += seps[i];
+                }
             }
-            temp += values[values.Count - 1];
+            temp = temp.Remove(temp.Length - 1);
             return temp;
         }
     }

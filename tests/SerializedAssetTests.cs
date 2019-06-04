@@ -1,4 +1,5 @@
 using LibSaberPatch;
+using LibSaberPatch.BehaviorDataObjects;
 using Xunit;
 using System;
 using System.IO;

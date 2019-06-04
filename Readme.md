@@ -58,9 +58,9 @@ Removing songs is fundamentally possible and not that hard to implement but I ha
 
 If you get unhandled exceptions when trying to patch, maybe something like `System.IO.InvalidDataException: End of Central Directory record could not be found.`, this might happen sometimes and I'm not sure why, the recently added transactions feature might have fixed it but I'm not sure. Anyhow restoring your patching APK by making a **new copy** from your IMPORTANT ORIGINAL BACKUP COPY and patching that should hopefully fix the errors.
 
-### 1GB size limit: App won't launch
+### 2GB size limit: App won't launch
 
-If the resulting APK file the patcher produces is bigger than 1GB (the maximum size of an APK allowed on the Quest, see [this link](https://developer.oculus.com/distribute/latest/concepts/publish-quest-req/)) the APK will install but not launch. This puts a limit on how many songs you can add.
+If the resulting APK file the patcher produces is bigger than 2.1GB (the maximum size of a signed 32 bit integer) the APK will install but not launch. This puts a limit on how many songs you can add.
 
 ## Advanced Command Line App For GUIs
 

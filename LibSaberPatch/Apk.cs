@@ -70,33 +70,6 @@ namespace LibSaberPatch
             if (entry != null) entry.Delete();
         }
 
-        public void WriteSplits(string basePath)
-        {
-            var mainAssetsEntry = archive.GetEntry(basePath);
-            if (mainAssetsEntry == null) throw new ArgumentException("The original .assets file must exist!");
-            using (Stream stream = mainAssetsEntry.Open())
-            {
-                string split = basePath + ".split";
-                int splitSize = 1024 * 1024;
-                for (int i = 0; ; i++)
-                {
-                    if (i * splitSize >= stream.Length) break;
-                    var existingEntry = archive.GetEntry(split + i);
-                    if (existingEntry != null) existingEntry.Delete();
-                    ZipArchiveEntry entry = archive.CreateEntry(split + i);
-                    using (Stream fileStream = entry.Open())
-                    {
-                        int size = stream.Length - stream.Position < splitSize ? (int)(stream.Length - stream.Position) : splitSize;
-                        byte[] buf = new byte[size];
-                        stream.Seek(i * splitSize, SeekOrigin.Begin);
-                        stream.Read(buf, 0, size);
-                        fileStream.Write(buf, 0, buf.Length);
-                    }
-                }
-            }
-            mainAssetsEntry.Delete();
-        }
-
         public byte[] JoinedContents(string basePath) {
             using (MemoryStream stream = new MemoryStream()) {
                 string splitBase = basePath + ".split";
@@ -163,7 +136,7 @@ namespace LibSaberPatch
             }
 
             /// <summary>
-            /// Deletes the given file from the APK, ASSUMING IT EXISTS!
+            /// Deletes the given file from the APK, if it exists.
             /// </summary>
             /// <param name="filePath">The file to delete in the APK</param>
             public void RemoveFileAt(string filePath)

@@ -343,15 +343,12 @@ namespace LibSaberPatch
 
         public AssetObject GetAssetObjectFromScript<T>(Predicate<MonoBehaviorAssetData> mob, Predicate<T> cond) where T : BehaviorData
         {
-            var list = objects.FindAll(d => d.data.GetType().Equals(typeof(MonoBehaviorAssetData))
-            && (d.data as MonoBehaviorAssetData).data.GetType().Equals(typeof(T)));
-            foreach (AssetObject d in list)
-            {
-                var m = (MonoBehaviorAssetData)d.data;
-                if (mob(m) && cond((T)(m).data))
-                {
-                    return d;
-                }
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is MonoBehaviorAssetData)) continue;
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                if(!(monob.data is T) || !mob(monob)) continue;
+                T behaviorData = (T)monob.data;
+                if(cond(behaviorData)) return obj;
             }
             return null;
         }
@@ -401,15 +398,14 @@ namespace LibSaberPatch
                 data = data,
                 paddingLen = 0,
             };
-            // Shift offsets of all other objects by the delta size of this, 
+            // Shift offsets of all other objects by the delta size of this,
             // should get taken care of automatically.
             return objects[ind];
         }
 
         public LevelBehaviorData GetLevelMatching(string levelID)
         {
-            AssetObject obj = GetAssetObjectFromScript<LevelBehaviorData>(p => p.levelID == levelID);
-            return ((obj.data as MonoBehaviorAssetData).data as LevelBehaviorData);
+            return FindScript<LevelBehaviorData>(p => p.levelID == levelID);
         }
 
         public HashSet<string> ExistingLevelIDs() {
@@ -433,24 +429,16 @@ namespace LibSaberPatch
 
         public T FindScript<T>(Predicate<MonoBehaviorAssetData> cond, Predicate<T> condition) where T : BehaviorData
         {
-            foreach (AssetObject a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData)) && cond((MonoBehaviorAssetData)ao.data)))
-            {
-                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)a.data;
-                if (monob.data.GetType().Equals(typeof(T)) && condition((T)monob.data))
-                {
-                    return (T)monob.data;
-                }
-            }
-            return null;
+            AssetObject obj = GetAssetObjectFromScript(cond, condition);
+            return ((obj.data as MonoBehaviorAssetData).data as T);
         }
 
-        public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> obj)
+        public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> pred)
         {
-            foreach (var a in objects.FindAll(ao => ao.data.GetType().Equals(typeof(GameObjectAssetData)))) {
-                if (obj(a.data as GameObjectAssetData))
-                {
-                    return a.data as GameObjectAssetData;
-                }
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is GameObjectAssetData)) continue;
+                GameObjectAssetData gobj = (GameObjectAssetData)obj.data;
+                if(pred(gobj)) return gobj;
             }
             return null;
         }
@@ -501,7 +489,7 @@ namespace LibSaberPatch
         public LevelPackBehaviorData FindCustomLevelPack()
         {
             var col = FindScript<LevelPackBehaviorData>(mb => mb.name == "CustomLevelPack", l => true);
-            
+
             if (col == null)
             {
                 // Make sure the CustomLevelCollection exists.

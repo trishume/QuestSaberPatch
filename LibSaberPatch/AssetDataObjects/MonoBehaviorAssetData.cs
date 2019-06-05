@@ -32,9 +32,21 @@ namespace LibSaberPatch.AssetDataObjects
             name = reader.ReadAlignedString();
             int headerLen = (int)reader.BaseStream.Position - startOffset;
 
-            if (scriptID.SequenceEqual(LevelBehaviorData.ScriptID)) data = new LevelBehaviorData(reader, length - headerLen);
-            if (scriptID.SequenceEqual(LevelCollectionBehaviorData.ScriptID)) data = new LevelCollectionBehaviorData(reader, length - headerLen);
-            if (scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID)) data = new BeatmapDataBehaviorData(reader, length - headerLen);
+            if (scriptID.SequenceEqual(LevelBehaviorData.ScriptID))
+            {
+                data = new LevelBehaviorData(reader, length - headerLen);
+                return;
+            }
+            if (scriptID.SequenceEqual(LevelCollectionBehaviorData.ScriptID))
+            {
+                data = new LevelCollectionBehaviorData(reader, length - headerLen);
+                return;
+            }
+            if (scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID))
+            {
+                data = new BeatmapDataBehaviorData(reader, length - headerLen);
+                return;
+            }
 
             switch (script.pathID)
             {

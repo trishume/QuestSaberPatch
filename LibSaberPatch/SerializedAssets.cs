@@ -426,7 +426,7 @@ namespace LibSaberPatch
         public T FindScript<T>(Predicate<MonoBehaviorAssetData> cond, Predicate<T> condition) where T : BehaviorData
         {
             AssetObject obj = GetAssetObjectFromScript(cond, condition);
-            return ((obj.data as MonoBehaviorAssetData).data as T);
+            return obj != null ? ((obj.data as MonoBehaviorAssetData).data as T) : null;
         }
 
         public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> pred)

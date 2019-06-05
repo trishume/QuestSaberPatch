@@ -193,7 +193,7 @@ namespace LibSaberPatch
             string header = "\n<size=150%><color=#EC1C24FF>Quest Modders</color></size>";
             string sc2ad = "<color=#EDCE21FF>Sc2ad</color>";
             string trishume = "<color=#40E0D0FF>trishume</color>";
-            string emulamer = "<color=#5402CEFF>emulamer</color>";
+            string emulamer = "<color=#00FF00FF>emulamer</color>";
             string trueavid = "<color=#FF8897FF>Trueavid</color>";
 
             string message = header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + trueavid;

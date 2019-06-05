@@ -41,6 +41,12 @@ namespace app
                 //string textAssetsPath = "assets/bin/Data/c4dc0d059266d8d47862f46460cf8f31";
                 string textAssetsPath = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
                 SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(textAssetsPath));
+                var ao = textAssets.GetAssetAt(1);
+                TextAssetAssetData ta = ao.data as TextAssetAssetData;
+                var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });
+                Utils.ApplyWatermark(segments);
+                ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
+                apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());
 
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData customCollection = assets.FindCustomLevelCollection();
@@ -60,11 +66,7 @@ namespace app
                             // Reset it.
                             //continue;
                         }
-                        var ao = textAssets.GetAssetAt(1);
-                        TextAssetAssetData ta = ao.data as TextAssetAssetData;
                         string key = args[i + 1].ToUpper();
-
-                        var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });
 
                         //segments.ToList().ForEach(a => Console.Write(a.Trim() + ","));
                         List<string> value;
@@ -75,9 +77,8 @@ namespace app
                         Console.WriteLine($"Found key at index: {key.Trim()} with value: {value[value.Count - 1]}");
                         segments[key.Trim()][value.Count - 1] = args[i + 2];
                         Console.WriteLine($"New value: {args[i + 2]}");
-                        Utils.ApplyWatermark(segments);
-                        ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
                         i += 2;
+                        ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
                         apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());
                         //Console.WriteLine((a.data as TextAsset).script);
                         continue;

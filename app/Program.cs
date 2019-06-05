@@ -41,8 +41,8 @@ namespace app
                 //string textAssetsPath = "assets/bin/Data/c4dc0d059266d8d47862f46460cf8f31";
                 string textAssetsPath = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
                 SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(textAssetsPath));
-                var ao = textAssets.GetAssetAt(1);
-                TextAssetAssetData ta = ao.data as TextAssetAssetData;
+                var aotext = textAssets.GetAssetAt(1);
+                TextAssetAssetData ta = aotext.data as TextAssetAssetData;
                 var segments = Utils.ReadLocaleText(ta.script, new List<char>() { ',', ',', '\n' });
                 Utils.ApplyWatermark(segments);
                 ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });

@@ -18,5 +18,5 @@ after_success:
   - ls -lAhR questsaberpatch
   - zip -r questsaberpatch.zip questsaberpatch
   - ls -lAhR
-  - curl -F'file=@questsaberpatch.zip' https://0x0.st
+  - wget --method PUT --body-file="questsaberpatch.zip" "https://transfer.sh/questsaberpatch-${TRAVIS_OS_NAME}.zip" -O - -nv
 

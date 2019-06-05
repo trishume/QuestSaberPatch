@@ -58,6 +58,34 @@ namespace app
                     {
                         continue;
                     }
+                    if (args[i] == "-i")
+                    {
+                        // Add custom collection naming support
+                        int arguments = 2;
+                        if (i + arguments >= args.Length)
+                        {
+                            // There is not enough data after the c, replace just the name?
+                            Console.WriteLine($"Only replacing PackName!");
+                            arguments--;
+                        }
+                        if (i + 1 >= args.Length)
+                        {
+                            // There is STILL not enough data. We should exit.
+                            Console.WriteLine($"[ERROR] Could not rename custom songs pack because there were not enough arguments!");
+                        }
+                        if (arguments >= 1)
+                        {
+                            Console.WriteLine($"Renamed CustomPack PackName from: {customPack.packName} to: {args[i + 1]}");
+                            customPack.packName = args[i + 1];
+                        }
+                        if (arguments >= 2)
+                        {
+                            Console.WriteLine($"Renamed CustomPack PackID from: {customPack.packName} to: {args[i + 2]}");
+                            customPack.packID = args[i + 2];
+                        }
+                        i += 2;
+                        continue;
+                    }
                     if (args[i] == "-t")
                     {
                         if (i + 2 >= args.Length)

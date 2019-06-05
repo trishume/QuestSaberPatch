@@ -258,6 +258,34 @@ namespace LibSaberPatch
             temp = temp.Remove(temp.Length - 1);
             return temp;
         }
+
+        public static AssetPtr CreateCustomCollection(SerializedAssets assets)
+        {
+            return assets.AppendAsset(new MonoBehaviorAssetData()
+            {
+                data = new LevelCollectionBehaviorData(),
+                name = "CustomLevelCollection",
+                script = assets.scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
+            });
+        }
+
+        public static AssetPtr CreateCustomPack(SerializedAssets assets, AssetPtr collection)
+        {
+            var ptr = assets.AppendAsset(new MonoBehaviorAssetData()
+            {
+                data = new LevelPackBehaviorData()
+                {
+                    packName = "Custom Songs",
+                    packID = "CustomPack",
+                    isPackAlwaysOwned = true,
+                    beatmapLevelCollection = collection,
+                    coverImage = new AssetPtr(0, 45) // Default
+                },
+                name = "CustomLevelPack",
+                script = assets.scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
+            });
+            return ptr;
+        }
     }
 
     // loosely based on https://stackoverflow.com/questions/1440392/use-byte-as-key-in-dictionary

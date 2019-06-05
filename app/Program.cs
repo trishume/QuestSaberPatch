@@ -48,6 +48,15 @@ namespace app
                 ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
                 apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());
 
+                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
+                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
+
+                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+                Console.WriteLine($"Found sharedassets17.assets at FileID: {fileI}");
+                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
+                var pointerPacks = mainLevelPack.beatmapLevelPacks[mainLevelPack.beatmapLevelPacks.Count - 1];
+                Console.WriteLine($"Original last pack FileID: {pointerPacks.fileID} PathID: {pointerPacks.pathID}");
+
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData customCollection = assets.FindCustomLevelCollection();
                 LevelPackBehaviorData customPack = assets.FindCustomLevelPack();
@@ -56,6 +65,58 @@ namespace app
                 for (int i = 1; i < args.Length; i++) {
                     if (args[i] == "-r" || args[i] == "removeSongs" || args[i] == "-e")
                     {
+                        continue;
+                    }
+                    if (args[i] == "-ac")
+                    {
+                        // Add custom collection, needs three parameters
+                        if (i + 3 >= args.Length)
+                        {
+                            // There is STILL not enough data. We should exit.
+                            Console.WriteLine($"[ERROR] Could not rename custom songs pack because there were not enough arguments!");
+                        }
+                        var collection = Utils.CreateCustomCollection(assets);
+                        var pack = Utils.CreateCustomPack(assets, collection);
+
+                        Console.WriteLine($"Named new CustomPack PackName: {args[i + 1]}");
+                        pack.FollowToScript<LevelPackBehaviorData>(assets).packName = args[i + 1];
+                        Console.WriteLine($"Named new CustomPack PackID: {args[i + 2]}");
+                        pack.FollowToScript<LevelPackBehaviorData>(assets).packID = args[i + 2];
+                        pack.Follow<MonoBehaviorAssetData>(assets).name = args[i + 1];
+                        // Add pack pointer to "mainLevelPack"
+                        Console.WriteLine($"Added new {args[i + 1]} to all packs!");
+                        mainLevelPack.beatmapLevelPacks.Add(pack);
+
+                        Utils.FindLevels(args[i + 3], (levelFolder) =>
+                        {
+                            try
+                            {
+                                JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
+                                string levelID = level.GenerateBasicLevelID();
+                                var apkTxn = new Apk.Transaction();
+
+                                // This will add duplicate levels and not really care what you think about it.
+                                // It will also add a new collection every iteration - it does ZERO checking for duplicates
+                                Console.WriteLine($"Adding to Collection: {args[i + 1]}:  {level._songName}");
+                                var assetsTxn = new SerializedAssets.Transaction(assets);
+                                AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn, levelID);
+
+                                // Danger should be over, nothing here should fail
+                                assetsTxn.ApplyTo(assets);
+                                customCollection.levels.Add(levelPtr);
+                                existingLevels.Add(levelID);
+                                apkTxn.ApplyTo(apk);
+                            }
+                            catch (FileNotFoundException e)
+                            {
+                                Console.WriteLine("[SKIPPING] Missing file referenced by level: {0}", e.FileName);
+                            }
+                            catch (JsonReaderException e)
+                            {
+                                Console.WriteLine("[SKIPPING] Invalid level JSON: {0}", e.Message);
+                            }
+                        });
+                        i += 3;
                         continue;
                     }
                     if (args[i] == "-i")
@@ -83,7 +144,7 @@ namespace app
                             Console.WriteLine($"Renamed CustomPack PackID from: {customPack.packName} to: {args[i + 2]}");
                             customPack.packID = args[i + 2];
                         }
-                        i += 2;
+                        i += arguments;
                         continue;
                     }
                     if (args[i] == "-t")
@@ -283,17 +344,6 @@ namespace app
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
                 apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
 
-                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
-                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
-
-                // Modify image to be CustomLevelPack image?
-                //customPack.coverImage = new AssetPtr(assets.externals.FindIndex(e => e.pathName == "sharedassets19.assets"))
-                // Adds custom pack to the set of all packs
-                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
-                Console.WriteLine($"Found sharedassets17.assets at FileID: {fileI}");
-                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
-                var pointerPacks = mainLevelPack.beatmapLevelPacks[mainLevelPack.beatmapLevelPacks.Count - 1];
-                Console.WriteLine($"Original last pack FileID: {pointerPacks.fileID} PathID: {pointerPacks.pathID}");
                 if (!mainLevelPack.beatmapLevelPacks.Any(ptr => ptr.fileID == fileI && ptr.pathID == customPackPathID))
                 {
                     Console.WriteLine($"Added CustomLevelPack to {mainPackFile}");

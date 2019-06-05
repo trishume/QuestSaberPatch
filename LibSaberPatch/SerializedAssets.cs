@@ -483,12 +483,7 @@ namespace LibSaberPatch
             var col = FindScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", l => true);
             if (col == null)
             {
-                var ptr = AppendAsset(new MonoBehaviorAssetData()
-                {
-                    data = new LevelCollectionBehaviorData(),
-                    name = "CustomLevelCollection",
-                    script = scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
-                });
+                var ptr = Utils.CreateCustomCollection(this);
 
                 col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
             }
@@ -523,20 +518,7 @@ namespace LibSaberPatch
 
         public AssetPtr CreateCustomLevelPack()
         {
-            var ptr = AppendAsset(new MonoBehaviorAssetData()
-            {
-                data = new LevelPackBehaviorData()
-                {
-                    packName = "Custom Songs",
-                    packID = "CustomPack",
-                    isPackAlwaysOwned = true,
-                    beatmapLevelCollection = new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID),
-                    coverImage = new AssetPtr(0, 45) // Default
-                },
-                name = "CustomLevelPack",
-                script = scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
-            });
-            return ptr;
+            return Utils.CreateCustomPack(this, new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID));
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()

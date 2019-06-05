@@ -83,11 +83,14 @@ namespace app
                         Console.WriteLine($"Named new CustomPack PackID: {args[i + 2]}");
                         pack.FollowToScript<LevelPackBehaviorData>(assets).packID = args[i + 2];
                         pack.Follow<MonoBehaviorAssetData>(assets).name = args[i + 1];
+                        var texturePointer = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 3], args[i + 1], true));
+                        var spPointer = assets.AppendAsset(Utils.CreateSprite(assets, texturePointer));
+                        pack.FollowToScript<LevelPackBehaviorData>(assets).coverImage = spPointer;
                         // Add pack pointer to "mainLevelPack"
                         Console.WriteLine($"Added new {args[i + 1]} to all packs!");
                         mainLevelPack.beatmapLevelPacks.Add(pack);
 
-                        Utils.FindLevels(args[i + 3], (levelFolder) =>
+                        Utils.FindLevels(args[i + 4], (levelFolder) =>
                         {
                             try
                             {

@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class LevelCollectionBehaviorData : BehaviorData
     {
-        public const int PathID = 762;
+        public const int PathID = 760;
 
         public List<AssetPtr> levels;
 

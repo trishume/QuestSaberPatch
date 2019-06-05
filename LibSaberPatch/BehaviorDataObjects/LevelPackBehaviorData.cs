@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class LevelPackBehaviorData : BehaviorData
     {
-        public const int PathID = 1480;
+        public const int PathID = 1476;
 
         public string packID;
         public string packName;

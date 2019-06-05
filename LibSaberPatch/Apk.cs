@@ -96,10 +96,10 @@ namespace LibSaberPatch
         }
 
         private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
-        private const int sigPatchLoc = 0x0109D074;
+        private const int sigPatchLoc = 0x013B0934;
         public void PatchSignatureCheck() {
             byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
-            byte[] toReplace = {0x8B, 0xD8, 0xFE, 0xEB};
+            byte[] toReplace = {0x1A, 0x83, 0xC3, 0xEB};
             byte[] data = ReadEntireEntry(il2cppLibEntry);
             // Check if already done
             if(bytesEqualAtOffset(data, sigPatch, sigPatchLoc)) return;

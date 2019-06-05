@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class BeatmapDataBehaviorData : BehaviorData
     {
-        public const int PathID = 1552;
+        public const int PathID = 1548;
 
         public string jsonData;
         public byte[] signature;

@@ -57,7 +57,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 
     public class LevelBehaviorData : BehaviorData
     {
-        public const int PathID = 644;
+        public const int PathID = 642;
 
         public string levelID;
         public string songName;

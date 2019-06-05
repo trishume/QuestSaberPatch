@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class BeatmapLevelPackCollection : BehaviorData
     {
-        public const int PathID = 1530;
+        public const int PathID = 1526;
 
         public List<AssetPtr> beatmapLevelPacks;
         public List<AssetPtr> previewBeatmapLevelPack;

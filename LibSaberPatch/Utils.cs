@@ -233,11 +233,12 @@ namespace LibSaberPatch
             string trishume = "<color=#40E0D0FF>trishume</color>";
             string emulamer = "<color=#00FF00FF>emulamer</color>";
             string jakibaki = "<color=#4268F4FF>jakibaki</color>";
+            string elliotttate = "<color=#67AAFBFF>elliotttate</color>";
             string leo60228 = "<color=#00FF00FF>leo60228</color>";
             string trueavid = "<color=#FF8897FF>Trueavid</color>";
             string kayTH = "<color=#40FE97FF>kayTH</color>";
 
-            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + jakibaki + '\n' + leo60228 + '\n' + trueavid + '\n' + kayTH;
+            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + jakibaki + '\n' + elliotttate + '\n' + leo60228 + '\n' + trueavid + '\n' + kayTH;
 
             var value = localeValues["CREDITS_CONTENT"];
             string item = value[value.Count - 1];

@@ -91,21 +91,51 @@ namespace LibSaberPatch
             return levelPathID;
         }
 
-        public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c)
+        public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c, bool left)
         {
             Console.WriteLine($"Creating CustomColor with r: {c.r} g: {c.g} b: {c.b} a: {c.a}");
 
             var dat = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
+
+            var mbl = new MonoBehaviorAssetData()
+            {
+                name = "LeftCustomColor",
+                data = c,
+                script = assets.scriptIDToScriptPtr[SimpleColor.ScriptID]
+            };
+            var mbr = new MonoBehaviorAssetData()
+            {
+                name = "RightCustomColor",
+                data = c,
+                script = assets.scriptIDToScriptPtr[SimpleColor.ScriptID]
+            };
             //var dat = ((MonoBehaviorAssetData)assets.GetAssetAt(52).data).data as ColorManager;
             if (dat.colorA.pathID != 54)
             {
-                Console.WriteLine($"Removed existing CustomColor at PathID: {dat.colorA.pathID}");
-                assets.RemoveAssetAt(dat.colorA.pathID);
+                if (!left)
+                {
+                    Console.WriteLine($"Replaced existing CustomColor at PathID: {dat.colorA.pathID}");
+                    assets.SetAssetAt(dat.colorA.pathID, mbl);
+                }
             }
+            else if (!left)
+            {
+                dat.colorA = assets.AppendAsset(mbl);
+                Console.WriteLine($"Created new CustomColor at PathID: {dat.colorA.pathID}");
+            }
+            
             if (dat.colorB.pathID != 53)
             {
-                Console.WriteLine($"Removing existing CustomColor at PathID: {dat.colorB.pathID}");
-                assets.RemoveAssetAt(dat.colorB.pathID);
+                if (left)
+                {
+                    Console.WriteLine($"Replaced existing CustomColor at PathID: {dat.colorB.pathID}");
+                    assets.SetAssetAt(dat.colorB.pathID, mbr);
+                }
+            }
+            else if (left)
+            {
+                dat.colorB = assets.AppendAsset(mbr);
+                Console.WriteLine($"Created new CustomColor at PathID: {dat.colorB.pathID}");
             }
             return dat;
         }

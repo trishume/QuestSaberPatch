@@ -121,6 +121,35 @@ namespace app
                             apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
                             continue;
                         }
+                        if (args[i + 1].StartsWith("#"))
+                        {
+                            string hexString = args[i + 1].Substring(1);
+                            if (hexString.Length == 6)
+                            {
+                                hexString += "FF";
+                            }
+                            if (hexString.Length != 8)
+                            {
+                                Console.WriteLine($"[ERROR] invalid length color hexstring: {hexString} it should instead be 8 characters!");
+                            }
+                            float[] colors = new float[4];
+                            for (int j = 0; j < hexString.Length; j += 2)
+                            {
+                                colors[j / 2] = Utils.HexToBytes("" + hexString[j] + hexString[j + 1])[0] / 255.0f;
+                            }
+                            SimpleColor color = new SimpleColor()
+                            {
+                                r = colors[0],
+                                g = colors[1],
+                                b = colors[2],
+                                a = colors[3]
+                            };
+
+                            var manager = Utils.CreateColor(colorAssets, color, args[i] == "-c1");
+
+                            i++;
+                            continue;
+                        }
                         if (!args[i + 1].StartsWith("("))
                         {
                             // Reset it.
@@ -143,24 +172,7 @@ namespace app
                             a = Convert.ToSingle(args[i + 4].Split(',')[0].Replace(')', '.'))
                         };
 
-                        ColorManager dat = Utils.CreateColor(colorAssets, c);
-
-                        var ptr = colorAssets.AppendAsset(new MonoBehaviorAssetData()
-                        {
-                            data = c,
-                            name = "CustomColor" + args[i][args[i].Length - 1],
-                            script = colorAssets.scriptIDToScriptPtr[SimpleColor.ScriptID],
-                        });
-                        Console.WriteLine($"Created new CustomColor for colorA at PathID: {ptr.pathID}");
-                        if (args[i] == "-c1")
-                        {
-                            dat.colorA = ptr;
-                        } else
-                        {
-                            dat.colorB = ptr;
-                        }
-
-                        apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
+                        ColorManager dat = Utils.CreateColor(colorAssets, c, args[i] == "-c1");
 
                         i += 4;
                         continue;
@@ -269,6 +281,7 @@ namespace app
                 }
                 byte[] outData = assets.ToBytes();
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
+                apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
 
                 string mainPackFile = "assets/bin/Data/sharedassets19.assets";
                 SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));

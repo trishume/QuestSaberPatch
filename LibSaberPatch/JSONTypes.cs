@@ -144,18 +144,11 @@ namespace LibSaberPatch
             Texture2DAssetData cover = Texture2DAssetData.CoverFromImageFile(coverPath, levelID);
             AssetPtr coverPtr = assets.AppendAsset(cover);
 
-            AssetPtr environment = new AssetPtr(20, 1); // default environment
-            switch(_environmentName) {
-                case "NiceEnvironment":
-                    environment = new AssetPtr(38, 3);
-                    break;
-                case "TriangleEnvironment":
-                    environment = new AssetPtr(0, 252);
-                    break;
-                case "BigMirrorEnvironment":
-                    environment = new AssetPtr(0, 249);
-                    break;
+            AssetPtr environment = assets.environmentIDToPtr["DefaultEnvironment"];
+            if(assets.environmentIDToPtr.ContainsKey(_environmentName)) {
+                environment = assets.environmentIDToPtr[_environmentName];
             }
+
 
             LevelBehaviorData level = new LevelBehaviorData() {
                 levelID = levelID,

@@ -22,6 +22,7 @@ namespace LibSaberPatch
 
         // ===== Extra fields, these aren't in the binary but are useful
         public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+        public Dictionary<string,AssetPtr> environmentIDToPtr;
 
         public class TypeRef {
             public int classID;
@@ -177,6 +178,7 @@ namespace LibSaberPatch
 
             // ===== Extra stuff
             scriptIDToScriptPtr = new Dictionary<byte[], AssetPtr>(new ByteArrayComparer());
+            environmentIDToPtr = new Dictionary<string, AssetPtr>();
 
             // ===== Parse Data
             for(int i = 0; i < objects.Count-1; i++) {
@@ -215,6 +217,8 @@ namespace LibSaberPatch
                     throw new ParseException($"Parsed {bytesParsed} bytes but expected {obj.size} for path ID {obj.pathID}");
                 if(!reader.ReadAllZeros(obj.paddingLen)) throw new ParseException("Expected zeros for padding");
             }
+
+            FindEnvironmentPointers();
         }
 
         private static void PatchInt(byte[] arr, long index, int val, bool bigEndian) {
@@ -335,8 +339,30 @@ namespace LibSaberPatch
             return (LevelCollectionBehaviorData)monob.data;
         }
 
+        private void TryToFindEnvironment(string name) {
+            string monobName = name + "SceneInfo";
+            AssetObject obj = objects.Find(x => (x.data is MonoBehaviorAssetData) &&
+                    ((x.data as MonoBehaviorAssetData).name == monobName));
+            if(obj == null) return;
+            environmentIDToPtr.Add(name, new AssetPtr(0, obj.pathID));
+        }
+
+        private void FindEnvironmentPointers() {
+            TryToFindEnvironment("NiceEnvironment");
+            TryToFindEnvironment("TriangleEnvironment");
+            TryToFindEnvironment("BigMirrorEnvironment");
+            TryToFindEnvironment("KDAEnvironment");
+            TryToFindEnvironment("CrabRaveEnvironment");
+
+            environmentIDToPtr.Add("DefaultEnvironment", new AssetPtr(20, 1));
+            if(!environmentIDToPtr.ContainsKey("NiceEnvironment")) { // v1.0.0
+                environmentIDToPtr.Add("NiceEnvironment", new AssetPtr(38, 3));
+            }
+        }
+
         public class Transaction {
             public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+            public Dictionary<string,AssetPtr> environmentIDToPtr;
 
             ulong lastPathID;
             List<AssetData> toAdd;
@@ -345,6 +371,7 @@ namespace LibSaberPatch
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
                 scriptIDToScriptPtr = assets.scriptIDToScriptPtr;
+                environmentIDToPtr = assets.environmentIDToPtr;
             }
 
             public AssetPtr AppendAsset(AssetData data) {

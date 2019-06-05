@@ -6,15 +6,16 @@ A basic custom song patcher for Beat Saber on the Oculus Quest, written in C# an
 
 It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as well as patch the binary to not check the signature on levels. It's very similar to [emulamer's patcher](https://github.com/emulamer/QuestStopgap) with some differences:
 
-- My library is missing some features that @emulamer's patcher has:
-    - Adding a Custom Levels collection (mine puts it in "Extras")
-    - Automated batch file workflow to do all the steps.
 - I have a few extra features his doesn't (note this might be outdated if he adds them):
     - Cover support with proper resizing and mip-mapping for smaller patched APKs and higher frame rate on the song menu screen.
     - Support for different environments as specified by the level: default, nice, triangle and big mirror
     - Recursively searches for levels in a folder, or pass multiple command line arguments for levels to add
-- My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is probably faster but I haven't tested.
-- My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is 40 lines, @emulamer's is 600.
+    - Custom color support (with hexstrings)
+    - Custom text replacement
+    - Cover pack image replacement
+    - Custom Songs pack renaming
+- My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is around twice as fast.
+- My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is STILL FAR TOO MANY lines, @emulamer's is 600.
 - I use a transaction-based design that (hopefully) should gracefully handle broken level data without messing up the APK and just skip over those songs.
 - My patcher uses fewer temporary buffers and does less copying, which may eventually lead to higher performance but right now everything is bottlenecked on beatmap serialization.
 - Mine has both read and write support for all asset constructs it supports, whereas more things in @emulamer's only have one direction of support.
@@ -35,6 +36,16 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
     - It should gracefully handle levels that are already patched in, including hopefully ones using @emulamer's patcher, ignoring them.
     - Note that it modifies the APK in place and doesn't create a new one, so make sure you have a separate backup original copy!
     - This now also signs the APK with a debug certificate in place thanks to [@emulamer's signer](https://github.com/emulamer/Apkifier).
+3. You can provide many different types of command line arguments for a variety of features:
+    - `-s path\to\image.jpg` Use `-s` to provide a custom cover image for the custom songs pack. Supported image types include `.jpg`, `.png` and `.tiff`.
+    - `-c1/-c2 #FFFFFF[FF]` Use `-c1` along with either a 6 character or 8 character hex string for a color. This will replace your saber and block colors. `-c1` corresponds to your left saber, whereas `-c2` corresponds to your right. Not providing any color after `-c1` or `-c2` _should_ reset the color, but this hasn't been tested.
+    - `-t text_key_to_replace "text to replace the key with"` Use `-t` along with a key to replace and the new text to swap it with. A full list of text keys can be found [here](https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt)
+    - `-i "New Custom Songs Pack Name" ["New Custom Songs Pack ID"]` Use `-i` along with either _just_ a new name, or a name and an ID to rename the custom songs pack to the provided name/ID.
+    - `-r` DO NOT USE! Currently broken.
+    - `-ac` DO NOT USE! CUrrently broken.
+    - `-g` Extra info about gameobjects (log only)
+    - All of the above commandline arguments can be done as many times as desired, all other command line arguments will be interpretted as song folders.
+      - For `-s`, `-c1/-c2`, and `-i`, only the last call will be saved to the .apk
 4. Use `adb install -r {patched apk path}` to install the patched signed new APK that the signer creates replacing the old APK.
 
 ### Initial setup (do this once)

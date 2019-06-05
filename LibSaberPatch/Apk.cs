@@ -102,9 +102,13 @@ namespace LibSaberPatch
 
             bool patched = false;
             byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
-            if(data.Length == 26901596) { // v1.0.1
+            if(data.Length == 26901596 && data[100] == 0x54) { // v1.0.1
                 int sigPatchLoc = 0x13b0934;
                 byte[] toReplace = {0x1A, 0x83, 0xC3, 0xEB};
+                patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
+            } else if(data.Length == 26901596 && data[100] == 0x94) { // v1.0.2
+                int sigPatchLoc = 0x10014B8;
+                byte[] toReplace = {0x00, 0x00, 0xA0, 0xE3};
                 patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
             } else if(data.Length == 27041992) { // v1.0.0
                 int sigPatchLoc = 0x0109D074;

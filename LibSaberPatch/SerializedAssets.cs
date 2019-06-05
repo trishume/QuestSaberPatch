@@ -279,13 +279,13 @@ namespace LibSaberPatch
                 // ===== Data
                 dataOffset = (int)w.BaseStream.Position;
                 
-                var serializedObjects = objects.AsParallel().AsOrdered().Select((obj, idx) => {
+                var serializedObjects = objects.AsParallel().Select((obj, idx) => {
                     using(var objStream = new MemoryStream()) {
                         obj.data.WriteTo(new BinaryWriter(objStream));
                         obj.size = (int)objStream.Length;
                         return (idx, obj, objStream.ToArray());
                     }
-                }).AsSequential();
+                });
 
                 
                 foreach(var (idx, obj, bytes) in serializedObjects) {

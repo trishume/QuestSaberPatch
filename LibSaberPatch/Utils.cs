@@ -229,6 +229,8 @@ namespace LibSaberPatch
         public static void ApplyWatermark(Dictionary<string, List<string>> localeValues)
         {
             string header = "\n<size=150%><color=#EC1C24FF>Quest Modders</color></size>";
+            string testersHeader = "<color=#E543E5FF>Testers</color>";
+
             string sc2ad = "<color=#EDCE21FF>Sc2ad</color>";
             string trishume = "<color=#40E0D0FF>trishume</color>";
             string emulamer = "<color=#00FF00FF>emulamer</color>";
@@ -238,7 +240,8 @@ namespace LibSaberPatch
             string trueavid = "<color=#FF8897FF>Trueavid</color>";
             string kayTH = "<color=#40FE97FF>kayTH</color>";
 
-            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + jakibaki + '\n' + elliotttate + '\n' + leo60228 + '\n' + trueavid + '\n' + kayTH;
+            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + jakibaki +
+                '\n' + elliotttate + '\n' + leo60228 + '\n' + testersHeader + '\n' + trueavid + '\n' + kayTH;
 
             var value = localeValues["CREDITS_CONTENT"];
             string item = value[value.Count - 1];

@@ -54,7 +54,7 @@ namespace LibSaberPatch
 
         public override int GetHashCode()
         {
-            return (int)pathID + 65535 * fileID;
+            return (int)pathID + short.MaxValue * fileID;
         }
     }
 

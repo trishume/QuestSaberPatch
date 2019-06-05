@@ -199,14 +199,11 @@ namespace app
                                     continue;
                                 }
                             }
-                            else
-                            {
-                                var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
-                                Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
-                                var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
-                                Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
-                                customPack.coverImage = sPtr;
-                            }
+                            var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
+                            Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
+                            var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
+                            Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
+                            customPack.coverImage = sPtr;
 
                         } catch (FileNotFoundException)
                         {

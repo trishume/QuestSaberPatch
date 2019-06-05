@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class LevelPackBehaviorData : BehaviorData
     {
-        public const int PathID = 1476;
+        public static byte[] ScriptID = Utils.HexToBytes("8F442E25C9A4AAC8DABEC88917B0DC7D");
 
         public string packID;
         public string packName;

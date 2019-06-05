@@ -121,7 +121,7 @@ namespace app
                         {
                             data = c,
                             name = "CustomColor" + args[i][args[i].Length - 1],
-                            script = new AssetPtr(1, SimpleColor.PathID),
+                            script = colorAssets.scriptIDToScriptPtr[SimpleColor.ScriptID],
                         });
                         Console.WriteLine($"Created new CustomColor for colorA at PathID: {ptr.pathID}");
                         if (args[i] == "-c1")

@@ -47,26 +47,34 @@ namespace LibSaberPatch.AssetDataObjects
                 data = new BeatmapDataBehaviorData(reader, length - headerLen);
                 return;
             }
+            if (scriptID.SequenceEqual(LevelPackBehaviorData.ScriptID))
+            {
+                data = new LevelPackBehaviorData(reader, length - headerLen);
+                return;
+            }
+            if (scriptID.SequenceEqual(ColorManager.ScriptID))
+            {
+                data = new ColorManager(reader, length - headerLen);
+                return;
+            }
+            if (scriptID.SequenceEqual(SimpleColor.ScriptID))
+            {
+                data = new SimpleColor(reader, length - headerLen);
+                return;
+            }
+            if (scriptID.SequenceEqual(BeatmapLevelPackCollection.ScriptID))
+            {
+                data = new BeatmapLevelPackCollection(reader, length - headerLen);
+                return;
+            }
 
             switch (script.pathID)
             {
-                case LevelPackBehaviorData.PathID:
-                    data = new LevelPackBehaviorData(reader, length - headerLen);
-                    break;
-                case ColorManager.PathID:
-                    data = new ColorManager(reader, length - headerLen);
-                    break;
-                case SimpleColor.PathID:
-                    data = new SimpleColor(reader, length - headerLen);
-                    break;
                 case TextMeshPro.PathID:
                     data = new TextMeshPro(reader, length - headerLen);
                     break;
                 case Saber.PathID:
                     data = new Saber(reader, length - headerLen);
-                    break;
-                case BeatmapLevelPackCollection.PathID:
-                    data = new BeatmapLevelPackCollection(reader, length - headerLen);
                     break;
                 case LocalizedTextMeshProUGUI.PathID:
                     data = new LocalizedTextMeshProUGUI(reader, length - headerLen);
@@ -77,6 +85,10 @@ namespace LibSaberPatch.AssetDataObjects
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;
+            }
+            if (!(data is UnknownBehaviorData))
+            {
+                Console.WriteLine($"Type: {data.GetType()} ScriptHash: {BitConverter.ToString(scriptID).Replace("-", "")}");
             }
         }
 

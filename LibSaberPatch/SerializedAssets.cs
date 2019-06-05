@@ -534,7 +534,7 @@ namespace LibSaberPatch
                     coverImage = new AssetPtr(0, 45) // Default
                 },
                 name = "CustomLevelPack",
-                script = new AssetPtr(1, LevelPackBehaviorData.PathID)
+                script = scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
             });
             return ptr;
         }

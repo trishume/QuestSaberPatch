@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using LibSaberPatch.BehaviorDataObjects;
 using LibSaberPatch.AssetDataObjects;
@@ -277,10 +278,19 @@ namespace LibSaberPatch
 
                 // ===== Data
                 dataOffset = (int)w.BaseStream.Position;
-                foreach(AssetObject obj in objects) {
+                
+                var serializedObjects = objects.AsParallel().AsOrdered().Select((obj, idx) => {
+                    using(var objStream = new MemoryStream()) {
+                        obj.data.WriteTo(new BinaryWriter(objStream));
+                        obj.size = (int)objStream.Length;
+                        return (idx, obj, objStream.ToArray());
+                    }
+                }).AsSequential();
+
+                
+                foreach(var (idx, obj, bytes) in serializedObjects) {
                     obj.offset = (int)w.BaseStream.Position - dataOffset;
-                    obj.data.WriteTo(w);
-                    obj.size = ((int)w.BaseStream.Position - dataOffset) - obj.offset;
+                    w.Write(bytes);
                     w.WriteZeros(obj.paddingLen);
 
                     // TODO do objects need to be aligned?
@@ -288,6 +298,8 @@ namespace LibSaberPatch
                     // But if we change the size of an object it's probably more important to preserve
                     // alignment than the exact amount of padding.
                     w.AlignStream();
+
+                    objects[idx] = obj;
                 }
 
                 length = (int)stream.Length;

@@ -203,8 +203,9 @@ namespace LibSaberPatch
             string trishume = "<color=#40E0D0FF>trishume</color>";
             string emulamer = "<color=#00FF00FF>emulamer</color>";
             string trueavid = "<color=#FF8897FF>Trueavid</color>";
+            string kayTH = "<color=#40FE97FF>kayTH</color>";
 
-            string message = header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + trueavid;
+            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + trueavid + '\n' + kayTH;
 
             var value = localeValues["CREDITS_CONTENT"];
             string item = value[value.Count - 1];

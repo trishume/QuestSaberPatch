@@ -186,15 +186,28 @@ namespace app
                         string cusomCoverFile = args[i + 1];
                         try
                         {
-                            Texture2DAssetData dat = assets.GetAssetAt(14).data as Texture2DAssetData;
-
                             //assets.SetAssetAt(14, dat);
-                            var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
-                            Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
-                            var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
-                            Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
+                            var spPtr = customPack.coverImage.Follow<SpriteAssetData>(assets);
+                            if (spPtr != null)
+                            {
+                                var texture = spPtr.texture.Follow<Texture2DAssetData>(assets);
+                                if (texture.name == "CustomSongsCover")
+                                {
+                                    Console.WriteLine($"Replacing existing Sprite + Texture2D at: {customPack.coverImage.pathID}");
+                                    assets.SetAssetAt(spPtr.texture.pathID, Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
+                                    i++;
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
+                                Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
+                                var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
+                                Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
+                                customPack.coverImage = sPtr;
+                            }
 
-                            customPack.coverImage = sPtr;
                         } catch (FileNotFoundException)
                         {
                             Console.WriteLine($"[ERROR] Custom cover file does not exist: {args[i+1]}");

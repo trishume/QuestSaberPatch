@@ -495,7 +495,7 @@ namespace LibSaberPatch
             var col = FindScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", l => true);
             if (col == null)
             {
-                var ptr = Utils.CreateCustomCollection(this);
+                var ptr = Utils.CreateCustomCollection(this, "CustomLevelCollection");
 
                 col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
             }
@@ -530,7 +530,7 @@ namespace LibSaberPatch
 
         public AssetPtr CreateCustomLevelPack()
         {
-            return Utils.CreateCustomPack(this, new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID));
+            return Utils.CreateCustomPack(this, new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID), "Custom Songs", "CustomLevel");
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()

@@ -42,7 +42,7 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
     - `-t text_key_to_replace "text to replace the key with"` Use `-t` along with a key to replace and the new text to swap it with. A full list of text keys can be found [here](https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt)
     - `-i "New Custom Songs Pack Name" ["New Custom Songs Pack ID"]` Use `-i` along with either _just_ a new name, or a name and an ID to rename the custom songs pack to the provided name/ID.
     - `-r` DO NOT USE! Currently broken.
-    - `-ac` DO NOT USE! CUrrently broken.
+    - `-ac "Playlist name" "PlaylistID" path\to\image.jpg path\to\songs` Use `-ac` along with a playlist name, id, image, and songs inside that playlist to load a custom playlist into your game. Supports only one path for songs. THIS HAS NO DUPLICATE PROTECTION! That means that if you have a playlist with duplicate songs, or you accidentally add an identical playlist twice, they will BOTH APPEAR! 
     - `-g` Extra info about gameobjects (log only)
     - All of the above commandline arguments can be done as many times as desired, all other command line arguments will be interpretted as song folders.
       - For `-s`, `-c1/-c2`, and `-i`, only the last call will be saved to the .apk

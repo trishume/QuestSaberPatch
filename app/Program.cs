@@ -48,14 +48,7 @@ namespace app
                 ta.script = Utils.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
                 apk.ReplaceAssetsFile(textAssetsPath, textAssets.ToBytes());
 
-                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
-                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
-
-                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
-                Console.WriteLine($"Found sharedassets17.assets at FileID: {fileI}");
-                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
-                var pointerPacks = mainLevelPack.beatmapLevelPacks[mainLevelPack.beatmapLevelPacks.Count - 1];
-                Console.WriteLine($"Original last pack FileID: {pointerPacks.fileID} PathID: {pointerPacks.pathID}");
+                var newPacks = new List<ulong>();
 
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData customCollection = assets.FindCustomLevelCollection();
@@ -75,20 +68,16 @@ namespace app
                             // There is STILL not enough data. We should exit.
                             Console.WriteLine($"[ERROR] Could not rename custom songs pack because there were not enough arguments!");
                         }
-                        var collection = Utils.CreateCustomCollection(assets);
-                        var pack = Utils.CreateCustomPack(assets, collection);
+                        var collection = Utils.CreateCustomCollection(assets, args[i + 1] + "Collection");
+                        var pack = Utils.CreateCustomPack(assets, collection, args[i + 1], args[i + 2]);
 
-                        Console.WriteLine($"Named new CustomPack PackName: {args[i + 1]}");
-                        pack.FollowToScript<LevelPackBehaviorData>(assets).packName = args[i + 1];
-                        Console.WriteLine($"Named new CustomPack PackID: {args[i + 2]}");
-                        pack.FollowToScript<LevelPackBehaviorData>(assets).packID = args[i + 2];
-                        pack.Follow<MonoBehaviorAssetData>(assets).name = args[i + 1];
+                        var c = collection.FollowToScript<LevelCollectionBehaviorData>(assets);
                         var texturePointer = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 3], args[i + 1], true));
-                        var spPointer = assets.AppendAsset(Utils.CreateSprite(assets, texturePointer));
+                        var spPointer = assets.AppendAsset(Utils.CreateSprite(assets, texturePointer, args[i + 1] + "CoverSprite"));
                         pack.FollowToScript<LevelPackBehaviorData>(assets).coverImage = spPointer;
                         // Add pack pointer to "mainLevelPack"
                         Console.WriteLine($"Added new {args[i + 1]} to all packs!");
-                        mainLevelPack.beatmapLevelPacks.Add(pack);
+                        newPacks.Add(pack.pathID);
 
                         Utils.FindLevels(args[i + 4], (levelFolder) =>
                         {
@@ -106,7 +95,7 @@ namespace app
 
                                 // Danger should be over, nothing here should fail
                                 assetsTxn.ApplyTo(assets);
-                                customCollection.levels.Add(levelPtr);
+                                c.levels.Add(levelPtr);
                                 existingLevels.Add(levelID);
                                 apkTxn.ApplyTo(apk);
                             }
@@ -119,7 +108,7 @@ namespace app
                                 Console.WriteLine("[SKIPPING] Invalid level JSON: {0}", e.Message);
                             }
                         });
-                        i += 3;
+                        i += 4;
                         continue;
                     }
                     if (args[i] == "-i")
@@ -277,7 +266,7 @@ namespace app
                             }
                             var ptr = assets.AppendAsset(Texture2DAssetData.CoverFromImageFile(args[i + 1], "CustomSongs", true));
                             Console.WriteLine($"Added Texture at PathID: {ptr.pathID} with new Texture2D from file: {args[i + 1]}");
-                            var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr));
+                            var sPtr = assets.AppendAsset(Utils.CreateSprite(assets, ptr, "CustomSongsCoverSprite"));
                             Console.WriteLine($"Added Sprite at PathID: {sPtr.pathID}!");
                             customPack.coverImage = sPtr;
 
@@ -347,6 +336,15 @@ namespace app
                 apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
                 apk.ReplaceAssetsFile(colorPath, colorAssets.ToBytes());
 
+                string mainPackFile = "assets/bin/Data/sharedassets19.assets";
+                SerializedAssets mainPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(mainPackFile));
+
+                int fileI = mainPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+                Console.WriteLine($"Found sharedassets17.assets at FileID: {fileI}");
+                var mainLevelPack = mainPackAssets.FindMainLevelPackCollection();
+                var pointerPacks = mainLevelPack.beatmapLevelPacks[mainLevelPack.beatmapLevelPacks.Count - 1];
+                Console.WriteLine($"Original last pack FileID: {pointerPacks.fileID} PathID: {pointerPacks.pathID}");
+
                 if (!mainLevelPack.beatmapLevelPacks.Any(ptr => ptr.fileID == fileI && ptr.pathID == customPackPathID))
                 {
                     Console.WriteLine($"Added CustomLevelPack to {mainPackFile}");
@@ -360,6 +358,11 @@ namespace app
                         Console.WriteLine("Adding as new Pack!");
                         mainLevelPack.beatmapLevelPacks.Add(new AssetPtr(fileI, customPackPathID));
                     }
+                }
+                foreach (var newPack in newPacks)
+                {
+                    Console.WriteLine($"Adding new pack at PathID: {newPack}");
+                    mainLevelPack.beatmapLevelPacks.Add(new AssetPtr(fileI, newPack));
                 }
                 pointerPacks = mainLevelPack.beatmapLevelPacks[mainLevelPack.beatmapLevelPacks.Count - 1];
                 Console.WriteLine($"New last pack FileID: {pointerPacks.fileID} PathID: {pointerPacks.pathID}");

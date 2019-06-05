@@ -157,7 +157,7 @@ namespace LibSaberPatch
             }
         }
 
-        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture)
+        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture, string name)
         {
             // Default Sprite
             ulong pd = 45;
@@ -169,7 +169,7 @@ namespace LibSaberPatch
             var sprite = sp.data as SpriteAssetData;
             return new SpriteAssetData()
             {
-                name = "CustomPackCover",
+                name = name,
                 texture = customTexture,
                 atlasTags = sprite.atlasTags,
                 extrude = sprite.extrude,
@@ -262,29 +262,29 @@ namespace LibSaberPatch
             return temp;
         }
 
-        public static AssetPtr CreateCustomCollection(SerializedAssets assets)
+        public static AssetPtr CreateCustomCollection(SerializedAssets assets, string name)
         {
             return assets.AppendAsset(new MonoBehaviorAssetData()
             {
                 data = new LevelCollectionBehaviorData(),
-                name = "CustomLevelCollection",
+                name = name,
                 script = assets.scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
             });
         }
 
-        public static AssetPtr CreateCustomPack(SerializedAssets assets, AssetPtr collection)
+        public static AssetPtr CreateCustomPack(SerializedAssets assets, AssetPtr collection, string name, string id)
         {
             var ptr = assets.AppendAsset(new MonoBehaviorAssetData()
             {
                 data = new LevelPackBehaviorData()
                 {
-                    packName = "Custom Songs",
-                    packID = "CustomPack",
+                    packName = name,
+                    packID = id,
                     isPackAlwaysOwned = true,
                     beatmapLevelCollection = collection,
                     coverImage = new AssetPtr(0, 45) // Default
                 },
-                name = "CustomLevelPack",
+                name = id + "Pack",
                 script = assets.scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
             });
             return ptr;

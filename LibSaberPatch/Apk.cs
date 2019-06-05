@@ -95,21 +95,34 @@ namespace LibSaberPatch
             }
         }
 
-        private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
-        private const int sigPatchLoc = 0x013B0934;
-        public void PatchSignatureCheck() {
-            byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
-            byte[] toReplace = {0x1A, 0x83, 0xC3, 0xEB};
-            byte[] data = ReadEntireEntry(il2cppLibEntry);
-            // Check if already done
-            if(bytesEqualAtOffset(data, sigPatch, sigPatchLoc)) return;
+        private bool tryPatch(byte[] data, int sigPatchLoc, byte[] sigPatch, byte[] toReplace) {
+            if(bytesEqualAtOffset(data, sigPatch, sigPatchLoc)) return false;
             if(!bytesEqualAtOffset(data, toReplace, sigPatchLoc))
                 throw new ApplicationException("Trying to patch different version of code");
 
             for(int i = 0; i < sigPatch.Length; i++) {
                 data[sigPatchLoc + i] = sigPatch[i];
             }
-            WriteEntireEntry(il2cppLibEntry, data);
+            return true;
+        }
+
+        private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
+        public void PatchSignatureCheck() {
+            byte[] data = ReadEntireEntry(il2cppLibEntry);
+
+            bool patched = false;
+            byte[] sigPatch = {0x01, 0x00, 0xA0, 0xE3};
+            if(data.Length == 26901596) { // v1.0.1
+                int sigPatchLoc = 0x13b0934;
+                byte[] toReplace = {0x1A, 0x83, 0xC3, 0xEB};
+                patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
+            } else if(data.Length == 27041992) { // v1.0.0
+                int sigPatchLoc = 0x0109D074;
+                byte[] toReplace = {0x8B, 0xD8, 0xFE, 0xEB};
+                patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
+            }
+
+            if(patched) WriteEntireEntry(il2cppLibEntry, data);
         }
 
         private static bool bytesEqualAtOffset(byte[] data, byte[] patch, int offset) {

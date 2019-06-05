@@ -48,7 +48,7 @@ namespace LibSaberPatch
             string characteristicPart = ((characteristic == Characteristic.Standard) ? "" : characteristic.ToString());
             string assetName = levelID + characteristicPart + _difficulty.ToString() + "BeatmapData";
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
-                script = new AssetPtr(1, BeatmapDataBehaviorData.PathID),
+                script = assets.scriptIDToScriptPtr[BeatmapDataBehaviorData.ScriptID],
                 name = assetName,
                 data = beatmapData,
             };
@@ -180,7 +180,7 @@ namespace LibSaberPatch
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
-                script = new AssetPtr(1, LevelBehaviorData.PathID),
+                script = assets.scriptIDToScriptPtr[LevelBehaviorData.ScriptID],
                 name = level.levelID + "Level",
                 data = level,
             };

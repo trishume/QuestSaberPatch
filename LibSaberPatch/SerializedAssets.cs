@@ -22,12 +22,15 @@ namespace LibSaberPatch
         public List<SerializedAssets.Script> scripts;
         public List<SerializedAssets.External> externals;
 
+        // ===== Extra fields, these aren't in the binary but are useful
+        public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+
         public class TypeRef {
             public int classID;
-            bool isStripped;
-            ushort scriptTypeIndex;
-            byte[] scriptID;
-            byte[] typeHash;
+            public bool isStripped;
+            public ushort scriptTypeIndex;
+            public byte[] scriptID;
+            public byte[] typeHash;
 
             public TypeRef(BinaryReader reader) {
                 classID = reader.ReadInt32();
@@ -173,6 +176,9 @@ namespace LibSaberPatch
             if(!reader.ReadAllZeros(paddingLen)) throw new ParseException("Expected zeros for padding");
             Debug.Assert(reader.BaseStream.Position == dataOffset, "Parsed metadata wrong");
 
+            // ===== Extra stuff
+            scriptIDToScriptPtr = new Dictionary<byte[], AssetPtr>(new ByteArrayComparer());
+
             // ===== Parse Data
             for(int i = 0; i < objects.Count-1; i++) {
                 objects[i].paddingLen = objects[i+1].offset-(objects[i].offset+objects[i].size);
@@ -194,7 +200,10 @@ namespace LibSaberPatch
                 }
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
-                        obj.data = new MonoBehaviorAssetData(reader, obj.size);
+                        byte[] scriptID = types[obj.typeID].scriptID;
+                        var monob = new MonoBehaviorAssetData(reader, obj.size, scriptID);
+                        scriptIDToScriptPtr[scriptID] = monob.script;
+                        obj.data = monob;
                         break;
                     case AudioClipAssetData.ClassID:
                         obj.data = new AudioClipAssetData(reader, obj.size);
@@ -220,7 +229,7 @@ namespace LibSaberPatch
                 }
                 long bytesParsed = reader.BaseStream.Position - startOffset;
                 if(bytesParsed != obj.size)
-                    throw new ParseException($"Parsed {bytesParsed} but expected {obj.size} for {obj.pathID}");
+                    throw new ParseException($"Parsed {bytesParsed} bytes but expected {obj.size} for path ID {obj.pathID}");
                 if(!reader.ReadAllZeros(obj.paddingLen)) throw new ParseException("Expected zeros for padding");
             }
         }
@@ -294,6 +303,17 @@ namespace LibSaberPatch
             }
 
             outStream.Write(buf, 0, length);
+        }
+
+        public enum BeatSaberVersion {
+            V1_0_0,
+            V1_0_1,
+        }
+
+        public BeatSaberVersion GetBeatSaberVersion() {
+            if(types.Count == 30) return BeatSaberVersion.V1_0_0;
+            if(types.Count == 29) return BeatSaberVersion.V1_0_1;
+            throw new ParseException("Can't determine version");
         }
 
         public AssetPtr AppendAsset(AssetData data) {
@@ -463,7 +483,7 @@ namespace LibSaberPatch
                 {
                     data = new LevelCollectionBehaviorData(),
                     name = "CustomLevelCollection",
-                    script = new AssetPtr(1, LevelCollectionBehaviorData.PathID)
+                    script = scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
                 });
 
                 col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
@@ -522,12 +542,15 @@ namespace LibSaberPatch
         }
 
         public class Transaction {
+            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+
             ulong lastPathID;
             List<AssetData> toAdd;
 
             public Transaction(SerializedAssets assets) {
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
+                scriptIDToScriptPtr = assets.scriptIDToScriptPtr;
             }
 
             public AssetPtr AppendAsset(AssetData data) {

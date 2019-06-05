@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -7,8 +9,6 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using LibSaberPatch.BehaviorDataObjects;
-using System.Collections.Generic;
-using System.Linq;
 using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
@@ -49,6 +49,14 @@ namespace LibSaberPatch
                 }
             }
             return imageData;
+        }
+
+        // https://stackoverflow.com/questions/321370/how-can-i-convert-a-hex-string-to-a-byte-array
+        public static byte[] HexToBytes(string hex) {
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
         }
         
         public static ulong RemoveLevel(SerializedAssets assets, LevelBehaviorData level)
@@ -219,5 +227,23 @@ namespace LibSaberPatch
             temp = temp.Remove(temp.Length - 1);
             return temp;
         }
+    }
+
+    // loosely based on https://stackoverflow.com/questions/1440392/use-byte-as-key-in-dictionary
+    public class ByteArrayComparer : EqualityComparer<byte[]> {
+        public override bool Equals(byte[] first, byte[] second) {
+            if (first == null || second == null) {
+                return first == second;
+            }
+            return first.SequenceEqual(second);
+        }
+
+        public override int GetHashCode(byte[] obj) {
+            if (obj.Length >= 4) {
+                return BitConverter.ToInt32(obj, 0);
+            }
+            return 0;
+        }
+
     }
 }

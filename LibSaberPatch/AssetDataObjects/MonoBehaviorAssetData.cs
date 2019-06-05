@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
@@ -22,7 +23,7 @@ namespace LibSaberPatch.AssetDataObjects
             enabled = 1;
         }
 
-        public MonoBehaviorAssetData(BinaryReader reader, int length)
+        public MonoBehaviorAssetData(BinaryReader reader, int length, byte[] scriptID)
         {
             int startOffset = (int)reader.BaseStream.Position;
             gameObject = new AssetPtr(reader);
@@ -31,17 +32,12 @@ namespace LibSaberPatch.AssetDataObjects
             name = reader.ReadAlignedString();
             int headerLen = (int)reader.BaseStream.Position - startOffset;
 
+            if (scriptID.SequenceEqual(LevelBehaviorData.ScriptID)) data = new LevelBehaviorData(reader, length - headerLen);
+            if (scriptID.SequenceEqual(LevelCollectionBehaviorData.ScriptID)) data = new LevelCollectionBehaviorData(reader, length - headerLen);
+            if (scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID)) data = new BeatmapDataBehaviorData(reader, length - headerLen);
+
             switch (script.pathID)
             {
-                case LevelBehaviorData.PathID:
-                    data = new LevelBehaviorData(reader, length - headerLen);
-                    break;
-                case LevelCollectionBehaviorData.PathID:
-                    data = new LevelCollectionBehaviorData(reader, length - headerLen);
-                    break;
-                case BeatmapDataBehaviorData.PathID:
-                    data = new BeatmapDataBehaviorData(reader, length - headerLen);
-                    break;
                 case LevelPackBehaviorData.PathID:
                     data = new LevelPackBehaviorData(reader, length - headerLen);
                     break;

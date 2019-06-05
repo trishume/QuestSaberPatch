@@ -28,7 +28,11 @@ namespace LibSaberPatch
 
     public class LevelCollectionBehaviorData : BehaviorData
     {
-        public const int PathID = 762;
+        public static byte[] ScriptID = Utils.HexToBytes("930CDD59C2DBC4FA674501914A570AC2");
+
+        // This is for level packs, I got it wrong the first time, saving this until we need it
+        // public static byte[] ScriptID = Utils.HexToBytes("8F442E25C9A4AAC8DABEC88917B0DC7D");
+
         public List<AssetPtr> levels;
 
         public LevelCollectionBehaviorData(BinaryReader reader, int length) {
@@ -46,7 +50,7 @@ namespace LibSaberPatch
 
     public class BeatmapDataBehaviorData : BehaviorData
     {
-        public const int PathID = 1552;
+        public static byte[] ScriptID = Utils.HexToBytes("95AF3C8D406FF35C9DA151E0EE1E0013");
 
         public string jsonData;
         public byte[] signature;
@@ -118,7 +122,7 @@ namespace LibSaberPatch
 
     public class LevelBehaviorData : BehaviorData
     {
-        public const int PathID = 644;
+        public static byte[] ScriptID = Utils.HexToBytes("A3EC9046011206F5CD109314850602E3");
 
         public string levelID;
         public string songName;

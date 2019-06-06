@@ -29,12 +29,7 @@ namespace LibSaberPatch
 
         public string _beatmapFilename;
 
-        public BeatmapDifficulty ToAssets(
-            SerializedAssets.Transaction assets,
-            string levelFolderPath,
-            string levelID,
-            Characteristic characteristic
-        ) {
+        public MonoBehaviorAssetData ToAssetData(Dictionary<byte[], AssetPtr> scripts, string levelFolderPath, string levelID, Characteristic characteristic) {
             string beatmapFile = Path.Combine(levelFolderPath, _beatmapFilename);
             string jsonData = File.ReadAllText(beatmapFile);
             BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
@@ -48,11 +43,19 @@ namespace LibSaberPatch
             string characteristicPart = ((characteristic == Characteristic.Standard) ? "" : characteristic.ToString());
             string assetName = levelID + characteristicPart + _difficulty.ToString() + "BeatmapData";
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
-                script = assets.scriptIDToScriptPtr[BeatmapDataBehaviorData.ScriptID],
+                script = scripts[BeatmapDataBehaviorData.ScriptID],
                 name = assetName,
                 data = beatmapData,
             };
-            AssetPtr assetPtr = assets.AppendAsset(monob);
+
+            return monob;
+        }
+
+        public BeatmapDifficulty ToAssets(
+            SerializedAssets.Transaction assets,
+            MonoBehaviorAssetData data
+        ) {
+            AssetPtr assetPtr = assets.AppendAsset(data);
 
             return new BeatmapDifficulty() {
                 difficulty = (int)_difficulty,
@@ -80,10 +83,13 @@ namespace LibSaberPatch
         public List<JsonBeatmapDifficulty> _difficultyBeatmaps;
         public Characteristic _beatmapCharacteristicName;
 
+        public List<MonoBehaviorAssetData> ToAssetData(Dictionary<byte[], AssetPtr> scripts, string levelFolderPath, string levelID) {
+            return _difficultyBeatmaps.Select(s => s.ToAssetData(scripts, levelFolderPath, levelID, _beatmapCharacteristicName)).ToList();
+        }
+
         public BeatmapSet ToAssets(
             SerializedAssets.Transaction assets,
-            string levelFolderPath,
-            string levelID
+            List<MonoBehaviorAssetData> data
         ) {
             var set = new BeatmapSet();
             switch (_beatmapCharacteristicName)
@@ -100,7 +106,7 @@ namespace LibSaberPatch
                 case Characteristic.Lightshow:
                     return null;
             }
-            set.difficultyBeatmaps = _difficultyBeatmaps.Select(s => s.ToAssets(assets, levelFolderPath, levelID, _beatmapCharacteristicName)).ToList();
+            set.difficultyBeatmaps = _difficultyBeatmaps.Zip(data, (a, b) => (a, b)).Select((s) => s.Item1.ToAssets(assets, s.Item2)).ToList();
             return set;
         }
     }
@@ -137,7 +143,11 @@ namespace LibSaberPatch
             return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
         }
 
-        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID) {
+        public List<List<MonoBehaviorAssetData>> ToAssetData(Dictionary<byte[], AssetPtr> scripts, string levelID) {
+            return _difficultyBeatmapSets.Select(s => s.ToAssetData(scripts, levelFolderPath, levelID)).ToList();
+        }
+
+        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID, List<List<MonoBehaviorAssetData>> data) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);
             AssetPtr audioClipPtr = assets.AppendAsset(audioClip);
@@ -169,7 +179,7 @@ namespace LibSaberPatch
                 coverImage = coverPtr,
                 environment = environment,
 
-                difficultyBeatmapSets = _difficultyBeatmapSets.Select(s => s.ToAssets(assets, levelFolderPath, levelID)).Where(s => s!=null).ToList(),
+                difficultyBeatmapSets = _difficultyBeatmapSets.Zip(data, (a, b) => (a, b)).Select(s => s.Item1.ToAssets(assets, s.Item2)).Where(s => s!=null).ToList(),
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {

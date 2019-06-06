@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
@@ -191,28 +192,41 @@ namespace jsonApp
             InvocationResult res,
             Dictionary<string, string> levels
         ) {
+            var serializationFuncs = new List<Func<(JsonLevel, List<List<MonoBehaviorAssetData>>, string, string)>>();
             foreach(string levelID in toInstall) {
                 string levelFolder = levels[levelID];
                 try {
-                    JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
-                    // We use transactions here so if these throw
-                    // an exception, which happens when levels are
-                    // invalid, then it doesn't modify the APK in
-                    // any way that might screw things up later.
-                    var assetsTxn = new SerializedAssets.Transaction(assets);
-                    var apkTxn = new Apk.Transaction();
-                    AssetPtr levelPtr = level.AddToAssets(assetsTxn, apkTxn, levelID);
+                    serializationFuncs.Add(() => {
+                        JsonLevel level = JsonLevel.LoadFromFolder(levelFolder);
 
-                    // Danger should be over, nothing here should fail
-                    assetsTxn.ApplyTo(assets);
-                    apkTxn.ApplyTo(apk);
-                    res.installedLevels.Add(levelID);
+                        var levelData = level.ToAssetData(assets.scriptIDToScriptPtr, levelID);
+
+                        return (level, levelData, levelID, level._songName);
+                    });
                 } catch (FileNotFoundException e) {
                     res.installSkipped.Add(levelID, $"Missing file referenced by level: {e.FileName}");
                 } catch (JsonReaderException e) {
                     res.installSkipped.Add(levelID, $"Invalid level JSON: {e.Message}");
                 }
             }
+
+            var serializedAssets = new (JsonLevel, List<List<MonoBehaviorAssetData>>, string, string)[serializationFuncs.Count];
+
+            Parallel.ForEach(serializationFuncs, (func, state, idx) => {
+                serializedAssets[idx] = func();
+            });
+
+            var assetsBatchTxn = new SerializedAssets.Transaction(assets);
+            var apkBatchTxn = new Apk.Transaction();
+
+            foreach (var (level, levelData, levelID, songName) in serializedAssets) {
+                level.AddToAssets(assetsBatchTxn, apkBatchTxn, levelID, levelData);
+
+                res.installedLevels.Add(levelID);
+            }
+
+            assetsBatchTxn.ApplyTo(assets);
+            apkBatchTxn.ApplyTo(apk);
         }
 
         static void UpdateColors(Apk apk, CustomColors colors) {

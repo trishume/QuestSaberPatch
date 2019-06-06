@@ -432,6 +432,26 @@ namespace LibSaberPatch
             return set;
         }
 
+        public Dictionary<string, ulong> FindLevels() {
+            var dict = new Dictionary<string, ulong>();
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is MonoBehaviorAssetData))
+                    continue;
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                if(!(monob.data is LevelBehaviorData))
+                    continue;
+                LevelBehaviorData levelData = (LevelBehaviorData)monob.data;
+                dict.Add(levelData.levelID, obj.pathID);
+            }
+            return dict;
+        }
+
+        public ulong MainAssetsMaxBaseGamePath() {
+            var lastBaseObject = objects.Find(o => (o.data is MonoBehaviorAssetData) &&
+                (o.data as MonoBehaviorAssetData).name == "SimpleRetailDemoMenuScenesTransitionSetupDataSO");
+            return lastBaseObject.pathID;
+        }
+
         public T FindScript<T>(Predicate<T> condition) where T : BehaviorData
         {
             return FindScript(ao => true, condition);

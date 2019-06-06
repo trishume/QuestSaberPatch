@@ -1,0 +1,15 @@
+{
+  "apkPath": "/Users/tristan/BeatSaber/base_testing.apk",
+  "patchSignatureCheck": false,
+  "sign": true,
+  "levels": {
+    "BUBBLETEA": "testdata/bubble_tea_song"
+  },
+  "packs": [
+    {
+      "name": "Custom Levels",
+      "coverImagePath": "testdata/bubble_tea_song/cover.jpg",
+      "levelIDs": ["BUBBLETEA"]
+    }
+  ]
+}

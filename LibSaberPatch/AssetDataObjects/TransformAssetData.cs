@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class TransformAssetData : AssetData
+    public sealed class TransformAssetData : AssetData
     {
         public const int ClassID = 4;
 
@@ -26,12 +26,12 @@ namespace LibSaberPatch.AssetDataObjects
             parent = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return -1; // TODO
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             gameObject.WriteTo(w);
             localRotation.WriteTo(w);

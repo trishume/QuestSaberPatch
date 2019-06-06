@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class SpriteAssetData : AssetData
+    public sealed class SpriteAssetData : AssetData
     {
         public const int ClassID = 0xD5;
 
@@ -43,7 +43,7 @@ namespace LibSaberPatch.AssetDataObjects
 
         public SpriteAssetData() { }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             w.WriteAlignedString(name);
             foreach (float f in floats)
@@ -61,12 +61,12 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(bytesAfterTexture);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return 0x06;
         }
 
-        public override void Trace(Action<AssetPtr> action)
+        public sealed override void Trace(Action<AssetPtr> action)
         {
             foreach (AssetPtr p in atlasTags)
             {

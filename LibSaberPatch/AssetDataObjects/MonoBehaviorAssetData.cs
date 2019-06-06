@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class MonoBehaviorAssetData : AssetData
+    public sealed class MonoBehaviorAssetData : AssetData
     {
         public const int ClassID = 114;
 
@@ -92,7 +92,7 @@ namespace LibSaberPatch.AssetDataObjects
             }
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             gameObject.WriteTo(w);
             w.Write(enabled);
@@ -101,19 +101,19 @@ namespace LibSaberPatch.AssetDataObjects
             data.WriteTo(w);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return data.SharedAssetsTypeIndex();
         }
 
-        public override void Trace(Action<AssetPtr> action)
+        public sealed override void Trace(Action<AssetPtr> action)
         {
             // So, we have AssetPtrs, however, we don't want to delete any of the pointers for Gameobject/Script
             // We DO want to delete/call trace on all pointers that are in data.
             data.Trace(action);
         }
 
-        public override List<string> OwnedFiles(SerializedAssets assets)
+        public sealed override List<string> OwnedFiles(SerializedAssets assets)
         {
             return data.OwnedFiles(assets);
         }

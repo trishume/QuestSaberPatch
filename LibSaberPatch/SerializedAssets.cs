@@ -2,14 +2,14 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using LibSaberPatch.BehaviorDataObjects;
 using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
-    public class SerializedAssets
+    public sealed class SerializedAssets
     {
         /// padding between metadata and data
         int paddingLen;
@@ -27,7 +27,7 @@ namespace LibSaberPatch
         public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
         public Dictionary<string,AssetPtr> environmentIDToPtr;
 
-        public class TypeRef {
+        public sealed class TypeRef {
             public int classID;
             public bool isStripped;
             public ushort scriptTypeIndex;
@@ -55,7 +55,7 @@ namespace LibSaberPatch
             }
         }
 
-        public class AssetObject {
+        public sealed class AssetObject {
             public ulong pathID;
             public int typeID;
             public AssetData data;
@@ -89,7 +89,7 @@ namespace LibSaberPatch
             }
         }
 
-        public class Script {
+        public sealed class Script {
             int fileIndex;
             ulong inFileID;
 
@@ -106,7 +106,7 @@ namespace LibSaberPatch
             }
         }
 
-        public class External {
+        public sealed class External {
             public string tempEmpty;
             public byte[] guid;
             public int type;
@@ -127,7 +127,7 @@ namespace LibSaberPatch
             }
         }
 
-        public class ParseException : ApplicationException {
+        public sealed class ParseException : ApplicationException {
             public ParseException(string msg) : base(msg) {}
         }
 
@@ -191,7 +191,9 @@ namespace LibSaberPatch
             int dataSize = fileSize - dataOffset;
             last.paddingLen = dataSize - (last.offset+last.size);
 
-            foreach(AssetObject obj in objects) {
+            for(int idx = 0; idx < objects.Count; ++idx) {
+                var obj = objects[idx];
+
                 // Console.WriteLine((reader.BaseStream.Position-dataOffset, obj.offset, obj.size));
                 if(reader.BaseStream.Position-dataOffset != obj.offset) {
                     throw new ParseException("Objects aren't in order");
@@ -239,19 +241,21 @@ namespace LibSaberPatch
             FindEnvironmentPointers();
         }
 
-        private static void PatchInt(byte[] arr, long index, int val, bool bigEndian) {
+        private static void PatchInt<T>(T stream, long index, int val, bool bigEndian, bool preserve = true) where T : Stream {
             byte[] buff = BitConverter.GetBytes(val);
             if(bigEndian) Array.Reverse(buff);
-            for(int i = 0; i < 4; i++) arr[i+index] = buff[i];
+            var prev = stream.Position;
+            stream.Position = index;
+            stream.Write(buff, 0, buff.Length);
+            if (preserve) stream.Position = prev;
         }
 
-        public void WriteTo(Stream outStream) {
-            List<long> patchLocs = new List<long>(objects.Count);
-            byte[] buf;
-            int length;
-            int dataOffset;
-            int metadataSize;
-            using (MemoryStream stream = new MemoryStream()) {
+        public void WriteTo<T>(T unbufferedStream) where T : Stream {
+            using (var stream = new BufferedStream(unbufferedStream)) {
+                List<long> patchLocs = new List<long>(objects.Count);
+                int dataOffset;
+                int metadataSize;
+
                 BinaryWriter w = new BinaryWriter(stream);
 
                 // ===== Header
@@ -278,11 +282,22 @@ namespace LibSaberPatch
 
                 // ===== Data
                 dataOffset = (int)w.BaseStream.Position;
-                foreach(AssetObject obj in objects) {
-                    obj.offset = (int)w.BaseStream.Position - dataOffset;
-                    obj.data.WriteTo(w);
-                    obj.size = ((int)w.BaseStream.Position - dataOffset) - obj.offset;
-                    w.WriteZeros(obj.paddingLen);
+
+                var serializedObjects = new byte[objects.Count][];
+                Parallel.ForEach(objects, (obj, state, idx) => {
+                    using(var objMemStream = new MemoryStream())
+                    using(var objStream = new BufferedStream(objMemStream)) {
+                        obj.data.WriteTo(new BinaryWriter(objStream));
+                        obj.size = (int)objStream.Length;
+                        objStream.Flush();
+                        serializedObjects[idx] = objMemStream.GetBuffer();
+                    }
+                });
+
+                for(int idx = 0; idx < objects.Count; ++idx) {
+                    objects[idx].offset = (int)w.BaseStream.Position - dataOffset;
+                    w.Write(serializedObjects[idx], 0, objects[idx].size);
+                    w.WriteZeros(objects[idx].paddingLen);
 
                     // TODO do objects need to be aligned?
                     // All objects I can find are. If nothing is modified this shouldn't do anything.
@@ -291,23 +306,19 @@ namespace LibSaberPatch
                     w.AlignStream();
                 }
 
-                length = (int)stream.Length;
-                stream.Close();
-                buf = stream.GetBuffer();
+                // Patch header
+                PatchInt(stream, 0*4, metadataSize, true, true);
+                PatchInt(stream, 1*4, (int)stream.Position, true, false);
+                PatchInt(stream, 3*4, dataOffset, true, false);
+
+                // Patch objects
+                for(int i = 0; i < patchLocs.Count; i++) {
+                    PatchInt(stream, patchLocs[i] + 0*4, objects[i].offset, false, false);
+                    PatchInt(stream, patchLocs[i] + 1*4, objects[i].size, false, false);
+                }
+
+                stream.Flush();
             }
-
-            // Patch header
-            PatchInt(buf, 0*4, metadataSize, true);
-            PatchInt(buf, 1*4, length, true);
-            PatchInt(buf, 3*4, dataOffset, true);
-
-            // Patch objects
-            for(int i = 0; i < patchLocs.Count; i++) {
-                PatchInt(buf, patchLocs[i] + 0*4, objects[i].offset, false);
-                PatchInt(buf, patchLocs[i] + 1*4, objects[i].size, false);
-            }
-
-            outStream.Write(buf, 0, length);
         }
 
         public AssetPtr AppendAsset(AssetData data) {
@@ -524,7 +535,7 @@ namespace LibSaberPatch
             }
         }
 
-        public class Transaction {
+        public sealed class Transaction {
             private SerializedAssets _assets;
 
             public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr {

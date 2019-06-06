@@ -61,8 +61,8 @@ namespace LibSaberPatch
 
         public static void WritePrefixedList<T>(this BinaryWriter w, List<T> l, Action<T> del) {
             w.Write((int)l.Count);
-            foreach(T o in l) {
-                del(o);
+            for(int idx = 0; idx < l.Count; ++idx) {
+                del(l[idx]);
             }
         }
     }

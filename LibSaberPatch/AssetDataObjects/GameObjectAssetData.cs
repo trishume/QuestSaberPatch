@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class GameObjectAssetData : AssetData
+    public sealed class GameObjectAssetData : AssetData
     {
         public const int ClassID = 1;
 
@@ -29,12 +29,12 @@ namespace LibSaberPatch.AssetDataObjects
             isActive = reader.ReadBoolean();
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return 0;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             w.Write(components.Length);
             foreach (AssetPtr p in components)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class MeshFilterAssetData : AssetData
+    public sealed class MeshFilterAssetData : AssetData
     {
         public const int ClassID = 33;
 
@@ -20,12 +20,12 @@ namespace LibSaberPatch.AssetDataObjects
             mesh = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return 4;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             gameObject.WriteTo(w);
             mesh.WriteTo(w);

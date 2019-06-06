@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class Texture2DAssetData : AssetData
+    public sealed class Texture2DAssetData : AssetData
     {
         public const int ClassID = 28;
 
@@ -112,7 +112,7 @@ namespace LibSaberPatch.AssetDataObjects
             path = reader.ReadAlignedString();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             w.WriteAlignedString(name);
             w.Write(forcedFallbackFormat);
@@ -146,7 +146,7 @@ namespace LibSaberPatch.AssetDataObjects
             w.WriteAlignedString(path);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return 2;
         }

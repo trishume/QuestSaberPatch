@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSaberPatch.AssetDataObjects
 {
-    public class AudioClipAssetData : AssetData
+    public sealed class AudioClipAssetData : AssetData
     {
         public const int ClassID = 83;
 
@@ -53,7 +53,7 @@ namespace LibSaberPatch.AssetDataObjects
             compressionFormat = reader.ReadInt32();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public sealed override void WriteTo(BinaryWriter w)
         {
             w.WriteAlignedString(name);
             w.Write(loadType);
@@ -76,12 +76,12 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(compressionFormat);
         }
 
-        public override int SharedAssetsTypeIndex()
+        public sealed override int SharedAssetsTypeIndex()
         {
             return 5;
         }
 
-        public override List<string> OwnedFiles(SerializedAssets assets)
+        public sealed override List<string> OwnedFiles(SerializedAssets assets)
         {
             return new List<string>() { source };
         }

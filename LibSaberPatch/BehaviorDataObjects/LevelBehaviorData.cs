@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibSaberPatch.AssetDataObjects;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -56,7 +57,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 
     public class LevelBehaviorData : BehaviorData
     {
-        public const int PathID = 644;
+        public static byte[] ScriptID = Utils.HexToBytes("A3EC9046011206F5CD109314850602E3");
 
         public string levelID;
         public string songName;

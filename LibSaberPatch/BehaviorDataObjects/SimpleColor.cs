@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class SimpleColor : BehaviorData
     {
-        public const int PathID = 423;
+        public static byte[] ScriptID = Utils.HexToBytes("2A0A32BC8678D13C59FA6DF042711134");
 
         public float r;
         public float g;

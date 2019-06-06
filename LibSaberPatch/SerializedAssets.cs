@@ -2,8 +2,10 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -21,12 +23,16 @@ namespace LibSaberPatch
         public List<SerializedAssets.Script> scripts;
         public List<SerializedAssets.External> externals;
 
+        // ===== Extra fields, these aren't in the binary but are useful
+        public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+        public Dictionary<string,AssetPtr> environmentIDToPtr;
+
         public class TypeRef {
             public int classID;
-            bool isStripped;
-            ushort scriptTypeIndex;
-            byte[] scriptID;
-            byte[] typeHash;
+            public bool isStripped;
+            public ushort scriptTypeIndex;
+            public byte[] scriptID;
+            public byte[] typeHash;
 
             public TypeRef(BinaryReader reader) {
                 classID = reader.ReadInt32();
@@ -172,6 +178,10 @@ namespace LibSaberPatch
             if(!reader.ReadAllZeros(paddingLen)) throw new ParseException("Expected zeros for padding");
             Debug.Assert(reader.BaseStream.Position == dataOffset, "Parsed metadata wrong");
 
+            // ===== Extra stuff
+            scriptIDToScriptPtr = new Dictionary<byte[], AssetPtr>(new ByteArrayComparer());
+            environmentIDToPtr = new Dictionary<string, AssetPtr>();
+
             // ===== Parse Data
             for(int i = 0; i < objects.Count-1; i++) {
                 objects[i].paddingLen = objects[i+1].offset-(objects[i].offset+objects[i].size);
@@ -193,7 +203,10 @@ namespace LibSaberPatch
                 }
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
-                        obj.data = new MonoBehaviorAssetData(reader, obj.size);
+                        byte[] scriptID = types[obj.typeID].scriptID;
+                        var monob = new MonoBehaviorAssetData(reader, obj.size, scriptID);
+                        scriptIDToScriptPtr[scriptID] = monob.script;
+                        obj.data = monob;
                         break;
                     case AudioClipAssetData.ClassID:
                         obj.data = new AudioClipAssetData(reader, obj.size);
@@ -207,11 +220,11 @@ namespace LibSaberPatch
                     case GameObjectAssetData.ClassID:
                         obj.data = new GameObjectAssetData(reader, obj.size);
                         break;
-                    case MeshFilter.ClassID:
-                        obj.data = new MeshFilter(reader, obj.size);
+                    case MeshFilterAssetData.ClassID:
+                        obj.data = new MeshFilterAssetData(reader, obj.size);
                         break;
-                    case TextAsset.ClassID:
-                        obj.data = new TextAsset(reader, obj.size);
+                    case TextAssetAssetData.ClassID:
+                        obj.data = new TextAssetAssetData(reader, obj.size);
                         break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
@@ -219,9 +232,11 @@ namespace LibSaberPatch
                 }
                 long bytesParsed = reader.BaseStream.Position - startOffset;
                 if(bytesParsed != obj.size)
-                    throw new ParseException($"Parsed {bytesParsed} but expected {obj.size} for {obj.pathID}");
+                    throw new ParseException($"Parsed {bytesParsed} bytes but expected {obj.size} for path ID {obj.pathID}");
                 if(!reader.ReadAllZeros(obj.paddingLen)) throw new ParseException("Expected zeros for padding");
             }
+
+            FindEnvironmentPointers();
         }
 
         private static void PatchInt(byte[] arr, long index, int val, bool bigEndian) {
@@ -263,10 +278,19 @@ namespace LibSaberPatch
 
                 // ===== Data
                 dataOffset = (int)w.BaseStream.Position;
-                foreach(AssetObject obj in objects) {
+                
+                var serializedObjects = objects.AsParallel().Select((obj, idx) => {
+                    using(var objStream = new MemoryStream()) {
+                        obj.data.WriteTo(new BinaryWriter(objStream));
+                        obj.size = (int)objStream.Length;
+                        return (idx, obj, objStream.ToArray());
+                    }
+                });
+
+                
+                foreach(var (idx, obj, bytes) in serializedObjects) {
                     obj.offset = (int)w.BaseStream.Position - dataOffset;
-                    obj.data.WriteTo(w);
-                    obj.size = ((int)w.BaseStream.Position - dataOffset) - obj.offset;
+                    w.Write(bytes);
                     w.WriteZeros(obj.paddingLen);
 
                     // TODO do objects need to be aligned?
@@ -274,6 +298,8 @@ namespace LibSaberPatch
                     // But if we change the size of an object it's probably more important to preserve
                     // alignment than the exact amount of padding.
                     w.AlignStream();
+
+                    objects[idx] = obj;
                 }
 
                 length = (int)stream.Length;
@@ -293,6 +319,17 @@ namespace LibSaberPatch
             }
 
             outStream.Write(buf, 0, length);
+        }
+
+        public enum BeatSaberVersion {
+            V1_0_0,
+            V1_0_1,
+        }
+
+        public BeatSaberVersion GetBeatSaberVersion() {
+            if(types.Count == 30) return BeatSaberVersion.V1_0_0;
+            if(types.Count == 29) return BeatSaberVersion.V1_0_1;
+            throw new ParseException("Can't determine version");
         }
 
         public AssetPtr AppendAsset(AssetData data) {
@@ -367,11 +404,6 @@ namespace LibSaberPatch
             return obj;
         }
 
-        public AssetObject RemoveAsset(AssetData data)
-        {
-            return RemoveAsset(d => d.data.Equals(data));
-        }
-
         public AssetObject RemoveAssetAt(ulong pathID)
         {
             return RemoveAsset(d => d.pathID == pathID);
@@ -430,7 +462,7 @@ namespace LibSaberPatch
         public T FindScript<T>(Predicate<MonoBehaviorAssetData> cond, Predicate<T> condition) where T : BehaviorData
         {
             AssetObject obj = GetAssetObjectFromScript(cond, condition);
-            return ((obj.data as MonoBehaviorAssetData).data as T);
+            return obj != null ? ((obj.data as MonoBehaviorAssetData).data as T) : null;
         }
 
         public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> pred)
@@ -463,12 +495,7 @@ namespace LibSaberPatch
             var col = FindScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", l => true);
             if (col == null)
             {
-                var ptr = AppendAsset(new MonoBehaviorAssetData()
-                {
-                    data = new LevelCollectionBehaviorData(),
-                    name = "CustomLevelCollection",
-                    script = new AssetPtr(1, LevelCollectionBehaviorData.PathID)
-                });
+                var ptr = Utils.CreateCustomCollection(this, "CustomLevelCollection");
 
                 col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
             }
@@ -503,20 +530,7 @@ namespace LibSaberPatch
 
         public AssetPtr CreateCustomLevelPack()
         {
-            var ptr = AppendAsset(new MonoBehaviorAssetData()
-            {
-                data = new LevelPackBehaviorData()
-                {
-                    packName = "Custom Songs",
-                    packID = "CustomPack",
-                    isPackAlwaysOwned = true,
-                    beatmapLevelCollection = new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID),
-                    coverImage = new AssetPtr(0, 45) // Default
-                },
-                name = "CustomLevelPack",
-                script = new AssetPtr(1, LevelPackBehaviorData.PathID)
-            });
-            return ptr;
+            return Utils.CreateCustomPack(this, new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID), "Custom Songs", "CustomLevel");
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()
@@ -525,13 +539,39 @@ namespace LibSaberPatch
             return FindScript<BeatmapLevelPackCollection>(a => true); // Should only be one.
         }
 
+        private void TryToFindEnvironment(string name) {
+            string monobName = name + "SceneInfo";
+            AssetObject obj = objects.Find(x => (x.data is MonoBehaviorAssetData) &&
+                    ((x.data as MonoBehaviorAssetData).name == monobName));
+            if(obj == null) return;
+            environmentIDToPtr.Add(name, new AssetPtr(0, obj.pathID));
+        }
+
+        private void FindEnvironmentPointers() {
+            TryToFindEnvironment("NiceEnvironment");
+            TryToFindEnvironment("TriangleEnvironment");
+            TryToFindEnvironment("BigMirrorEnvironment");
+            TryToFindEnvironment("KDAEnvironment");
+            TryToFindEnvironment("CrabRaveEnvironment");
+
+            environmentIDToPtr.Add("DefaultEnvironment", new AssetPtr(20, 1));
+            if(!environmentIDToPtr.ContainsKey("NiceEnvironment")) { // v1.0.0
+                environmentIDToPtr.Add("NiceEnvironment", new AssetPtr(38, 3));
+            }
+        }
+
         public class Transaction {
+            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
+            public Dictionary<string,AssetPtr> environmentIDToPtr;
+
             ulong lastPathID;
             List<AssetData> toAdd;
 
             public Transaction(SerializedAssets assets) {
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
+                scriptIDToScriptPtr = assets.scriptIDToScriptPtr;
+                environmentIDToPtr = assets.environmentIDToPtr;
             }
 
             public AssetPtr AppendAsset(AssetData data) {

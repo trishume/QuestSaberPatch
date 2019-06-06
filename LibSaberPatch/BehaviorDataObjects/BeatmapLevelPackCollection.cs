@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class BeatmapLevelPackCollection : BehaviorData
     {
-        public const int PathID = 1530;
+        public static byte[] ScriptID = Utils.HexToBytes("C6A198833B7D41CCE8D783CD6A11BFD4");
 
         public List<AssetPtr> beatmapLevelPacks;
         public List<AssetPtr> previewBeatmapLevelPack;

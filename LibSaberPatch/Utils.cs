@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -7,8 +9,7 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using LibSaberPatch.BehaviorDataObjects;
-using System.Collections.Generic;
-using System.Linq;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -49,6 +50,14 @@ namespace LibSaberPatch
             }
             return imageData;
         }
+
+        // https://stackoverflow.com/questions/321370/how-can-i-convert-a-hex-string-to-a-byte-array
+        public static byte[] HexToBytes(string hex) {
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
+        }
         
         public static ulong RemoveLevel(SerializedAssets assets, LevelBehaviorData level)
         {
@@ -82,21 +91,51 @@ namespace LibSaberPatch
             return levelPathID;
         }
 
-        public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c)
+        public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c, bool left)
         {
             Console.WriteLine($"Creating CustomColor with r: {c.r} g: {c.g} b: {c.b} a: {c.a}");
 
             var dat = assets.FindScript<ColorManager>(cm => true); // Should only have one color manager
+
+            var mbl = new MonoBehaviorAssetData()
+            {
+                name = "LeftCustomColor",
+                data = c,
+                script = assets.scriptIDToScriptPtr[SimpleColor.ScriptID]
+            };
+            var mbr = new MonoBehaviorAssetData()
+            {
+                name = "RightCustomColor",
+                data = c,
+                script = assets.scriptIDToScriptPtr[SimpleColor.ScriptID]
+            };
             //var dat = ((MonoBehaviorAssetData)assets.GetAssetAt(52).data).data as ColorManager;
             if (dat.colorA.pathID != 54)
             {
-                Console.WriteLine($"Removed existing CustomColor at PathID: {dat.colorA.pathID}");
-                assets.RemoveAssetAt(dat.colorA.pathID);
+                if (!left)
+                {
+                    Console.WriteLine($"Replaced existing CustomColor at PathID: {dat.colorA.pathID}");
+                    assets.SetAssetAt(dat.colorA.pathID, mbl);
+                }
             }
+            else if (!left)
+            {
+                dat.colorA = assets.AppendAsset(mbl);
+                Console.WriteLine($"Created new CustomColor at PathID: {dat.colorA.pathID}");
+            }
+            
             if (dat.colorB.pathID != 53)
             {
-                Console.WriteLine($"Removing existing CustomColor at PathID: {dat.colorB.pathID}");
-                assets.RemoveAssetAt(dat.colorB.pathID);
+                if (left)
+                {
+                    Console.WriteLine($"Replaced existing CustomColor at PathID: {dat.colorB.pathID}");
+                    assets.SetAssetAt(dat.colorB.pathID, mbr);
+                }
+            }
+            else if (left)
+            {
+                dat.colorB = assets.AppendAsset(mbr);
+                Console.WriteLine($"Created new CustomColor at PathID: {dat.colorB.pathID}");
             }
             return dat;
         }
@@ -118,7 +157,7 @@ namespace LibSaberPatch
             }
         }
 
-        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture)
+        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture, string name)
         {
             // Default Sprite
             ulong pd = 45;
@@ -130,7 +169,7 @@ namespace LibSaberPatch
             var sprite = sp.data as SpriteAssetData;
             return new SpriteAssetData()
             {
-                name = "CustomPackCover",
+                name = name,
                 texture = customTexture,
                 atlasTags = sprite.atlasTags,
                 extrude = sprite.extrude,
@@ -174,9 +213,8 @@ namespace LibSaberPatch
                 }
             }
             segments.Add(temp);
-            Console.WriteLine(segments.Count);
             Dictionary<string, List<string>> o = new Dictionary<string, List<string>>();
-            for (int i = 0; i < segments.Count - seps.Count; i += seps.Count)
+            for (int i = 0; i < segments.Count - seps.Count + 1; i += seps.Count)
             {
                 List<string> segs = new List<string>();
                 for (int j = 1; j < seps.Count; j++)
@@ -190,11 +228,25 @@ namespace LibSaberPatch
 
         public static void ApplyWatermark(Dictionary<string, List<string>> localeValues)
         {
-            string people = ", Sc2ad, trishume";
+            string header = "\n<size=150%><color=#EC1C24FF>Quest Modders</color></size>";
+            string testersHeader = "<color=#E543E5FF>Testers</color>";
+
+            string sc2ad = "<color=#EDCE21FF>Sc2ad</color>";
+            string trishume = "<color=#40E0D0FF>trishume</color>";
+            string emulamer = "<color=#00FF00FF>emulamer</color>";
+            string jakibaki = "<color=#4268F4FF>jakibaki</color>";
+            string elliotttate = "<color=#67AAFBFF>elliotttate</color>";
+            string leo60228 = "<color=#00FF00FF>leo60228</color>";
+            string trueavid = "<color=#FF8897FF>Trueavid</color>";
+            string kayTH = "<color=#40FE97FF>kayTH</color>";
+
+            string message = '\n' + header + '\n' + sc2ad + '\n' + trishume + '\n' + emulamer + '\n' + jakibaki +
+                '\n' + elliotttate + '\n' + leo60228 + '\n' + testersHeader + '\n' + trueavid + '\n' + kayTH;
+
             var value = localeValues["CREDITS_CONTENT"];
             string item = value[value.Count - 1];
-            if (item.Contains(people)) return;
-            localeValues["CREDITS_CONTENT"][value.Count - 1] = item.Remove(item.Length - 2) + people + '"';
+            if (item.Contains(message)) return;
+            localeValues["CREDITS_CONTENT"][value.Count - 1] = item.Remove(item.Length - 2) + message + '"';
         }
 
         public static string WriteLocaleText(Dictionary<string, List<string>> values, List<char> seps)
@@ -212,5 +264,51 @@ namespace LibSaberPatch
             temp = temp.Remove(temp.Length - 1);
             return temp;
         }
+
+        public static AssetPtr CreateCustomCollection(SerializedAssets assets, string name)
+        {
+            return assets.AppendAsset(new MonoBehaviorAssetData()
+            {
+                data = new LevelCollectionBehaviorData(),
+                name = name,
+                script = assets.scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
+            });
+        }
+
+        public static AssetPtr CreateCustomPack(SerializedAssets assets, AssetPtr collection, string name, string id)
+        {
+            var ptr = assets.AppendAsset(new MonoBehaviorAssetData()
+            {
+                data = new LevelPackBehaviorData()
+                {
+                    packName = name,
+                    packID = id,
+                    isPackAlwaysOwned = true,
+                    beatmapLevelCollection = collection,
+                    coverImage = new AssetPtr(0, 45) // Default
+                },
+                name = id + "Pack",
+                script = assets.scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
+            });
+            return ptr;
+        }
+    }
+
+    // loosely based on https://stackoverflow.com/questions/1440392/use-byte-as-key-in-dictionary
+    public class ByteArrayComparer : EqualityComparer<byte[]> {
+        public override bool Equals(byte[] first, byte[] second) {
+            if (first == null || second == null) {
+                return first == second;
+            }
+            return first.SequenceEqual(second);
+        }
+
+        public override int GetHashCode(byte[] obj) {
+            if (obj.Length >= 4) {
+                return BitConverter.ToInt32(obj, 0);
+            }
+            return 0;
+        }
+
     }
 }

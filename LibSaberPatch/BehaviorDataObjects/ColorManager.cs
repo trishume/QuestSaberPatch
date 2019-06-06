@@ -7,7 +7,7 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class ColorManager : BehaviorData
     {
-        public const int PathID = 297;
+        public static byte[] ScriptID = Utils.HexToBytes("A2996891087D7B9FEEF00137BF8AE624");
 
         public AssetPtr playerModel;
         public AssetPtr colorA;

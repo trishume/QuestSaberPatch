@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -47,7 +48,7 @@ namespace LibSaberPatch
             string characteristicPart = ((characteristic == Characteristic.Standard) ? "" : characteristic.ToString());
             string assetName = levelID + characteristicPart + _difficulty.ToString() + "BeatmapData";
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
-                script = new AssetPtr(1, BeatmapDataBehaviorData.PathID),
+                script = assets.scriptIDToScriptPtr[BeatmapDataBehaviorData.ScriptID],
                 name = assetName,
                 data = beatmapData,
             };
@@ -145,18 +146,11 @@ namespace LibSaberPatch
             Texture2DAssetData cover = Texture2DAssetData.CoverFromImageFile(coverPath, levelID);
             AssetPtr coverPtr = assets.AppendAsset(cover);
 
-            AssetPtr environment = new AssetPtr(20, 1); // default environment
-            switch(_environmentName) {
-                case "NiceEnvironment":
-                    environment = new AssetPtr(38, 3);
-                    break;
-                case "TriangleEnvironment":
-                    environment = new AssetPtr(0, 252);
-                    break;
-                case "BigMirrorEnvironment":
-                    environment = new AssetPtr(0, 249);
-                    break;
+            AssetPtr environment = assets.environmentIDToPtr["DefaultEnvironment"];
+            if(assets.environmentIDToPtr.ContainsKey(_environmentName)) {
+                environment = assets.environmentIDToPtr[_environmentName];
             }
+
 
             LevelBehaviorData level = new LevelBehaviorData() {
                 levelID = levelID,
@@ -179,7 +173,7 @@ namespace LibSaberPatch
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {
-                script = new AssetPtr(1, LevelBehaviorData.PathID),
+                script = assets.scriptIDToScriptPtr[LevelBehaviorData.ScriptID],
                 name = level.levelID + "Level",
                 data = level,
             };

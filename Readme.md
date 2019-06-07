@@ -1,31 +1,31 @@
 # QuestSaberPatch
 
-A basic custom song patcher for Beat Saber on the Oculus Quest, written in C# and runnable hopefully cross-platform and tested to work on macOS, Windows and Linux. It can successfully add custom songs to the Quest and should be cross-platform. Based on discoveries both of my own as well as many discoveries made by [@emulamer](https://github.com/emulamer/QuestStopgap) (his code was also an excellent reference!), with lots of code contributed by [@sc2ad](https://github.com/sc2ad), and information from others on the Beat Saber modding Discord.
+A custom song patcher for Beat Saber on the Oculus Quest, written in C# and runnable cross-platform on macOS, Windows and Linux. It can successfully add custom songs to the Quest as well as create custom packs and saber colors with the advanced JSON interface. Based on discoveries both of my own as well as many discoveries made by [@emulamer](https://github.com/emulamer/QuestStopgap) (his code was also an excellent reference!), with lots of code contributed by [@sc2ad](https://github.com/sc2ad), and information from others on the Beat Saber modding Discord.
 
 ## Features
 
-It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as well as patch the binary to not check the signature on levels. It's very similar to [emulamer's patcher](https://github.com/emulamer/QuestStopgap) with some differences:
+It can patch a Beat Saber APK with new custom levels, as well as patch the binary to not check the signature on levels. It's very similar to [emulamer's patcher](https://github.com/emulamer/QuestStopgap) with some extra features and some missing features, what specific features are different changes very frequently and I can't hope to keep the readme completely up to date. Here are some of the features of QuestSaberPatch:
 
-- I have a few extra features his doesn't (note this might be outdated if he adds them):
-    - Cover support with proper resizing and mip-mapping for smaller patched APKs and higher frame rate on the song menu screen.
-    - Recursively searches for levels in a folder, or pass multiple command line arguments for levels to add
-- QuestSaberPatch also provides an advanced library and JSON interface with additional fancy features:
+- Provides an advanced library and JSON interface with additional fancy features:
     - Multiple custom song packs with arbitrary names, covers and contents
     - Syncing that automatically removes old songs, uploads new ones and replaces pack contents
     - Custom color support
     - Custom text replacement
-- My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is around twice as fast.
-- My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is 70 lines, @emulamer's is 600.
+- Built and tested on .NET Core with releases on Windows, macOS and Linux.
+- Modifies and signs the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step.
+- Has a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code.
 - I use a transaction-based design that (hopefully) should gracefully handle broken level data without messing up the APK and just skip over those songs.
-- My patcher uses fewer temporary buffers and does less copying, which may eventually lead to higher performance but right now everything is bottlenecked on beatmap serialization.
-- Mine has both read and write support for all asset constructs it supports, whereas more things in @emulamer's only have one direction of support.
-- My patcher was developed on macOS and definitely works there, @emulamer's patcher might well work on macOS though, although any batch files won't. I haven't tested mine on Windows though but it should work.
-- I implement a fix for the slow signing behavior I describe in [this issue](https://github.com/emulamer/Apkifier/issues/1) so at least on .NET Core on macOS my patcher should be much faster when signing, around an extra 2s to sign instead of 20s.
-- I think my code is cleaner, if you're interested in building on it you can take a look at both of our codebases and see which one you like.
+- I've focused on code quality from the start. Emulamer's started off quite messy but he's been gradually improving it, if you're interested in building on it you can take a look at both of our codebases and see which one you like.
 
 ## How to use it
 
-**DO NOT ASK ME FOR HELP USING THIS UNLESS YOU HAVE POSTING PERMISSION IN #quest-mod-dev ON DISCORD**. While it has progressed from programmers-only to power-users-only it's still not an easy process. You at least need to be comfortable with the command line. If anything goes wrong while you try to follow this process, I disclaim liability, do this at your own risk.
+QuestSaberPatch is the backend for the Beat Saber modding support in [SideQuest](https://github.com/the-expanse/SideQuest). I highly recommend SideQuest as the preferred way of using QuestSaberPatch. It's what I personally use.
+
+### Command line installation instructions
+
+If for some reason you can't or don't want to use SideQuest, you can use the command line version of QuestSaberPatch by following these instructions.
+
+Don't ask me for help with this process unless you're a programmer looking to integrate QuestSaberPatch into a GUI. While it has progressed from programmers-only to power-users-only it's still not an easy process. You at least need to be comfortable with the command line. If anything goes wrong while you try to follow this process, I disclaim liability, do this at your own risk.
 
 ### Patching (do this whenever you want to add levels)
 
@@ -177,7 +177,7 @@ Things I'm planning on doing but may or may not get around to include the follow
 
 - Switching to a new ZIP library to hopefully fix corruption errors
 - Doing my own BinaryFormatter output so that it's much faster
-- Publish library as a NuGet package
+- Publish library as a NuGet package (contact me if you personally want this)
 - Testing with large numbers of added songs
 
 ## Credits

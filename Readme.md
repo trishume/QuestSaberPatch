@@ -1,6 +1,6 @@
 # QuestSaberPatch
 
-A basic custom song patcher for Beat Saber on the Oculus Quest, written in C# and runnable hopefully cross-platform and tested to work on macOS and Windows (after `v0.3`). It can successfully add custom songs to the Quest and should be cross-platform. Based on discoveries both of my own as well as many discoveries made by [@emulamer](https://github.com/emulamer/QuestStopgap) (his code was also an excellent reference!) and others on the Beat Saber modding Discord.
+A basic custom song patcher for Beat Saber on the Oculus Quest, written in C# and runnable hopefully cross-platform and tested to work on macOS, Windows and Linux. It can successfully add custom songs to the Quest and should be cross-platform. Based on discoveries both of my own as well as many discoveries made by [@emulamer](https://github.com/emulamer/QuestStopgap) (his code was also an excellent reference!), with lots of code contributed by [@sc2ad](https://github.com/sc2ad), and information from others on the Beat Saber modding Discord.
 
 ## Features
 
@@ -8,14 +8,14 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 
 - I have a few extra features his doesn't (note this might be outdated if he adds them):
     - Cover support with proper resizing and mip-mapping for smaller patched APKs and higher frame rate on the song menu screen.
-    - Support for different environments as specified by the level: default, nice, triangle and big mirror
     - Recursively searches for levels in a folder, or pass multiple command line arguments for levels to add
-    - Custom color support (with hexstrings)
+- QuestSaberPatch also provides an advanced library and JSON interface with additional fancy features:
+    - Multiple custom song packs with arbitrary names, covers and contents
+    - Syncing that automatically removes old songs, uploads new ones and replaces pack contents
+    - Custom color support
     - Custom text replacement
-    - Cover pack image replacement
-    - Custom Songs pack renaming
 - My patcher modifies the APK in-place using zip file manipulation, eliminating the need for an unpacking and repacking step. This is around twice as fast.
-- My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is STILL FAR TOO MANY lines, @emulamer's is 600.
+- My patcher has more of a library structure instead of a program, with the idea that a GUI can use it as a library with minimal amounts of code. `Program.cs` in my patcher is 70 lines, @emulamer's is 600.
 - I use a transaction-based design that (hopefully) should gracefully handle broken level data without messing up the APK and just skip over those songs.
 - My patcher uses fewer temporary buffers and does less copying, which may eventually lead to higher performance but right now everything is bottlenecked on beatmap serialization.
 - Mine has both read and write support for all asset constructs it supports, whereas more things in @emulamer's only have one direction of support.
@@ -36,16 +36,6 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
     - It should gracefully handle levels that are already patched in, including hopefully ones using @emulamer's patcher, ignoring them.
     - Note that it modifies the APK in place and doesn't create a new one, so make sure you have a separate backup original copy!
     - This now also signs the APK with a debug certificate in place thanks to [@emulamer's signer](https://github.com/emulamer/Apkifier).
-3. You can provide many different types of command line arguments for a variety of features:
-    - `-s path\to\image.jpg` Use `-s` to provide a custom cover image for the custom songs pack. Supported image types include `.jpg`, `.png` and `.tiff`.
-    - `-c1/-c2 #FFFFFF[FF]` Use `-c1` along with either a 6 character or 8 character hex string for a color. This will replace your saber and block colors. `-c1` corresponds to your left saber, whereas `-c2` corresponds to your right. Not providing any color after `-c1` or `-c2` _should_ reset the color, but this hasn't been tested.
-    - `-t text_key_to_replace "text to replace the key with"` Use `-t` along with a key to replace and the new text to swap it with. A full list of text keys can be found [here](https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt)
-    - `-i "New Custom Songs Pack Name" ["New Custom Songs Pack ID"]` Use `-i` along with either _just_ a new name, or a name and an ID to rename the custom songs pack to the provided name/ID.
-    - `-r` DO NOT USE! Currently broken.
-    - `-ac "Playlist name" "PlaylistID" path\to\image.jpg path\to\songs` Use `-ac` along with a playlist name, id, image, and songs inside that playlist to load a custom playlist into your game. Supports only one path for songs. THIS HAS NO DUPLICATE PROTECTION! That means that if you have a playlist with duplicate songs, or you accidentally add an identical playlist twice, they will BOTH APPEAR! 
-    - `-g` Extra info about gameobjects (log only)
-    - All of the above commandline arguments can be done as many times as desired, all other command line arguments will be interpretted as song folders.
-      - For `-s`, `-c1/-c2`, and `-i`, only the last call will be saved to the .apk
 4. Use `adb install -r {patched apk path}` to install the patched signed new APK that the signer creates replacing the old APK.
 
 ### Initial setup (do this once)
@@ -63,7 +53,7 @@ It can patch a Beat Saber APK with new custom levels in the "Extras" folder, as 
 
 ### Removing songs
 
-Removing songs is fundamentally possible and not that hard to implement but I haven't done it yet. Right now if you want to remove songs just make a new COPY of your backup APK, patch that with all the songs you still want, and then install it.
+Removing songs is only possible using the advanced JSON interface described below. Right now if you want to remove songs just make a new COPY of your backup APK, patch that with all the songs you still want, and then install it.
 
 ### It's throwing errors!
 
@@ -77,29 +67,60 @@ If the resulting APK file the patcher produces is bigger than 2.1GB (the maximum
 
 Because of the fact that this is a library, I could easily make a separate executable with an advanced JSON-based interface, intended for GUIs written in other languages to easily script.
 
-You can check out the source in `jsonApp/Program.cs`, but the way it works is that you give it JSON dictionaries as single lines of STDIN input which perform commands and it executes the command and give you back single line JSON dictionaries as output.
+You can check out the source in `jsonApp2/Program.cs`, but the way it works is that you give it a JSON dictionary of command info as STDIN input and it executes the command and gives you back a single line JSON dictionary as output.
 
-The process can accept many commands before exiting, so you can keep a process running if you want a minor speed boost from avoiding C# runtime startup. Commands can tell it to exit afterwayds so this is optional.
+It works on a synchronization model and supports custom packs, you can just tell it what songs and packs you want, and it will patch the APK to make that the current state. It removes old songs and packs that are no longer needed. The resulting packs and levels should be the same for a given invocation regardless on whether you run it on an upatched APK or a previously patched one. It even removes old-school custom songs from the Extras collection so you can use it on an APK patched with an older version of QuestSaberPatch.
 
 The input format is as follows, except being collapsed onto a single line is mandatory for real input:
 
 ```js
 {
-  "apkPath":"/Users/tristan/BeatSaber/base_testing.apk",
+  "apkPath": "/Users/tristan/BeatSaber/base_testing.apk",
   // If true, will patch the signature check in the code, this only needs to be done
   // once per APK but you can have it always true at a slight performance cost
-  "patchSignatureCheck":false,
+  "patchSignatureCheck": true,
+  // If true, will sign the APK, after it does anything else
+  "sign": true,
   // Each dictionary item is a levelID:levelFolder pair that will be installed if
   // they aren't already present. The levelID can be any string you want but it must
   // be globally unique across all songs you want to install, and all built in Beat
   // Saber songs. See the output, which can return a list of installed levelIDs.
-  "ensureInstalled":{"BUBBLETEA":"testdata/bubble_tea_song"},
-  // If true, will sign the APK, after it does anything else
-  "sign":true,
-  // If true the process will exit after it finishes and prints the result, otherwise
-  // it will wait to read another line of JSON command
-  "exitAfterward":true
+  // All installed custom levels not present here will be removed.
+  "levels": {
+    "BUBBLETEA": "testdata/bubble_tea_song"
+  },
+  // This controls the level packs that will be displayed in the selector, in which
+  // order, how they show up and what songs are in them.
+  "packs": [
+    {
+      // Must be unique between packs but doesn't need to be consistent
+      "id": "CustomLevels1",
+      // Display name of the pack
+      "name": "Custom Levels",
+      // Image file for the cover that will be displayed for the pack
+      "coverImagePath": "testdata/bubble_tea_song/cover.jpg",
+      // List of level IDs in the pack in the order you want them displayed.
+      // Each levelID can be in multiple packs if you want.
+      "levelIDs": ["BUBBLETEA"],
+    }
+  ],
+  // This attribute controls custom saber colors.
+  // If the entire "colors" attribute is missing or null, colors won't be updated
+  "colors": {
+    // A is the red/left hand by default, but left-handed people might use the setting to switch hands
+    "colorA": {"r": 0.941176, "g": 0.188235, "b": 0.75, "a": 1.0},
+    // null for either resets to the default color for that saber
+    "colorB": null,
+  },
+  // if null or missing, doesn't replace text, if non-null but even if an
+  // empty dictionary, adds usernames of all the Quest Modders to the credits
+  "replaceText": {
+    // See https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt for
+    // what keys are available and what text they start with
+    "BUTTON_PLAY": "GO!",
+  }
 }
+
 ```
 
 And after running each command it will return an output JSON line that is in this format but all on one line:
@@ -107,17 +128,21 @@ And after running each command it will return an output JSON line that is in thi
 ```js
 {
   // Just mirrors the patchSignatureCheck input
-  "didSignatureCheckPatch":false,
+  "didSignatureCheckPatch":true,
   // Just mirrors the sign input
-  "didSign":false,
+  "didSign":true,
   // All levelIDs present in the APK after the command finished
   "presentLevels":["100Bills","AngelVoices","BalearicPumping","BeThereForYou","BeatSaber","Breezer","CommercialPumping","CountryRounds","CrabRave","Elixia","INeedYou","Legend","LvlInsane","OneHope","PopStars","RumNBass","TurnMeOn","UnlimitedPower","BUBBLETEA"],
   // All the levelIDs successfully installed by the command
   "installedLevels":["BUBBLETEA"],
-  // All the levels in ensureInstalled that weren't installed and the reason.
-  // Mostly this is due to them being present but the reason can also be an error
-  // message about the level being invalid such as missing a file.
-  "installSkipped":{"BUBBLETEA":"Present"},
+  // Custom levels that used to be in the APK but were removed
+  "removedLevels":["OldCustomSongLevelID"],
+  // Level IDs referenced in packs that weren't installed so couldn't be added
+  "missingFromPacks":[],
+  // All the levels in ensureInstalled that weren't installed and the reason. The
+  // reason is an error message about the level being invalid such as missing a
+  // file or the JSON being incorrect.
+  "installSkipped":{"BUBBLETEA":"Invalid level JSON: some error"},
   // This should be null unless something screws up, in which case it will be a
   // string with the exception message and backtrace, make sure to check this and
   // preferably surface it somehow or at least log it.
@@ -125,25 +150,34 @@ And after running each command it will return an output JSON line that is in thi
 }
 ```
 
-This interface should be present in builds past `v0.3` as the `jsonApp` executable, and runnable from source with `dotnet run -p jsonApp/jsonApp.csproj`. Try out the following:
+This interface should be present in builds past `v0.6` as the `jsonApp2` executable, and runnable from source with `dotnet run -p jsonApp2/jsonApp2.csproj`.
+
+### Manual Use
+
+If you want to use the new features to for example change your custom colors but don't want to wait for or use a GUI tool. You can manually edit a JSON file and then run the tool with it. Check out `testdata/sample_invocation_v2.json` for a starter JSON file and you can run it like this (or with the `jsonApp2` binary in a release):
 
 ```bash
-dotnet run -p jsonApp/jsonApp.csproj < testdata/sample_invocation.json
+dotnet run -p jsonApp2/jsonApp2.csproj < testdata/sample_invocation_v2.json
 ```
+
+### Old Advanced JSON interface
+
+An older version of the advanced JSON interface is still available in the builds and source as `jsonApp`. It's the one used by the original SideQuest integration and is kept around for compatibility.
+
+You can read about its interface in [an old version of the Readme](https://github.com/trishume/QuestSaberPatch/blob/847babac5cf883d4650dcc6c9818cf1b085a69f9/Readme.md). But I don't recommend using it now that the newer version is out.
 
 ## Roadmap
 
 Things I'm planning on doing but may or may not get around to include the following. I'd be open to accepting contributions or collaborating as long as you let me know what you want to work on so we don't collide. Not necessarily in order but approximately so:
 
-- Custom level collections
+- Switching to a new ZIP library to hopefully fix corruption errors
 - Doing my own BinaryFormatter output so that it's much faster
-- Support removing songs
 - Publish library as a NuGet package
 - Testing with large numbers of added songs
-- GUI integration
 
-## Based On
+## Credits
 
+- [@sc2ad](https://github.com/sc2ad) for contributing tons of code including custom color, custom text and custom pack support.
 - @emulamer's binary patch to disable the beatmap signature check.
 - @emulamer's discovery that the beatmaps are formatted with DeflateStream and BinaryFormatter.
 - @emulamer's code for ideas on how to do various things. I didn't copy any of his code except for name/field and enum definitions for the Beat Saber types, and a couple single line snippets so that I can match his conventions for things like level IDs and asset names.

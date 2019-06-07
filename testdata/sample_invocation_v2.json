@@ -1,0 +1,50 @@
+{
+  "apkPath": "/Users/tristan/BeatSaber/base_testing.apk",
+  // If true, will patch the signature check in the code, this only needs to be done
+  // once per APK but you can have it always true at a slight performance cost
+  "patchSignatureCheck": true,
+  // If true, will sign the APK, after it does anything else
+  "sign": true,
+  // Each dictionary item is a levelID:levelFolder pair that will be installed if
+  // they aren't already present. The levelID can be any string you want but it must
+  // be globally unique across all songs you want to install, and all built in Beat
+  // Saber songs. See the output, which can return a list of installed levelIDs.
+  // All installed custom levels not present here will be removed.
+  //
+  // This is what controls what assets are put in the APK, if you put a level here
+  // and don't reference it from a pack, it will still be installed, it just won't be
+  // accessible.
+  "levels": {
+    "BUBBLETEA": "testdata/bubble_tea_song"
+  },
+  // This controls the level packs that will be displayed in the selector, in which
+  // order, how they show up and what songs are in them.
+  "packs": [
+    {
+      // Must be unique between packs but doesn't need to be consistent
+      "id": "CustomLevels1",
+      // Display name of the pack
+      "name": "Custom Levels",
+      // Image file for the cover that will be displayed for the pack
+      "coverImagePath": "testdata/bubble_tea_song/cover.jpg",
+      // List of level IDs in the pack in the order you want them displayed.
+      // Each levelID can be in multiple packs if you want.
+      "levelIDs": ["BUBBLETEA"],
+    }
+  ],
+  // This attribute controls custom saber colors.
+  // If the entire "colors" attribute is missing or null, colors won't be updated
+  "colors": {
+    // A is the red/left hand by default, but left-handed people might use the setting to switch hands
+    "colorA": {"r": 0.941176, "g": 0.188235, "b": 0.75, "a": 1.0},
+    // null for either resets to the default color for that saber
+    "colorB": null,
+  },
+  // if null or missing, doesn't replace text, if non-null but even if an
+  // empty dictionary, adds usernames of all the Quest Modders to the credits
+  "replaceText": {
+    // See https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt for
+    // what keys are available and what text they start with
+    "BUTTON_PLAY": "GO!",
+  }
+}

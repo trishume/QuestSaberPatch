@@ -8,6 +8,9 @@ namespace LibSaberPatch
     public class Apk : IDisposable
     {
         public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
+        public static string RootPackFile = "assets/bin/Data/sharedassets19.assets";
+        public static string ColorsFile = "assets/bin/Data/sharedassets1.assets";
+        public static string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
 
         private ZipArchive archive;
 
@@ -58,6 +61,16 @@ namespace LibSaberPatch
                     fileStream.CopyTo(destStream);
                 }
             }
+        }
+
+        /// <summary>
+        /// Deletes the given file from the APK
+        /// </summary>
+        /// <param name="filePath">The file to delete in the APK</param>
+        public void RemoveFileAt(string filePath)
+        {
+            ZipArchiveEntry entry = archive.GetEntry(filePath);
+            if (entry != null) entry.Delete();
         }
 
         public byte[] JoinedContents(string basePath) {
@@ -128,9 +141,11 @@ namespace LibSaberPatch
 
         public class Transaction {
             List<(string, string)> copies;
+            List<string> deletions;
 
             public Transaction() {
                 copies = new List<(string,string)>();
+                deletions = new List<string>();
             }
 
             public void CopyFileInto(string sourceFilePath, string destEntryPath) {
@@ -140,9 +155,23 @@ namespace LibSaberPatch
                 copies.Add((sourceFilePath, destEntryPath));
             }
 
+            /// <summary>
+            /// Deletes the given file from the APK.
+            /// </summary>
+            /// <param name="filePath">The file to delete in the APK</param>
+            public void RemoveFileAt(string filePath)
+            {
+                deletions.Add(filePath);
+            }
+
             public void ApplyTo(Apk apk) {
+
                 foreach(var copy in copies) {
                     apk.CopyFileInto(copy.Item1, copy.Item2);
+                }
+                foreach(string item in deletions)
+                {
+                    apk.RemoveFileAt(item);
                 }
             }
         }

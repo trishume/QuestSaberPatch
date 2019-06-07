@@ -2,7 +2,10 @@
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
+using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -72,7 +75,6 @@ namespace LibSaberPatch
                 offset = reader.ReadInt32();
                 size = reader.ReadInt32();
                 typeID = reader.ReadInt32();
-                // Console.WriteLine((pathID, offset, size, typeID));
             }
 
             // returns the location to patch the offsets
@@ -105,10 +107,10 @@ namespace LibSaberPatch
         }
 
         public class External {
-            string tempEmpty;
-            byte[] guid;
-            int type;
-            string pathName;
+            public string tempEmpty;
+            public byte[] guid;
+            public int type;
+            public string pathName;
 
             public External(BinaryReader reader) {
                 tempEmpty = reader.ReadStringToNull();
@@ -195,6 +197,10 @@ namespace LibSaberPatch
                     throw new ParseException("Objects aren't in order");
                 }
                 long startOffset = reader.BaseStream.Position;
+                if (types.Count <= obj.typeID) {
+                    // Console.WriteLine($"TypeID of SimpleColor: {objects[52].typeID} with type: {objects[52].data.GetType()}");
+                    throw new ParseException($"Could not find typeID: {obj.typeID}, maximum is: {types.Count}");
+                }
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
                         byte[] scriptID = types[obj.typeID].scriptID;
@@ -207,6 +213,18 @@ namespace LibSaberPatch
                         break;
                     case Texture2DAssetData.ClassID:
                         obj.data = new Texture2DAssetData(reader, obj.size);
+                        break;
+                    case SpriteAssetData.ClassID:
+                        obj.data = new SpriteAssetData(reader, obj.size);
+                        break;
+                    case GameObjectAssetData.ClassID:
+                        obj.data = new GameObjectAssetData(reader, obj.size);
+                        break;
+                    case MeshFilterAssetData.ClassID:
+                        obj.data = new MeshFilterAssetData(reader, obj.size);
+                        break;
+                    case TextAssetData.ClassID:
+                        obj.data = new TextAssetData(reader, obj.size);
                         break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);
@@ -292,17 +310,6 @@ namespace LibSaberPatch
             outStream.Write(buf, 0, length);
         }
 
-        public enum BeatSaberVersion {
-            V1_0_0,
-            V1_0_1,
-        }
-
-        public BeatSaberVersion GetBeatSaberVersion() {
-            if(types.Count == 30) return BeatSaberVersion.V1_0_0;
-            if(types.Count == 29) return BeatSaberVersion.V1_0_1;
-            throw new ParseException("Can't determine version");
-        }
-
         public AssetPtr AppendAsset(AssetData data) {
             ulong pathID = (ulong)(objects.Count + 1);
             AssetObject obj = new AssetObject() {
@@ -313,6 +320,100 @@ namespace LibSaberPatch
             };
             objects.Add(obj);
             return new AssetPtr(0, pathID);
+        }
+
+        private void ShiftPathIDs(int startIndex, ulong delta, ulong startPathID)
+        {
+            // Shift all remaining PathIDs by delta
+            Action<AssetPtr> shift = null;
+            shift = (ptr) =>
+            {
+                if (ptr.fileID == 0 && ptr.pathID > startPathID) {
+                    ptr.pathID -= delta;
+                    var ast = GetAssetAt(ptr.pathID);
+                    if (ast == null) throw new ApplicationException($"Could not find PathID: {ptr.pathID}");
+                    ast.data.Trace(shift);
+                }
+            };
+
+            for (int i = startIndex; i < objects.Count; i++)
+            {
+                objects[i].data.Trace(shift);
+                if (objects[i].pathID > startPathID)
+                {
+                    objects[i].pathID -= delta;
+                }
+            }
+        }
+
+        public AssetObject GetAsset(Predicate<AssetObject> p)
+        {
+            return objects.Find(p);
+        }
+
+        public AssetObject GetAssetObjectFromScript<T>(Predicate<T> cond) where T : BehaviorData
+        {
+            return GetAssetObjectFromScript<T>(mob => true, cond);
+        }
+
+        public AssetObject GetAssetObjectFromScript<T>(Predicate<MonoBehaviorAssetData> mob, Predicate<T> cond) where T : BehaviorData
+        {
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is MonoBehaviorAssetData)) continue;
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                if(!(monob.data is T) || !mob(monob)) continue;
+                T behaviorData = (T)monob.data;
+                if(cond(behaviorData)) return obj;
+            }
+            return null;
+        }
+
+        // This should only be called with objects after the base game assets
+        // that are not referenced by any pointers.
+        public AssetObject RemoveAsset(Predicate<AssetObject> p) {
+            // First, find matching AssetObj
+            int objI = objects.FindIndex(p);
+            // Console.WriteLine($"{objects[objI].pathID} has type: {objects[objI].data.GetType()}");
+            AssetObject obj = objects[objI];
+            ShiftPathIDs(objI, 1, obj.pathID);
+            objects.RemoveAt(objI);
+            return obj;
+        }
+
+        public AssetObject RemoveAssetAt(ulong pathID)
+        {
+            return RemoveAsset(d => d.pathID == pathID);
+        }
+
+        public AssetObject RemoveScript(BehaviorData data)
+        {
+            return RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
+            && (ao.data as MonoBehaviorAssetData).data.Equals(data));
+        }
+
+        public AssetObject GetAssetAt(ulong pathID)
+        {
+            return objects.Find(d => d.pathID == pathID);
+        }
+
+        public AssetObject SetAssetAt(ulong pathID, AssetData data)
+        {
+            int ind = objects.FindIndex(d => d.pathID == pathID);
+            objects[ind] = new AssetObject()
+            {
+                pathID = pathID,
+                typeID = data.SharedAssetsTypeIndex(),
+                data = data,
+                paddingLen = 0,
+            };
+            // Shift offsets of all other objects by the delta size of this,
+            // should get taken care of automatically.
+            return objects[ind];
+        }
+
+        public LevelBehaviorData GetLevelMatching(string levelID)
+        {
+            return FindScript<LevelBehaviorData>(p => p.levelID == levelID);
         }
 
         public HashSet<string> ExistingLevelIDs() {
@@ -329,6 +430,52 @@ namespace LibSaberPatch
             return set;
         }
 
+        public Dictionary<string, ulong> FindLevels() {
+            var dict = new Dictionary<string, ulong>();
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is MonoBehaviorAssetData))
+                    continue;
+                MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+                if(!(monob.data is LevelBehaviorData))
+                    continue;
+                LevelBehaviorData levelData = (LevelBehaviorData)monob.data;
+                dict.Add(levelData.levelID, obj.pathID);
+            }
+            return dict;
+        }
+
+        public ulong MainAssetsMaxBaseGamePath() {
+            var lastBaseObject = objects.Find(o => (o.data is MonoBehaviorAssetData) &&
+                (o.data as MonoBehaviorAssetData).name == "SimpleRetailDemoMenuScenesTransitionSetupDataSO");
+            return lastBaseObject.pathID;
+        }
+
+        public T FindScript<T>(Predicate<T> condition) where T : BehaviorData
+        {
+            return FindScript(ao => true, condition);
+        }
+
+        public T FindScript<T>(Predicate<MonoBehaviorAssetData> cond, Predicate<T> condition) where T : BehaviorData
+        {
+            AssetObject obj = GetAssetObjectFromScript(cond, condition);
+            return obj != null ? ((obj.data as MonoBehaviorAssetData).data as T) : null;
+        }
+
+        public GameObjectAssetData FindGameObject(Predicate<GameObjectAssetData> pred)
+        {
+            foreach(AssetObject obj in objects) {
+                if(!(obj.data is GameObjectAssetData)) continue;
+                GameObjectAssetData gobj = (GameObjectAssetData)obj.data;
+                if(pred(gobj)) return gobj;
+            }
+            return null;
+        }
+
+        public GameObjectAssetData FindGameObject(string name)
+        {
+            return FindGameObject(g => g.name == name);
+        }
+
         public LevelCollectionBehaviorData FindExtrasLevelCollection() {
             AssetObject obj = objects[235]; // the index of the extras collection in sharedassets17
             if(!(obj.data is MonoBehaviorAssetData))
@@ -337,6 +484,23 @@ namespace LibSaberPatch
             if(monob.name != "ExtrasLevelCollection")
                 throw new ParseException("Extras level collection not at normal spot");
             return (LevelCollectionBehaviorData)monob.data;
+        }
+
+        public LevelPackBehaviorData FindExtrasLevelPack()
+        {
+            AssetObject obj = objects[236]; // the index of the extras collection in sharedassets17
+            if (!(obj.data is MonoBehaviorAssetData))
+                throw new ParseException("Extras level pack not at normal spot (not monob)");
+            MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
+            if (monob.name != "ExtrasLevelPack")
+                throw new ParseException("Extras level pack not at normal spot");
+            return (LevelPackBehaviorData)monob.data;
+        }
+
+        public BeatmapLevelPackCollection FindMainLevelPackCollection()
+        {
+            // This file needs to be sharedassets19.assets for the MainLevelPackCollection
+            return FindScript<BeatmapLevelPackCollection>(a => true); // Should only be one.
         }
 
         private void TryToFindEnvironment(string name) {
@@ -361,8 +525,14 @@ namespace LibSaberPatch
         }
 
         public class Transaction {
-            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
-            public Dictionary<string,AssetPtr> environmentIDToPtr;
+            private SerializedAssets _assets;
+
+            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr {
+                get { return _assets.scriptIDToScriptPtr; }
+            }
+            public Dictionary<string,AssetPtr> environmentIDToPtr {
+                get { return _assets.environmentIDToPtr; }
+            }
 
             ulong lastPathID;
             List<AssetData> toAdd;
@@ -370,8 +540,7 @@ namespace LibSaberPatch
             public Transaction(SerializedAssets assets) {
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
-                scriptIDToScriptPtr = assets.scriptIDToScriptPtr;
-                environmentIDToPtr = assets.environmentIDToPtr;
+                _assets = assets;
             }
 
             public AssetPtr AppendAsset(AssetData data) {
@@ -385,6 +554,10 @@ namespace LibSaberPatch
                 foreach(AssetData obj in toAdd) {
                     assets.AppendAsset(obj);
                 }
+            }
+
+            public AssetObject GetAssetAt(ulong pathID) {
+                return _assets.GetAssetAt(pathID);
             }
         }
     }

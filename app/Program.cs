@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Collections.Generic;
 using LibSaberPatch;
 using Newtonsoft.Json;
+using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace app
 {

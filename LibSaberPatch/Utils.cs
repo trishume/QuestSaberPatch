@@ -8,6 +8,8 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
+using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch
 {
@@ -55,6 +57,31 @@ namespace LibSaberPatch
                              .Where(x => x % 2 == 0)
                              .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                              .ToArray();
+        }
+
+        // This method will fail if given an object that is not a LevelBehaviorData
+        public static void RemoveLevel(SerializedAssets assets, SerializedAssets.AssetObject obj, Apk.Transaction apk)
+        {
+            LevelBehaviorData level = (obj.data as MonoBehaviorAssetData).data as LevelBehaviorData;
+
+            // Remove audio file
+            foreach (string s in level.OwnedFiles(assets)) {
+                apk.RemoveFileAt($"assets/bin/Data/{s}");
+            }
+
+            // Remove things from bottom up, so that pointers to other assets still are rooted
+            // and so get fixed up by RemoveAssetAt
+
+            foreach (BeatmapSet s in level.difficultyBeatmapSets) {
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps) {
+                    assets.RemoveAssetAt(d.beatmapData.pathID);
+                }
+            }
+
+            assets.RemoveAssetAt(level.coverImage.pathID);
+            assets.RemoveAssetAt(level.audioClip.pathID);
+
+            assets.RemoveAssetAt(obj.pathID);
         }
     }
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using LibSaberPatch;
 using Newtonsoft.Json;
+using LibSaberPatch.BehaviorDataObjects;
 
 namespace jsonApp
 {

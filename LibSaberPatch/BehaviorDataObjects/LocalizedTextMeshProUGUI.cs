@@ -21,11 +21,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             reader.AlignStream();
             key = reader.ReadAlignedString();
         }
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

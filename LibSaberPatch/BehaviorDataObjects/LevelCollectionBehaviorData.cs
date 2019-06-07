@@ -31,13 +31,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0x10;
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-                return levels.Equals((data as LevelCollectionBehaviorData).levels);
-            return false;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             foreach (AssetPtr p in levels)

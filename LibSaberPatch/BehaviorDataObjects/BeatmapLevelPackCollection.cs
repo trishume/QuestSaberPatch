@@ -18,12 +18,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             previewBeatmapLevelPack = reader.ReadPrefixedList(r => new AssetPtr(r));
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO Implement
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return 0x01;

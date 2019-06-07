@@ -86,12 +86,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             localize = new PersistentCalls(reader);
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO implement
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return 0x0F;

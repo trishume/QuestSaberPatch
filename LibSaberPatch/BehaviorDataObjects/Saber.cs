@@ -32,11 +32,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             vrController = new AssetPtr(reader);
             saberTypeObject = new AssetPtr(reader);
         }
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO Implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

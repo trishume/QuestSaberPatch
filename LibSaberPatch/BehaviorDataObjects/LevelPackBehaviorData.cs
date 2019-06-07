@@ -50,13 +50,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0x11;
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-                return packID == (data as LevelPackBehaviorData).packID;
-            return false;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(coverImage);

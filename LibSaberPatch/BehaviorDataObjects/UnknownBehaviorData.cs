@@ -22,12 +22,5 @@ namespace LibSaberPatch.BehaviorDataObjects
         {
             throw new ApplicationException("unknown type index");
         }
-
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-                return bytes.Equals((data as UnknownBehaviorData).bytes);
-            return false;
-        }
     }
 }

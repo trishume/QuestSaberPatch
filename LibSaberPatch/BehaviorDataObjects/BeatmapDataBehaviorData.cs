@@ -33,12 +33,5 @@ namespace LibSaberPatch.BehaviorDataObjects
         {
             return 0x0E;
         }
-
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-                return projectedData.Equals((data as BeatmapDataBehaviorData).projectedData);
-            return false;
-        }
     }
 }

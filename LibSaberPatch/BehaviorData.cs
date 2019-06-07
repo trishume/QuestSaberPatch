@@ -8,7 +8,6 @@ namespace LibSaberPatch
     {
         public abstract void WriteTo(BinaryWriter w);
         public abstract int SharedAssetsTypeIndex();
-        public abstract bool Equals(BehaviorData data);
         // Could maybe also make this method non-abstract using reflection
         /// <summary>
         /// Traces all AssetPtrs owned by this BehaviorData and calls the action on all of them.

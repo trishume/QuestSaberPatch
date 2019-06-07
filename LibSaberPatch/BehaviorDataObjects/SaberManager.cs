@@ -18,11 +18,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             leftSaber = new AssetPtr(reader);
             rightSaber = new AssetPtr(reader);
         }
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO Implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

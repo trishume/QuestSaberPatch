@@ -21,16 +21,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             colorB = new AssetPtr(reader);
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-            {
-                var cm = data as ColorManager;
-                return playerModel.Equals(cm.playerModel) && colorA.Equals(cm.colorA) && colorB.Equals(cm.colorB);
-            }
-            return false;
-        }
-
         public override int SharedAssetsTypeIndex()
         {
             return 0x0E;

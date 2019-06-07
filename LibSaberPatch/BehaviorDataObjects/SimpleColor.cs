@@ -23,15 +23,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             b = reader.ReadSingle();
             a = reader.ReadSingle();
         }
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-            {
-                SimpleColor c = data as SimpleColor;
-                return r == c.r && g == c.g && b == c.b && a == c.a;
-            }
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

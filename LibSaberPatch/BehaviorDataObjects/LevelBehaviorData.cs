@@ -121,13 +121,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0x0F;
         }
 
-        public override bool Equals(BehaviorData data)
-        {
-            if (GetType().Equals(data))
-                return levelID == (data as LevelBehaviorData).levelID;
-            return false;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(audioClip);

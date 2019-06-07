@@ -37,11 +37,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             fontAsset = new AssetPtr(reader);
             remainingData = reader.ReadBytes(length - (int)(reader.BaseStream.Position - start));
         }
-        public override bool Equals(BehaviorData data)
-        {
-            //TODO Implement
-            return false;
-        }
 
         public override int SharedAssetsTypeIndex()
         {

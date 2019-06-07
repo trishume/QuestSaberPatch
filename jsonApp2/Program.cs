@@ -114,6 +114,9 @@ namespace jsonApp
             Invocation inv,
             InvocationResult res
         ) {
+            if(inv.levels == null || inv.packs == null)
+                throw new ApplicationException("Either the 'levels' or 'packs' key is missing. Note the 'levels' key changed names from 'ensureInstalled' in the new version.");
+
             Dictionary<string, ulong> existingLevels = mainAssets.FindLevels();
             ulong maxBasePathID = mainAssets.MainAssetsMaxBaseGamePath();
 

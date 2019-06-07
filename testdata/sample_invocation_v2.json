@@ -10,6 +10,10 @@
   // be globally unique across all songs you want to install, and all built in Beat
   // Saber songs. See the output, which can return a list of installed levelIDs.
   // All installed custom levels not present here will be removed.
+  //
+  // This is what controls what assets are put in the APK, if you put a level here
+  // and don't reference it from a pack, it will still be installed, it just won't be
+  // accessible.
   "levels": {
     "BUBBLETEA": "testdata/bubble_tea_song"
   },

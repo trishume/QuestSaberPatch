@@ -86,6 +86,10 @@ The input format is as follows, except being collapsed onto a single line is man
   // be globally unique across all songs you want to install, and all built in Beat
   // Saber songs. See the output, which can return a list of installed levelIDs.
   // All installed custom levels not present here will be removed.
+  //
+  // This is what controls what assets are put in the APK, if you put a level here
+  // and don't reference it from a pack, it will still be installed, it just won't be
+  // accessible.
   "levels": {
     "BUBBLETEA": "testdata/bubble_tea_song"
   },
@@ -120,7 +124,6 @@ The input format is as follows, except being collapsed onto a single line is man
     "BUTTON_PLAY": "GO!",
   }
 }
-
 ```
 
 And after running each command it will return an output JSON line that is in this format but all on one line:
@@ -137,7 +140,9 @@ And after running each command it will return an output JSON line that is in thi
   "installedLevels":["BUBBLETEA"],
   // Custom levels that used to be in the APK but were removed
   "removedLevels":["OldCustomSongLevelID"],
-  // Level IDs referenced in packs that weren't installed so couldn't be added
+  // Level IDs referenced in packs that weren't installed so couldn't be added.
+  // This could be because the levelID wasn't included in `levels` or because
+  // the level wasn't installed because it was invalid.
   "missingFromPacks":[],
   // All the levels in ensureInstalled that weren't installed and the reason. The
   // reason is an error message about the level being invalid such as missing a

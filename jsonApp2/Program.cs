@@ -19,6 +19,11 @@ namespace jsonApp
         public List<string> levelIDs;
     }
 
+    class CustomColors {
+        public SimpleColor colorA;
+        public SimpleColor colorB;
+    }
+
     class Invocation {
         public string apkPath;
         public bool patchSignatureCheck;
@@ -26,6 +31,8 @@ namespace jsonApp
 
         public Dictionary<string, string> levels;
         public List<LevelPack> packs;
+
+        public CustomColors colors;
     }
     #pragma warning restore 0649
 
@@ -79,6 +86,9 @@ namespace jsonApp
 
                     apk.ReplaceAssetsFile(Apk.MainAssetsFile, mainAssets.ToBytes());
 
+                    if(inv.colors != null) {
+                        UpdateColors(apk, inv.colors);
+                    }
                 }
 
                 if(inv.sign) {
@@ -194,6 +204,16 @@ namespace jsonApp
                     res.installSkipped.Add(levelID, $"Invalid level JSON: {e.Message}");
                 }
             }
+        }
+
+        static void UpdateColors(Apk apk, CustomColors colors) {
+            SerializedAssets colorAssets = SerializedAssets.FromBytes(
+                apk.ReadEntireEntry(Apk.ColorsFile));
+            // There should only be one color manager
+            var colorManager = colorAssets.FindScript<ColorManager>(cm => true);
+            colorManager.UpdateColor(colorAssets, colors.colorA, ColorManager.ColorSide.A);
+            colorManager.UpdateColor(colorAssets, colors.colorB, ColorManager.ColorSide.B);
+            apk.ReplaceAssetsFile(Apk.ColorsFile, colorAssets.ToBytes());
         }
     }
 }

@@ -45,5 +45,26 @@ namespace LibSaberPatch.BehaviorDataObjects
             w.Write(b);
             w.Write(a);
         }
+
+        // default is red and on the left
+        public static SimpleColor DefaultColorA() {
+            return new SimpleColor() {
+                r = 240.0f/255.0f,
+                g = 48.0f/255.0f,
+                b = 48.0f/255.0f,
+                a = 1.0f,
+            };
+        }
+
+
+        // default is blue on the right
+        public static SimpleColor DefaultColorB() {
+            return new SimpleColor() {
+                r = 48.0f/255.0f,
+                g = 158.0f/255.0f,
+                b = 1.0f,
+                a = 1.0f,
+            };
+        }
     }
 }

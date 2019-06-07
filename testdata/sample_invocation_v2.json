@@ -12,5 +12,9 @@
       "coverImagePath": "testdata/bubble_tea_song/cover.jpg",
       "levelIDs": ["BUBBLETEA"],
     }
-  ]
+  ],
+  "colors": {
+    "colorA": {"r": 0.941176, "g": 0.188235, "b": 0.75, "a": 1.0},
+    "colorB": null,
+  }
 }

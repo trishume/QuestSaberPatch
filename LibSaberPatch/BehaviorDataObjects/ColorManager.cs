@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LibSaberPatch.AssetDataObjects;
 
 namespace LibSaberPatch.BehaviorDataObjects
 {
@@ -47,6 +48,28 @@ namespace LibSaberPatch.BehaviorDataObjects
             playerModel.WriteTo(w);
             colorA.WriteTo(w);
             colorB.WriteTo(w);
+        }
+
+        public enum ColorSide {
+            A,
+            B
+        }
+
+        public void UpdateColor(SerializedAssets assets, SimpleColor c, ColorSide side) {
+            // Reset if null
+            if(c == null) {
+                if(side == ColorSide.A) {
+                    c = SimpleColor.DefaultColorA();
+                } else {
+                    c = SimpleColor.DefaultColorB();
+                }
+            }
+
+            if(side == ColorSide.A) {
+                colorA.Follow<MonoBehaviorAssetData>(assets).data = c;
+            } else {
+                colorB.Follow<MonoBehaviorAssetData>(assets).data = c;
+            }
         }
     }
 }

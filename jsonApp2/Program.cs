@@ -7,6 +7,7 @@ using System.ComponentModel;
 using LibSaberPatch;
 using Newtonsoft.Json;
 using LibSaberPatch.BehaviorDataObjects;
+using LibSaberPatch.AssetDataObjects;
 
 namespace jsonApp
 {
@@ -33,6 +34,7 @@ namespace jsonApp
         public List<LevelPack> packs;
 
         public CustomColors colors;
+        public Dictionary<string, string> replaceText;
     }
     #pragma warning restore 0649
 
@@ -88,6 +90,10 @@ namespace jsonApp
 
                     if(inv.colors != null) {
                         UpdateColors(apk, inv.colors);
+                    }
+
+                    if(inv.replaceText != null) {
+                        UpdateText(apk, inv.replaceText);
                     }
                 }
 
@@ -214,6 +220,25 @@ namespace jsonApp
             colorManager.UpdateColor(colorAssets, colors.colorA, ColorManager.ColorSide.A);
             colorManager.UpdateColor(colorAssets, colors.colorB, ColorManager.ColorSide.B);
             apk.ReplaceAssetsFile(Apk.ColorsFile, colorAssets.ToBytes());
+        }
+
+        static void UpdateText(Apk apk, Dictionary<string, string> replaceText) {
+            SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.TextFile));
+            var aotext = textAssets.GetAssetAt(1);
+            TextAssetData ta = aotext.data as TextAssetData;
+            var segments = ta.ReadLocaleText(new List<char>() { ',', ',', '\n' });
+            TextAssetData.ApplyWatermark(segments);
+
+            foreach(var entry in replaceText) {
+                List<string> value;
+                if (!segments.TryGetValue(entry.Key, out value)) {
+                    continue;
+                }
+                segments[entry.Key][value.Count - 1] = entry.Value;
+            }
+
+            ta.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
+            apk.ReplaceAssetsFile(Apk.TextFile, textAssets.ToBytes());
         }
     }
 }

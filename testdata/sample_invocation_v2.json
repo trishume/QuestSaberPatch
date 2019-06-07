@@ -13,8 +13,16 @@
       "levelIDs": ["BUBBLETEA"],
     }
   ],
+  // if the entire "colors" attribute is missing or null, colors won't be updated
   "colors": {
     "colorA": {"r": 0.941176, "g": 0.188235, "b": 0.75, "a": 1.0},
+    // null resets to the default
     "colorB": null,
+  },
+  // if null or missing, doesn't replace text, if non-null but even if an
+  // empty dictionary, adds usernames of all the Quest Modders to the credits
+  "replaceText": {
+    // See https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt
+    "BUTTON_PLAY": "GO!",
   }
 }

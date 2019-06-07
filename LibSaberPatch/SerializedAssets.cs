@@ -223,8 +223,8 @@ namespace LibSaberPatch
                     case MeshFilterAssetData.ClassID:
                         obj.data = new MeshFilterAssetData(reader, obj.size);
                         break;
-                    case TextAssetAssetData.ClassID:
-                        obj.data = new TextAssetAssetData(reader, obj.size);
+                    case TextAssetData.ClassID:
+                        obj.data = new TextAssetData(reader, obj.size);
                         break;
                     default:
                         obj.data = new UnknownAssetData(reader, obj.size);

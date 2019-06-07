@@ -10,6 +10,7 @@ namespace LibSaberPatch
         public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
         public static string RootPackFile = "assets/bin/Data/sharedassets19.assets";
         public static string ColorsFile = "assets/bin/Data/sharedassets1.assets";
+        public static string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
 
         private ZipArchive archive;
 

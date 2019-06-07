@@ -80,6 +80,10 @@ namespace LibSaberPatch
             // Default to return no owned files
             return new List<string>();
         }
+
+        public virtual bool isScript<T>() {
+            return false;
+        }
     }
 
     public class AssetVector3

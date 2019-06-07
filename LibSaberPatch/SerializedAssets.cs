@@ -368,17 +368,15 @@ namespace LibSaberPatch
             return null;
         }
 
-        public AssetObject RemoveAsset(Predicate<AssetObject> p)
-        {
+        // This should only be called with objects after the base game assets
+        // that are not referenced by any pointers.
+        public AssetObject RemoveAsset(Predicate<AssetObject> p) {
             // First, find matching AssetObj
             int objI = objects.FindIndex(p);
             // Console.WriteLine($"{objects[objI].pathID} has type: {objects[objI].data.GetType()}");
             AssetObject obj = objects[objI];
             ShiftPathIDs(objI, 1, obj.pathID);
             objects.RemoveAt(objI);
-            // Now we need to find all assets that reference this asset's path ID.
-            // Alternatively, we can just let it crash, as I don't know how we would
-            // know what to change those pointers to in order to avoid a crash
             return obj;
         }
 
@@ -488,18 +486,6 @@ namespace LibSaberPatch
             return (LevelCollectionBehaviorData)monob.data;
         }
 
-        public LevelCollectionBehaviorData FindCustomLevelCollection()
-        {
-            var col = FindScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", l => true);
-            if (col == null)
-            {
-                var ptr = Utils.CreateCustomCollection(this, "CustomLevelCollection");
-
-                col = ptr.FollowToScript<LevelCollectionBehaviorData>(this);
-            }
-            return col;
-        }
-
         public LevelPackBehaviorData FindExtrasLevelPack()
         {
             AssetObject obj = objects[236]; // the index of the extras collection in sharedassets17
@@ -509,26 +495,6 @@ namespace LibSaberPatch
             if (monob.name != "ExtrasLevelPack")
                 throw new ParseException("Extras level pack not at normal spot");
             return (LevelPackBehaviorData)monob.data;
-        }
-
-        public LevelPackBehaviorData FindCustomLevelPack()
-        {
-            var col = FindScript<LevelPackBehaviorData>(mb => mb.name == "CustomLevelPack", l => true);
-
-            if (col == null)
-            {
-                // Make sure the CustomLevelCollection exists.
-                _ = FindCustomLevelCollection();
-                var ptr = CreateCustomLevelPack();
-
-                col = ptr.FollowToScript<LevelPackBehaviorData>(this);
-            }
-            return col;
-        }
-
-        public AssetPtr CreateCustomLevelPack()
-        {
-            return Utils.CreateCustomPack(this, new AssetPtr(0, GetAssetObjectFromScript<LevelCollectionBehaviorData>(mb => mb.name == "CustomLevelCollection", c => true).pathID), "Custom Songs", "CustomLevel");
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()
@@ -559,8 +525,14 @@ namespace LibSaberPatch
         }
 
         public class Transaction {
-            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
-            public Dictionary<string,AssetPtr> environmentIDToPtr;
+            private SerializedAssets _assets;
+
+            public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr {
+                get { return _assets.scriptIDToScriptPtr; }
+            }
+            public Dictionary<string,AssetPtr> environmentIDToPtr {
+                get { return _assets.environmentIDToPtr; }
+            }
 
             ulong lastPathID;
             List<AssetData> toAdd;
@@ -568,8 +540,7 @@ namespace LibSaberPatch
             public Transaction(SerializedAssets assets) {
                 lastPathID = (ulong)assets.objects.Count;
                 toAdd = new List<AssetData>();
-                scriptIDToScriptPtr = assets.scriptIDToScriptPtr;
-                environmentIDToPtr = assets.environmentIDToPtr;
+                _assets = assets;
             }
 
             public AssetPtr AppendAsset(AssetData data) {
@@ -583,6 +554,10 @@ namespace LibSaberPatch
                 foreach(AssetData obj in toAdd) {
                     assets.AppendAsset(obj);
                 }
+            }
+
+            public AssetObject GetAssetAt(ulong pathID) {
+                return _assets.GetAssetAt(pathID);
             }
         }
     }

@@ -117,5 +117,9 @@ namespace LibSaberPatch.AssetDataObjects
         {
             return data.OwnedFiles(assets);
         }
+
+        public override bool isScript<T>() {
+            return (data is T);
+        }
     }
 }

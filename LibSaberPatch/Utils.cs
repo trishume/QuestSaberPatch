@@ -58,37 +58,30 @@ namespace LibSaberPatch
                              .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                              .ToArray();
         }
-        
-        public static ulong RemoveLevel(SerializedAssets assets, LevelBehaviorData level)
+
+        // This method will fail if given an object that is not a LevelBehaviorData
+        public static void RemoveLevel(SerializedAssets assets, SerializedAssets.AssetObject obj, Apk.Transaction apk)
         {
-            // We want to find the level object in the assets list of objects so that we can remove it via PathID.
-            // Well, this is quite a messy solution... But it _should work_...
-            // What this is doing: Removing the asset that is a monobehavior, and the monobehavior's data equals this level.
-            // Then it casts that to a level behavior data.
+            LevelBehaviorData level = (obj.data as MonoBehaviorAssetData).data as LevelBehaviorData;
 
-            // TODO Make this work with Transactions instead of an assets object.
+            // Remove audio file
+            foreach (string s in level.OwnedFiles(assets)) {
+                apk.RemoveFileAt($"assets/bin/Data/{s}");
+            }
 
-            // Also remove difficulty beatmaps
-            foreach (BeatmapSet s in level.difficultyBeatmapSets)
-            {
-                foreach (BeatmapDifficulty d in s.difficultyBeatmaps)
-                {
+            // Remove things from bottom up, so that pointers to other assets still are rooted
+            // and so get fixed up by RemoveAssetAt
+
+            foreach (BeatmapSet s in level.difficultyBeatmapSets) {
+                foreach (BeatmapDifficulty d in s.difficultyBeatmaps) {
                     assets.RemoveAssetAt(d.beatmapData.pathID);
                 }
             }
-            // Remove cover image
-            assets.RemoveAssetAt(level.coverImage.pathID);
-            // Remove the file for the audio asset and the audio clip
-            var audioAsset = assets.RemoveAssetAt(level.audioClip.pathID).data as AudioClipAssetData;
-            if (audioAsset == null)
-            {
-                throw new ApplicationException($"Could not find audio asset at PathID: {level.audioClip.pathID}");
-            }
 
-            // Remove itself!
-            ulong levelPathID = assets.RemoveAsset(ao => ao.data.GetType().Equals(typeof(MonoBehaviorAssetData))
-            && (ao.data as MonoBehaviorAssetData).name == level.levelID + "Level").pathID;
-            return levelPathID;
+            assets.RemoveAssetAt(level.coverImage.pathID);
+            assets.RemoveAssetAt(level.audioClip.pathID);
+
+            assets.RemoveAssetAt(obj.pathID);
         }
 
         public static ColorManager CreateColor(SerializedAssets assets, SimpleColor c, bool left)
@@ -123,7 +116,7 @@ namespace LibSaberPatch
                 dat.colorA = assets.AppendAsset(mbl);
                 Console.WriteLine($"Created new CustomColor at PathID: {dat.colorA.pathID}");
             }
-            
+
             if (dat.colorB.pathID != 53)
             {
                 if (left)
@@ -155,31 +148,6 @@ namespace LibSaberPatch
                 assets.RemoveAssetAt(manager.colorB.pathID);
                 manager.colorB.pathID = 53;
             }
-        }
-
-        public static SpriteAssetData CreateSprite(SerializedAssets assets, AssetPtr customTexture, string name)
-        {
-            // Default Sprite
-            ulong pd = 45;
-            var sp = assets.GetAssetAt(pd);
-            if (!sp.data.GetType().Equals(typeof(SpriteAssetData)))
-            {
-                Console.WriteLine($"[ERROR] Default Sprite data does not exist at PathID: {pd} instead it has Type {sp.data.GetType()} with TypeID: {sp.typeID} and classid: {assets.types[sp.typeID].classID}");
-            }
-            var sprite = sp.data as SpriteAssetData;
-            return new SpriteAssetData()
-            {
-                name = name,
-                texture = customTexture,
-                atlasTags = sprite.atlasTags,
-                extrude = sprite.extrude,
-                floats = sprite.floats,
-                guid = sprite.guid,
-                isPolygon = sprite.isPolygon,
-                second = sprite.second,
-                spriteAtlas = sprite.spriteAtlas,
-                bytesAfterTexture = sprite.bytesAfterTexture
-            };
         }
 
         public static Dictionary<string, List<string>> ReadLocaleText(string text, List<char> seps)
@@ -263,34 +231,6 @@ namespace LibSaberPatch
             }
             temp = temp.Remove(temp.Length - 1);
             return temp;
-        }
-
-        public static AssetPtr CreateCustomCollection(SerializedAssets assets, string name)
-        {
-            return assets.AppendAsset(new MonoBehaviorAssetData()
-            {
-                data = new LevelCollectionBehaviorData(),
-                name = name,
-                script = assets.scriptIDToScriptPtr[LevelCollectionBehaviorData.ScriptID]
-            });
-        }
-
-        public static AssetPtr CreateCustomPack(SerializedAssets assets, AssetPtr collection, string name, string id)
-        {
-            var ptr = assets.AppendAsset(new MonoBehaviorAssetData()
-            {
-                data = new LevelPackBehaviorData()
-                {
-                    packName = name,
-                    packID = id,
-                    isPackAlwaysOwned = true,
-                    beatmapLevelCollection = collection,
-                    coverImage = new AssetPtr(0, 45) // Default
-                },
-                name = id + "Pack",
-                script = assets.scriptIDToScriptPtr[LevelPackBehaviorData.ScriptID]
-            });
-            return ptr;
         }
     }
 

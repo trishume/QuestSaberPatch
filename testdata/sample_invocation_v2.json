@@ -7,9 +7,10 @@
   },
   "packs": [
     {
-      "name": "Custom Levels",
+      "id": "CustomLevels",
+      "name": "Customs",
       "coverImagePath": "testdata/bubble_tea_song/cover.jpg",
-      "levelIDs": ["BUBBLETEA"]
+      "levelIDs": ["BUBBLETEA"],
     }
   ]
 }

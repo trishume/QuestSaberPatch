@@ -8,6 +8,7 @@ namespace LibSaberPatch
     public class Apk : IDisposable
     {
         public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
+        public static string RootPackFile = "assets/bin/Data/sharedassets19.assets";
 
         private ZipArchive archive;
 

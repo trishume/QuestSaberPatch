@@ -13,6 +13,7 @@ namespace jsonApp
     // These are assigned by JSON so disable the never assigned warning
     #pragma warning disable 0649
     class LevelPack {
+        public string id;
         public string name;
         public string coverImagePath;
         public List<string> levelIDs;
@@ -34,6 +35,8 @@ namespace jsonApp
 
         public List<string> presentLevels;
         public List<string> installedLevels;
+        public List<string> removedLevels;
+        public List<string> missingFromPacks;
         public Dictionary<string,string> installSkipped;
         public string error;
 
@@ -42,6 +45,7 @@ namespace jsonApp
             didSign = false;
             installSkipped = new Dictionary<string, string>();
             installedLevels = new List<string>();
+            missingFromPacks = new List<string>();
         }
     }
 
@@ -67,43 +71,14 @@ namespace jsonApp
                         res.didSignatureCheckPatch = true;
                     }
 
-                    byte[] mainAssetsData = apk.ReadEntireEntry(Apk.MainAssetsFile);
-                    SerializedAssets mainAssets = SerializedAssets.FromBytes(mainAssetsData);
+                    SerializedAssets mainAssets = SerializedAssets.FromBytes(
+                        apk.ReadEntireEntry(Apk.MainAssetsFile)
+                    );
 
-                    Dictionary<string, ulong> existingLevels = mainAssets.FindLevels();
-                    ulong maxBasePathID = mainAssets.MainAssetsMaxBaseGamePath();
+                    SyncLevels(apk, mainAssets, inv, res);
 
-                    // === Remove existing custom packs
-                    // TODO
+                    apk.ReplaceAssetsFile(Apk.MainAssetsFile, mainAssets.ToBytes());
 
-                    // === Remove old-school custom levels from Extras pack
-                    // TODO
-
-                    // === Remove existing levels
-                    var toRemove = new HashSet<string>();
-                    foreach(var entry in existingLevels) {
-                        if(inv.levels.ContainsKey(entry.Key)) continue; // requested
-                        if(entry.Value <= maxBasePathID) continue; // base game level
-                        toRemove.Add(entry.Key);
-                    }
-                    // TODO remove all levels in toRemove
-
-                    // === Install new levels
-                    var toInstall = new HashSet<string>();
-                    foreach(var entry in inv.levels) {
-                        if(existingLevels.ContainsKey(entry.Key)) continue; // already installed
-                        toInstall.Add(entry.Key);
-                    }
-                    Program.Install(apk, mainAssets, toInstall, res, inv.levels);
-
-                    // === Create new custom packs
-                    // TODO
-
-                    byte[] outData = mainAssets.ToBytes();
-                    apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
-
-                    Dictionary<string, ulong> finalLevels = mainAssets.FindLevels();
-                    res.presentLevels = finalLevels.Keys.ToList();
                 }
 
                 if(inv.sign) {
@@ -115,6 +90,79 @@ namespace jsonApp
             }
 
             return res;
+        }
+
+        static void SyncLevels(
+            Apk apk,
+            SerializedAssets mainAssets,
+            Invocation inv,
+            InvocationResult res
+        ) {
+            Dictionary<string, ulong> existingLevels = mainAssets.FindLevels();
+            ulong maxBasePathID = mainAssets.MainAssetsMaxBaseGamePath();
+
+            // === Load root level pack
+            SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.RootPackFile));
+            int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+            BeatmapLevelPackCollection rootLevelPack = rootPackAssets.FindMainLevelPackCollection();
+
+            // === Remove existing custom packs
+            rootLevelPack.beatmapLevelPacks.RemoveAll(ptr => ptr.fileID == mainFileI && ptr.pathID > maxBasePathID);
+            LevelPackBehaviorData.RemoveCustomPacksFromEnd(mainAssets);
+
+            // === Remove old-school custom levels from Extras pack
+            var extrasCollection = mainAssets.FindExtrasLevelCollection();
+            extrasCollection.levels.RemoveAll(ptr => ptr.pathID > maxBasePathID);
+
+            // === Remove existing levels
+            var toRemove = new HashSet<string>();
+            foreach(var entry in existingLevels) {
+                if(inv.levels.ContainsKey(entry.Key)) continue; // requested
+                if(entry.Value <= maxBasePathID) continue; // base game level
+                toRemove.Add(entry.Key);
+            }
+            foreach(string levelID in toRemove) {
+                var ao = mainAssets.GetAssetObjectFromScript<LevelBehaviorData>(p => p.levelID == levelID);
+                var apkTxn = new Apk.Transaction();
+                Utils.RemoveLevel(mainAssets, ao, apkTxn);
+                apkTxn.ApplyTo(apk);
+            }
+            res.removedLevels = toRemove.ToList();
+
+            // === Install new levels
+            var toInstall = new HashSet<string>();
+            foreach(var entry in inv.levels) {
+                if(existingLevels.ContainsKey(entry.Key)) continue; // already installed
+                toInstall.Add(entry.Key);
+            }
+            Program.Install(apk, mainAssets, toInstall, res, inv.levels);
+
+            // === Create new custom packs
+            Dictionary<string, ulong> availableLevels = mainAssets.FindLevels();
+            foreach(LevelPack pack in inv.packs) {
+                if(pack.name == null || pack.id == null || pack.levelIDs == null)
+                    throw new ApplicationException("Packs require name, id and levelIDs list");
+                var txn = new SerializedAssets.Transaction(mainAssets);
+                CustomPackInfo info = LevelPackBehaviorData.CreateCustomPack(
+                    txn, pack.id, pack.name, pack.coverImagePath
+                );
+                txn.ApplyTo(mainAssets);
+
+                var customCollection = info.collection.FollowToScript<LevelCollectionBehaviorData>(mainAssets);
+                foreach(string levelID in pack.levelIDs) {
+                    ulong levelPathID;
+                    if(!availableLevels.TryGetValue(levelID, out levelPathID)) {
+                        res.missingFromPacks.Add(levelID);
+                        continue;
+                    }
+                    customCollection.levels.Add(new AssetPtr(0, levelPathID));
+                }
+
+                rootLevelPack.beatmapLevelPacks.Add(new AssetPtr(mainFileI, info.pack.pathID));
+            }
+            res.presentLevels = availableLevels.Keys.ToList();
+
+            apk.ReplaceAssetsFile(Apk.RootPackFile, rootPackAssets.ToBytes());
         }
 
         static void Install(

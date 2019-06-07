@@ -75,5 +75,32 @@ namespace LibSaberPatch.AssetDataObjects
             action(spriteAtlas);
             action(texture);
         }
+
+        public static SpriteAssetData CreateCoverSprite(
+            SerializedAssets.Transaction assets,
+            AssetPtr customTexture,
+            string name
+        )
+        {
+            // Default Sprite
+            ulong pd = 45;
+            var sp = assets.GetAssetAt(pd);
+            if (!sp.data.GetType().Equals(typeof(SpriteAssetData))) {
+                throw new ApplicationException($"Default Sprite data does not exist at PathID: {pd} instead it has Type {sp.data.GetType()} with TypeID: {sp.typeID}");
+            }
+            var sprite = sp.data as SpriteAssetData;
+            return new SpriteAssetData() {
+                name = name + "CoverSprite",
+                texture = customTexture,
+                atlasTags = sprite.atlasTags,
+                extrude = sprite.extrude,
+                floats = sprite.floats,
+                guid = sprite.guid,
+                isPolygon = sprite.isPolygon,
+                second = sprite.second,
+                spriteAtlas = sprite.spriteAtlas,
+                bytesAfterTexture = sprite.bytesAfterTexture
+            };
+        }
     }
 }

@@ -106,7 +106,7 @@ namespace LibSaberPatch
                 case Characteristic.Lightshow:
                     return null;
             }
-            set.difficultyBeatmaps = _difficultyBeatmaps.Zip(data, (a, b) => (a, b)).Select((s) => s.Item1.ToAssets(assets, s.Item2)).ToList();
+            set.difficultyBeatmaps = _difficultyBeatmaps.Zip(data, (beatmap, beatmapData) => beatmap.ToAssets(assets, beatmapData)).ToList();
             return set;
         }
     }
@@ -183,7 +183,7 @@ namespace LibSaberPatch
                 coverImage = coverPtr,
                 environment = environment,
 
-                difficultyBeatmapSets = _difficultyBeatmapSets.Zip(data, (a, b) => (a, b)).Select(s => s.Item1.ToAssets(assets, s.Item2)).Where(s => s!=null).ToList(),
+                difficultyBeatmapSets = _difficultyBeatmapSets.Zip(data, (set, setData) => set.ToAssets(assets, setData)).Where(s => s!=null).ToList(),
             };
 
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {

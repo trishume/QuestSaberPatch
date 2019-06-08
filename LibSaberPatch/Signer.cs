@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.X509;
@@ -27,6 +26,8 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Utilities.IO.Pem;
 
 using OpenSsl = Org.BouncyCastle.OpenSsl;
+
+using Ionic.Zip;
 
 namespace LibSaberPatch
 {
@@ -92,62 +93,51 @@ hEJ9cirq8PX32lYS3Q5lHaFjlzNgVvijDQCFuxA4NOj+hDFfC/Q=
 
             SHA1 sha = SHA1Managed.Create();
             //so that we can do it in one pass, write the MF and SF line items at the same time to their respective streams
-            using(ZipArchive archive = ZipFile.Open(filename, ZipArchiveMode.Read)) {
-                foreach (var ze in archive.Entries)
+            using(ZipFile archive = ZipFile.Read(filename)) {
+                foreach (ZipEntry ze in archive)
                 {
                     WriteEntryHashes(ze, sha, msManifestFile, msSignatureFileBody);
                 }
-            }
 
-            //compute the hash on the entirety of the manifest file for the SF file
-            msManifestFile.Seek(0, SeekOrigin.Begin);
-            var manifestFileHash = sha.ComputeHash(msManifestFile);
+                //compute the hash on the entirety of the manifest file for the SF file
+                msManifestFile.Seek(0, SeekOrigin.Begin);
+                var manifestFileHash = sha.ComputeHash(msManifestFile);
 
-            // var watch = System.Diagnostics.Stopwatch.StartNew();
-            using(ZipArchive archive = ZipFile.Open(filename, ZipArchiveMode.Update)) {
+                // var watch = System.Diagnostics.Stopwatch.StartNew();
                 //delete all the META-INF stuff that exists already
-                archive.Entries.Where(x => x.FullName.StartsWith("META-INF")).ToList().ForEach(x =>
+                archive.Where(x => x.FileName.StartsWith("META-INF")).ToList().ForEach(x =>
                 {
-                    x.Delete();
+                    archive.RemoveEntry(x);
                 });
 
                 //write out the MF file
                 msManifestFile.Seek(0, SeekOrigin.Begin);
-                var manifestEntry = archive.CreateEntry("META-INF/MANIFEST.MF");
-                using (Stream s = manifestEntry.Open())
-                {
-                    msManifestFile.CopyTo(s);
-                }
+                archive.AddEntry("META-INF/MANIFEST.MF", msManifestFile);
 
                 //write the SF to memory then copy it out to the actual file- contents will be needed later to use for signing, don't want to hit the zip stream twice
-                var signaturesEntry = archive.CreateEntry("META-INF/BS.SF");
                 byte[] sigFileBytes = null;
-                using (MemoryStream msSigFile = new MemoryStream())
+                MemoryStream msSigFile = new MemoryStream();
+                using (StreamWriter swSignatureFile = GetSW(msSigFile))
                 {
-                    using (StreamWriter swSignatureFile = GetSW(msSigFile))
-                    {
-                        swSignatureFile.WriteLine("Signature-Version: 1.0");
-                        swSignatureFile.WriteLine($"SHA1-Digest-Manifest: {Convert.ToBase64String(manifestFileHash)}");
-                        swSignatureFile.WriteLine("Created-By: emulamer");
-                        swSignatureFile.WriteLine();
-                    }
-                    msSignatureFileBody.Seek(0, SeekOrigin.Begin);
-                    msSignatureFileBody.CopyTo(msSigFile);
-                    msSigFile.Seek(0, SeekOrigin.Begin);
-                    using (Stream s = signaturesEntry.Open())
-                    {
-                        msSigFile.CopyTo(s);
-                    }
-                    sigFileBytes = msSigFile.ToArray();
+                    swSignatureFile.WriteLine("Signature-Version: 1.0");
+                    swSignatureFile.WriteLine($"SHA1-Digest-Manifest: {Convert.ToBase64String(manifestFileHash)}");
+                    swSignatureFile.WriteLine("Created-By: emulamer");
+                    swSignatureFile.WriteLine();
                 }
+                msSignatureFileBody.Seek(0, SeekOrigin.Begin);
+                msSignatureFileBody.CopyTo(msSigFile);
+                msSigFile.Seek(0, SeekOrigin.Begin);
+                archive.AddEntry("META-INF/BS.SF", msSigFile);
+                sigFileBytes = msSigFile.ToArray();
 
                 //get the key block (all the hassle distilled into one line), then write it out to the RSA file
                 byte[] keyBlock = SignIt(sigFileBytes);
-                var rsaEntry = archive.CreateEntry("META-INF/BS.RSA");
-                using (Stream blockStream = rsaEntry.Open())
-                {
-                    blockStream.Write(keyBlock, 0, keyBlock.Length);
-                }
+                archive.AddEntry("META-INF/BS.RSA",
+                    _name => new MemoryStream(keyBlock),
+                    (_name, stream) => stream.Dispose());
+
+                archive.Save();
+                msSigFile.Dispose();
             }
             // watch.Stop();
             // Console.WriteLine("updating: " + watch.ElapsedMilliseconds);
@@ -162,44 +152,47 @@ hEJ9cirq8PX32lYS3Q5lHaFjlzNgVvijDQCFuxA4NOj+hDFfC/Q=
         /// Writes the MANIFEST.MF name and hash and the sigfile.SF hash for the sourceFile
         /// </summary>
         private static void WriteEntryHashes(
-            ZipArchiveEntry sourceFile,
+            ZipEntry sourceFile,
             SHA1 sha,
             Stream manifestFileStream,
             Stream signatureFileStream
         )
         {
             // These are going to be deleted soon so don't include them
-            if(sourceFile.FullName.StartsWith("META-INF")) {
+            if(sourceFile.FileName.StartsWith("META-INF")) {
                 return;
             }
 
-            using (Stream s = sourceFile.Open())
+            byte[] hash;
+            using (MemoryStream stream = new MemoryStream()) {
+                sourceFile.Extract(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                hash = sha.ComputeHash(stream);
+            }
+
+            using (MemoryStream msSection = new MemoryStream())
             {
-                var hash = sha.ComputeHash(s);
-                using (MemoryStream msSection = new MemoryStream())
+                string hashOfMFSection = null;
+                using (StreamWriter swSection = GetSW(msSection))
                 {
-                    string hashOfMFSection = null;
-                    using (StreamWriter swSection = GetSW(msSection))
-                    {
-                        swSection.WriteLine($"Name: {sourceFile.FullName}");
-                        swSection.WriteLine($"SHA1-Digest: {Convert.ToBase64String(hash)}");
-                        swSection.WriteLine("");
+                    swSection.WriteLine($"Name: {sourceFile.FileName}");
+                    swSection.WriteLine($"SHA1-Digest: {Convert.ToBase64String(hash)}");
+                    swSection.WriteLine("");
 
-                    }
-                    msSection.Seek(0, SeekOrigin.Begin);
-                    hashOfMFSection = Convert.ToBase64String(sha.ComputeHash(msSection));
-                    msSection.Seek(0, SeekOrigin.Begin);
-                    var actualString = UTF8Encoding.UTF8.GetString(msSection.ToArray());
-                    using (var swSFFile = GetSW(signatureFileStream))
-                    {
-                        swSFFile.WriteLine($"Name: {sourceFile.FullName}");
-                        swSFFile.WriteLine($"SHA1-Digest: {hashOfMFSection}");
-                        swSFFile.WriteLine();
-                    }
-
-                    msSection.Seek(0, SeekOrigin.Begin);
-                    msSection.CopyTo(manifestFileStream);
                 }
+                msSection.Seek(0, SeekOrigin.Begin);
+                hashOfMFSection = Convert.ToBase64String(sha.ComputeHash(msSection));
+                msSection.Seek(0, SeekOrigin.Begin);
+                var actualString = UTF8Encoding.UTF8.GetString(msSection.ToArray());
+                using (var swSFFile = GetSW(signatureFileStream))
+                {
+                    swSFFile.WriteLine($"Name: {sourceFile.FileName}");
+                    swSFFile.WriteLine($"SHA1-Digest: {hashOfMFSection}");
+                    swSFFile.WriteLine();
+                }
+
+                msSection.Seek(0, SeekOrigin.Begin);
+                msSection.CopyTo(manifestFileStream);
             }
         }
 

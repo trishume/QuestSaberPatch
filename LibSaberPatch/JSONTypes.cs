@@ -147,6 +147,10 @@ namespace LibSaberPatch
             return _difficultyBeatmapSets.Select(s => s.ToAssetData(scripts, levelFolderPath, levelID)).ToList();
         }
 
+        public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID) {
+            return AddToAssets(assets, apk, levelID, ToAssetData(assets.scriptIDToScriptPtr, levelID));
+        }
+
         public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID, List<List<MonoBehaviorAssetData>> data) {
             // var watch = System.Diagnostics.Stopwatch.StartNew();
             AudioClipAssetData audioClip = CreateAudioAsset(apk, levelID);

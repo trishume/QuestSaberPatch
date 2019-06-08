@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Collections.Generic;
+using Ionic.Zip;
+using Ionic.Zlib;
 
 namespace LibSaberPatch
 {
@@ -12,55 +13,43 @@ namespace LibSaberPatch
         public static string ColorsFile = "assets/bin/Data/sharedassets1.assets";
         public static string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
 
-        private ZipArchive archive;
+        private ZipFile archive;
 
         public Apk(string path) {
-            archive = ZipFile.Open(path, ZipArchiveMode.Update);
+            archive = ZipFile.Read(path);
+            archive.CompressionLevel = CompressionLevel.None;
         }
 
         public void Dispose() {
+            archive.Save();
             archive.Dispose();
         }
 
         public byte[] ReadEntireEntry(string entryPath) {
-            ZipArchiveEntry entry = archive.GetEntry(entryPath);
+            ZipEntry entry = archive[entryPath];
             if(entry == null) return JoinedContents(entryPath);
-            byte[] buf = new byte[entry.Length];
-            using (Stream stream = entry.Open()) {
-                stream.Read(buf, 0, buf.Length);
+            using (MemoryStream stream = new MemoryStream()) {
+                entry.Extract(stream);
+                stream.Close();
+                return stream.ToArray();
             }
-            return buf;
         }
 
         public void WriteEntireEntry(string entryPath, byte[] contents) {
-            ZipArchiveEntry entry = archive.GetEntry(entryPath);
-            if(entry == null) throw new FileNotFoundException(entryPath);
-            using (Stream stream = entry.Open()) {
-                stream.Write(contents, 0, contents.Length);
-            }
+            archive.UpdateEntry(entryPath,
+                _name => new MemoryStream(contents),
+                (_name, stream) => stream.Dispose());
         }
 
         public void ReplaceAssetsFile(string entryPath, byte[] contents) {
             DeleteSplits(entryPath);
-            try {
-                WriteEntireEntry(entryPath, contents);
-            } catch(FileNotFoundException) {
-                // no compression because faster and it's mostly already compressed beatmap data
-                ZipArchiveEntry entry = archive.CreateEntry(entryPath, CompressionLevel.NoCompression);
-                using (Stream stream = entry.Open()) {
-                    stream.Write(contents, 0, contents.Length);
-                }
-            }
+            WriteEntireEntry(entryPath, contents);
         }
 
         public void CopyFileInto(string sourceFilePath, string destEntryPath) {
-            // this is used for pre-compressed things like songs so no compression is best
-            ZipArchiveEntry entry = archive.CreateEntry(destEntryPath, CompressionLevel.NoCompression);
-            using (Stream destStream = entry.Open()) {
-                using (Stream fileStream = new FileStream(sourceFilePath, FileMode.Open)) {
-                    fileStream.CopyTo(destStream);
-                }
-            }
+            archive.AddEntry(destEntryPath,
+                _name => File.Open(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
+                (_name, stream) => stream.Close());
         }
 
         /// <summary>
@@ -69,20 +58,18 @@ namespace LibSaberPatch
         /// <param name="filePath">The file to delete in the APK</param>
         public void RemoveFileAt(string filePath)
         {
-            ZipArchiveEntry entry = archive.GetEntry(filePath);
-            if (entry != null) entry.Delete();
+            ZipEntry entry = archive[filePath];
+            if (entry != null) archive.RemoveEntry(entry);
         }
 
         public byte[] JoinedContents(string basePath) {
             using (MemoryStream stream = new MemoryStream()) {
                 string splitBase = basePath + ".split";
                 for(int i = 0; ; i++) {
-                    ZipArchiveEntry entry = archive.GetEntry(splitBase+i);
+                    ZipEntry entry = archive[splitBase+i];
                     if(entry == null && i == 0) return null;
                     if(entry == null) break;
-                    using (Stream fileStream = entry.Open()) {
-                        fileStream.CopyTo(stream);
-                    }
+                    entry.Extract(stream);
                 }
                 stream.Close();
                 return stream.ToArray();
@@ -92,9 +79,9 @@ namespace LibSaberPatch
         public void DeleteSplits(string basePath) {
             string splitBase = basePath + ".split";
             for(int i = 0; ; i++) {
-                ZipArchiveEntry entry = archive.GetEntry(splitBase+i);
+                ZipEntry entry = archive[splitBase+i];
                 if(entry == null) break;
-                entry.Delete();
+                archive.RemoveEntry(entry);
             }
         }
 

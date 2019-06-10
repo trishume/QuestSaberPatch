@@ -26,6 +26,7 @@ namespace app
 
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
+                // List<JsonLevel> levelsToAdd = new List<JsonLevel>();
                 for(int i = 1; i < args.Length; i++) {
                     Utils.FindLevels(args[i], levelFolder => {
                         try {

@@ -29,17 +29,23 @@ namespace LibSaberPatch
 
         public string _beatmapFilename;
 
+        private byte[] projectedData;
+
+        public void GenerateBeatmap(string levelFolderPath) {
+            if(projectedData != null) return;
+            string beatmapFile = Path.Combine(levelFolderPath, _beatmapFilename);
+            string jsonData = File.ReadAllText(beatmapFile);
+            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
+            projectedData = saveData.SerializeToBinary();
+        }
+
         public BeatmapDifficulty ToAssets(
             SerializedAssets.Transaction assets,
             string levelFolderPath,
             string levelID,
             Characteristic characteristic
         ) {
-            string beatmapFile = Path.Combine(levelFolderPath, _beatmapFilename);
-            string jsonData = File.ReadAllText(beatmapFile);
-            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
-            byte[] projectedData = saveData.SerializeToBinary();
-
+            GenerateBeatmap(levelFolderPath);
             BeatmapDataBehaviorData beatmapData = new BeatmapDataBehaviorData() {
                 jsonData = "",
                 signature = new byte[128], // all zeros
@@ -79,6 +85,12 @@ namespace LibSaberPatch
     {
         public List<JsonBeatmapDifficulty> _difficultyBeatmaps;
         public Characteristic _beatmapCharacteristicName;
+
+        public void GenerateBeatmaps(string levelFolderPath) {
+            foreach(var beatmap in _difficultyBeatmaps) {
+                beatmap.GenerateBeatmap(levelFolderPath);
+            }
+        }
 
         public BeatmapSet ToAssets(
             SerializedAssets.Transaction assets,
@@ -135,6 +147,14 @@ namespace LibSaberPatch
 
         public string GenerateBasicLevelID() {
             return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
+        }
+
+        // You can optionally call this ahead of time before AddToAssets in
+        // parallel to do the slow BinaryFormatter serialization ahead of time
+        public void GenerateBeatmaps(string levelFolderPath) {
+            foreach(var set in _difficultyBeatmapSets) {
+                set.GenerateBeatmaps(levelFolderPath);
+            }
         }
 
         public AssetPtr AddToAssets(SerializedAssets.Transaction assets, Apk.Transaction apk, string levelID) {

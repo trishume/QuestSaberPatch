@@ -27,7 +27,7 @@ namespace LibSaberPatch
         public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
         public Dictionary<string,AssetPtr> environmentIDToPtr;
 
-        private Apk.Version apkVersion;
+        public Apk.Version apkVersion;
 
         public class TypeRef {
             public int classID;
@@ -525,6 +525,9 @@ namespace LibSaberPatch
             }
             public Dictionary<string,AssetPtr> environmentIDToPtr {
                 get { return _assets.environmentIDToPtr; }
+            }
+            public Apk.Version apkVersion {
+                get { return _assets.apkVersion; }
             }
 
             ulong lastPathID;

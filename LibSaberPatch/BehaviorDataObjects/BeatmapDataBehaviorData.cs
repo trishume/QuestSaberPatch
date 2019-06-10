@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace LibSaberPatch.BehaviorDataObjects
 {
@@ -33,6 +34,18 @@ namespace LibSaberPatch.BehaviorDataObjects
         public override int SharedAssetsTypeIndex()
         {
             return 0x0E;
+        }
+
+        public static BeatmapDataBehaviorData FromJsonFile(string path) {
+            string jsonData = File.ReadAllText(path);
+            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
+            byte[] projectedData = saveData.SerializeToBinary();
+
+            return new BeatmapDataBehaviorData() {
+                jsonData = "",
+                signature = new byte[128], // all zeros
+                projectedData = projectedData,
+            };
         }
     }
 }

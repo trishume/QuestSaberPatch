@@ -162,6 +162,7 @@ namespace LibSaberPatch
 
         private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
         public void PatchSignatureCheck() {
+            if(version >= Version.V1_1_0) return;
             byte[] data = ReadEntireEntry(il2cppLibEntry);
 
             bool patched = false;
@@ -178,6 +179,8 @@ namespace LibSaberPatch
                 int sigPatchLoc = 0x0109D074;
                 byte[] toReplace = {0x8B, 0xD8, 0xFE, 0xEB};
                 patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
+            } else {
+                throw new ApplicationException("Can't recognize code version to patch");
             }
 
             if(patched) WriteEntireEntry(il2cppLibEntry, data);

@@ -42,8 +42,8 @@ namespace LibSaberPatch.BehaviorDataObjects
 
         public static BeatmapDataBehaviorData FromJsonFile(string path, Apk.Version v) {
             string jsonData = File.ReadAllText(path);
-            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
             if(v < Apk.Version.V1_1_0) {
+                BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
                 byte[] projectedData = saveData.SerializeToBinary();
 
                 return new BeatmapDataBehaviorData() {

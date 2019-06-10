@@ -9,13 +9,18 @@ namespace LibSaberPatch
 {
     public class Apk : IDisposable
     {
-        // This file contains the version number but we'll just hash it
-        private const string VersionHashFile = "assets/bin/Data/globalgamemanagers";
+        private class FileConstants
+        {
+            // This file contains the version number but we'll just hash it
+            internal const string VersionHashFile = "assets/bin/Data/globalgamemanagers";
 
-        private const string MainAssetsFile1 = "assets/bin/Data/sharedassets17.assets";
-        private const string RootPackFile = "assets/bin/Data/sharedassets19.assets";
-        private const string ColorsFile = "assets/bin/Data/sharedassets1.assets";
-        private const string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
+            internal const string MainAssetsFile1 = "assets/bin/Data/sharedassets17.assets";
+            internal const string MainAssetsFile2 = "assets/bin/Data/sharedassets18.assets";
+            internal const string RootPackFile1 = "assets/bin/Data/sharedassets19.assets";
+            internal const string ColorsFile1 = "assets/bin/Data/sharedassets1.assets";
+            internal const string TextFile1 = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
+        }
+
 
         private ZipFile archive;
 
@@ -41,7 +46,7 @@ namespace LibSaberPatch
 
         private string VersionFileHash() {
             SHA1 sha = SHA1Managed.Create();
-            byte[] hash = sha.ComputeHash(ReadEntireEntry(VersionHashFile));
+            byte[] hash = sha.ComputeHash(ReadEntireEntry(FileConstants.VersionHashFile));
             return Convert.ToBase64String(hash);
         }
 
@@ -63,10 +68,25 @@ namespace LibSaberPatch
 
         public string MainAssetsFile() {
             if(version >= Version.V1_1_0) {
-                return "assets/bin/Data/sharedassets18.assets";
+                return FileConstants.MainAssetsFile2;
             } else {
-                return "assets/bin/Data/sharedassets17.assets";
+                return FileConstants.MainAssetsFile1;
             }
+        }
+
+        public string RootPackFile()
+        {
+            return FileConstants.RootPackFile1;
+        }
+
+        public string ColorsFile()
+        {
+            return FileConstants.ColorsFile1;
+        }
+
+        public string TextFile()
+        {
+            return FileConstants.TextFile1;
         }
 
         public byte[] ReadEntireEntry(string entryPath) {

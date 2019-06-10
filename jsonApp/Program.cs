@@ -64,15 +64,15 @@ namespace jsonApp
                         res.didSignatureCheckPatch = true;
                     }
 
-                    byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
-                    SerializedAssets assets = SerializedAssets.FromBytes(data);
+                    byte[] data = apk.ReadEntireEntry(apk.MainAssetsFile());
+                    SerializedAssets assets = SerializedAssets.FromBytes(data, apk.version);
                     HashSet<string> existingLevels = assets.ExistingLevelIDs();
 
                     if(inv.ensureInstalled.Count > 0) {
                         Program.EnsureInstalled(apk, assets, existingLevels, res, inv.ensureInstalled);
 
                         byte[] outData = assets.ToBytes();
-                        apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
+                        apk.ReplaceAssetsFile(apk.MainAssetsFile(), outData);
                     }
 
                     res.presentLevels = existingLevels.ToList();

@@ -81,12 +81,12 @@ namespace jsonApp
                     }
 
                     SerializedAssets mainAssets = SerializedAssets.FromBytes(
-                        apk.ReadEntireEntry(Apk.MainAssetsFile)
+                        apk.ReadEntireEntry(apk.MainAssetsFile()), apk.version
                     );
 
                     SyncLevels(apk, mainAssets, inv, res);
 
-                    apk.ReplaceAssetsFile(Apk.MainAssetsFile, mainAssets.ToBytes());
+                    apk.ReplaceAssetsFile(apk.MainAssetsFile(), mainAssets.ToBytes());
 
                     if(inv.colors != null) {
                         UpdateColors(apk, inv.colors);
@@ -121,7 +121,7 @@ namespace jsonApp
             ulong maxBasePathID = mainAssets.MainAssetsMaxBaseGamePath();
 
             // === Load root level pack
-            SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.RootPackFile));
+            SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.RootPackFile()), apk.version);
             int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
             BeatmapLevelPackCollection rootLevelPack = rootPackAssets.FindMainLevelPackCollection();
 
@@ -181,7 +181,7 @@ namespace jsonApp
             }
             res.presentLevels = availableLevels.Keys.ToList();
 
-            apk.ReplaceAssetsFile(Apk.RootPackFile, rootPackAssets.ToBytes());
+            apk.ReplaceAssetsFile(apk.RootPackFile(), rootPackAssets.ToBytes());
         }
 
         static void Install(
@@ -217,16 +217,16 @@ namespace jsonApp
 
         static void UpdateColors(Apk apk, CustomColors colors) {
             SerializedAssets colorAssets = SerializedAssets.FromBytes(
-                apk.ReadEntireEntry(Apk.ColorsFile));
+                apk.ReadEntireEntry(apk.ColorsFile()), apk.version);
             // There should only be one color manager
             var colorManager = colorAssets.FindScript<ColorManager>(cm => true);
             colorManager.UpdateColor(colorAssets, colors.colorA, ColorManager.ColorSide.A);
             colorManager.UpdateColor(colorAssets, colors.colorB, ColorManager.ColorSide.B);
-            apk.ReplaceAssetsFile(Apk.ColorsFile, colorAssets.ToBytes());
+            apk.ReplaceAssetsFile(apk.ColorsFile(), colorAssets.ToBytes());
         }
 
         static void UpdateText(Apk apk, Dictionary<string, string> replaceText) {
-            SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.TextFile));
+            SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.TextFile()), apk.version);
             var aotext = textAssets.GetAssetAt(1);
             TextAssetData ta = aotext.data as TextAssetData;
             var segments = ta.ReadLocaleText(new List<char>() { ',', ',', '\n' });
@@ -241,7 +241,7 @@ namespace jsonApp
             }
 
             ta.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
-            apk.ReplaceAssetsFile(Apk.TextFile, textAssets.ToBytes());
+            apk.ReplaceAssetsFile(apk.TextFile(), textAssets.ToBytes());
         }
     }
 }

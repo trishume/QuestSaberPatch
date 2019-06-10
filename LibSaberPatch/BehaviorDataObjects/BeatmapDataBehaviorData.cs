@@ -17,18 +17,22 @@ namespace LibSaberPatch.BehaviorDataObjects
 
         public BeatmapDataBehaviorData() { }
 
-        public BeatmapDataBehaviorData(BinaryReader reader, int length)
+        public BeatmapDataBehaviorData(BinaryReader reader, int length, Apk.Version v)
         {
             jsonData = reader.ReadAlignedString();
-            signature = reader.ReadPrefixedBytes();
-            projectedData = reader.ReadPrefixedBytes();
+            if(v < Apk.Version.V1_1_0) {
+                signature = reader.ReadPrefixedBytes();
+                projectedData = reader.ReadPrefixedBytes();
+            }
         }
 
         public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(jsonData);
-            w.WritePrefixedBytes(signature);
-            w.WritePrefixedBytes(projectedData);
+            if(signature != null && projectedData != null) {
+                w.WritePrefixedBytes(signature);
+                w.WritePrefixedBytes(projectedData);
+            }
         }
 
         public override int SharedAssetsTypeIndex()
@@ -36,16 +40,22 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0x0E;
         }
 
-        public static BeatmapDataBehaviorData FromJsonFile(string path) {
+        public static BeatmapDataBehaviorData FromJsonFile(string path, Apk.Version v) {
             string jsonData = File.ReadAllText(path);
             BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
-            byte[] projectedData = saveData.SerializeToBinary();
+            if(v < Apk.Version.V1_1_0) {
+                byte[] projectedData = saveData.SerializeToBinary();
 
-            return new BeatmapDataBehaviorData() {
-                jsonData = "",
-                signature = new byte[128], // all zeros
-                projectedData = projectedData,
-            };
+                return new BeatmapDataBehaviorData() {
+                    jsonData = "",
+                    signature = new byte[128], // all zeros
+                    projectedData = projectedData,
+                };
+            } else {
+                return new BeatmapDataBehaviorData() {
+                    jsonData = jsonData,
+                };
+            }
         }
     }
 }

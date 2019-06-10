@@ -47,14 +47,9 @@ namespace LibSaberPatch.AssetDataObjects
                 data = new LevelCollectionBehaviorData(reader, length - headerLen);
                 return;
             }
-            if (typeRef.typeHash.SequenceEqual(BeatmapDataV2BehaviorData.TypeHash))
+            if (typeRef.scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID))
             {
-                data = new BeatmapDataV2BehaviorData(reader, length - headerLen);
-                return;
-            }
-            if (typeRef.typeHash.SequenceEqual(BeatmapDataBehaviorData.TypeHash))
-            {
-                data = new BeatmapDataBehaviorData(reader, length - headerLen);
+                data = new BeatmapDataBehaviorData(reader, length - headerLen, version);
                 return;
             }
             if (typeRef.scriptID.SequenceEqual(LevelPackBehaviorData.ScriptID))

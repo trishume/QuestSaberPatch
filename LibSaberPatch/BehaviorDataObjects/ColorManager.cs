@@ -33,7 +33,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             action(colorB);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             playerModel.WriteTo(w);
             colorA.WriteTo(w);

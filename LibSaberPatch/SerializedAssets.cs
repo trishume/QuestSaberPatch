@@ -27,6 +27,8 @@ namespace LibSaberPatch
         public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
         public Dictionary<string,AssetPtr> environmentIDToPtr;
 
+        private Apk.Version apkVersion;
+
         public class TypeRef {
             public int classID;
             public bool isStripped;
@@ -134,9 +136,9 @@ namespace LibSaberPatch
         private const int headerLen = 5*4;
         private const int parsedGeneration = 17;
 
-        public static SerializedAssets FromBytes(byte[] data) {
+        public static SerializedAssets FromBytes(byte[] data, Apk.Version v) {
             using (Stream stream = new MemoryStream(data)) {
-                return new SerializedAssets(stream);
+                return new SerializedAssets(stream, v);
             }
         }
 
@@ -148,7 +150,8 @@ namespace LibSaberPatch
             }
         }
 
-        public SerializedAssets(Stream stream) {
+        public SerializedAssets(Stream stream, Apk.Version v) {
+            apkVersion = v;
             BinaryReader reader = new BinaryReader(stream);
 
             // ===== Parse Header
@@ -204,7 +207,7 @@ namespace LibSaberPatch
                 switch(types[obj.typeID].classID) {
                     case MonoBehaviorAssetData.ClassID:
                         byte[] scriptID = types[obj.typeID].scriptID;
-                        var monob = new MonoBehaviorAssetData(reader, obj.size, scriptID);
+                        var monob = new MonoBehaviorAssetData(reader, obj.size, types[obj.typeID], apkVersion);
                         scriptIDToScriptPtr[scriptID] = monob.script;
                         obj.data = monob;
                         break;
@@ -280,7 +283,7 @@ namespace LibSaberPatch
                 dataOffset = (int)w.BaseStream.Position;
                 foreach(AssetObject obj in objects) {
                     obj.offset = (int)w.BaseStream.Position - dataOffset;
-                    obj.data.WriteTo(w);
+                    obj.data.WriteTo(w, apkVersion);
                     obj.size = ((int)w.BaseStream.Position - dataOffset) - obj.offset;
                     w.WriteZeros(obj.paddingLen);
 
@@ -477,24 +480,14 @@ namespace LibSaberPatch
         }
 
         public LevelCollectionBehaviorData FindExtrasLevelCollection() {
-            AssetObject obj = objects[235]; // the index of the extras collection in sharedassets17
-            if(!(obj.data is MonoBehaviorAssetData))
-                throw new ParseException("Extras level collection not at normal spot");
-            MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
-            if(monob.name != "ExtrasLevelCollection")
-                throw new ParseException("Extras level collection not at normal spot");
-            return (LevelCollectionBehaviorData)monob.data;
+            return FindScript<LevelCollectionBehaviorData>(
+                m => m.name == "ExtrasLevelCollection", l => true);
         }
 
         public LevelPackBehaviorData FindExtrasLevelPack()
         {
-            AssetObject obj = objects[236]; // the index of the extras collection in sharedassets17
-            if (!(obj.data is MonoBehaviorAssetData))
-                throw new ParseException("Extras level pack not at normal spot (not monob)");
-            MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
-            if (monob.name != "ExtrasLevelPack")
-                throw new ParseException("Extras level pack not at normal spot");
-            return (LevelPackBehaviorData)monob.data;
+            return FindScript<LevelPackBehaviorData>(
+                m => m.name == "ExtrasLevelPack", l => true);
         }
 
         public BeatmapLevelPackCollection FindMainLevelPackCollection()

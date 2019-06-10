@@ -60,7 +60,7 @@ namespace LibSaberPatch
 
     public abstract class AssetData
     {
-        public abstract void WriteTo(BinaryWriter w);
+        public abstract void WriteTo(BinaryWriter w, Apk.Version v);
         public abstract int SharedAssetsTypeIndex();
         // Could also maybe make this method an actual method, instead of abstract, and use reflection.
         /// <summary>

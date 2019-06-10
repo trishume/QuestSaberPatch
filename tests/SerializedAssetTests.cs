@@ -18,9 +18,9 @@ namespace TestApp
             return Path.Combine("../../../../", relativePath);
         }
 
-        private SerializedAssets TestRoundTrips(byte[] data, string name) {
+        private SerializedAssets TestRoundTrips(byte[] data, string name, Apk.Version v) {
             // File.WriteAllBytes($"../../../../testoutput/{name}.before.asset", data);
-            SerializedAssets assets = SerializedAssets.FromBytes(data);
+            SerializedAssets assets = SerializedAssets.FromBytes(data, v);
             Assert.NotEmpty(assets.types);
             Assert.NotEmpty(assets.objects);
             byte[] outData = assets.ToBytes();
@@ -33,15 +33,15 @@ namespace TestApp
         public void TestBasicRoundTrip() {
             using (Apk apk = new Apk(baseAPKPath)) {
                 byte[] data = apk.ReadEntireEntry("assets/bin/Data/3eb70b9e20363dd488f8c4841d7db87f");
-                TestRoundTrips(data, "basic");
+                TestRoundTrips(data, "basic", apk.version);
             }
         }
 
         [Fact]
         public void TestBigFile() {
             using (Apk apk = new Apk(baseAPKPath)) {
-                byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
-                var assets = TestRoundTrips(data, "big");
+                byte[] data = apk.ReadEntireEntry(apk.MainAssetsFile());
+                var assets = TestRoundTrips(data, "big", apk.version);
 
                 var existing = assets.ExistingLevelIDs();
                 Assert.NotEmpty(existing);
@@ -65,8 +65,9 @@ namespace TestApp
         [Fact]
         public void TestLoadBeatmap() {
             using (Apk apk = new Apk(baseAPKPath)) {
-                byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
-                SerializedAssets assets = SerializedAssets.FromBytes(data);
+                byte[] data = apk.ReadEntireEntry(apk.MainAssetsFile());
+                if(apk.version >= Apk.Version.V1_1_0) return;
+                SerializedAssets assets = SerializedAssets.FromBytes(data, apk.version);
                 SerializedAssets.AssetObject obj = assets.objects[62];
                 MonoBehaviorAssetData monob = (MonoBehaviorAssetData)obj.data;
                 BeatmapDataBehaviorData beatmap = (BeatmapDataBehaviorData)monob.data;

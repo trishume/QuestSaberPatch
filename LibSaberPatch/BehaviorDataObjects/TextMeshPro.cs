@@ -50,10 +50,10 @@ namespace LibSaberPatch.BehaviorDataObjects
             action(fontAsset);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             material.WriteTo(w);
-            color.WriteTo(w);
+            color.WriteTo(w, v);
             w.Write(raycastTarget);
             w.AlignStream();
             cullState.WriteTo(w);

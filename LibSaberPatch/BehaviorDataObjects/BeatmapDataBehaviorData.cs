@@ -8,6 +8,7 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class BeatmapDataBehaviorData : BehaviorData
     {
         public static byte[] ScriptID = Utils.HexToBytes("95AF3C8D406FF35C9DA151E0EE1E0013");
+        public static byte[] TypeHash = Utils.HexToBytes("56D73D1BF0CB3F5DA4714C77A41B9F88");
 
         public string jsonData;
         public byte[] signature;
@@ -22,7 +23,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             projectedData = reader.ReadPrefixedBytes();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(jsonData);
             w.WritePrefixedBytes(signature);

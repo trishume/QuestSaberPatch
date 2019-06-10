@@ -6,7 +6,7 @@ namespace LibSaberPatch
 {
     public abstract class BehaviorData
     {
-        public abstract void WriteTo(BinaryWriter w);
+        public abstract void WriteTo(BinaryWriter w, Apk.Version v);
         public abstract int SharedAssetsTypeIndex();
         // Could maybe also make this method non-abstract using reflection
         /// <summary>

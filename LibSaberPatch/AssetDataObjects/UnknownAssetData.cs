@@ -13,7 +13,7 @@ namespace LibSaberPatch.AssetDataObjects
             bytes = reader.ReadBytes(length);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.Write(bytes);
         }

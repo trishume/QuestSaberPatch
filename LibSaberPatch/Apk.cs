@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Ionic.Zip;
 using Ionic.Zlib;
 
@@ -8,21 +9,64 @@ namespace LibSaberPatch
 {
     public class Apk : IDisposable
     {
-        public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
-        public static string RootPackFile = "assets/bin/Data/sharedassets19.assets";
-        public static string ColorsFile = "assets/bin/Data/sharedassets1.assets";
-        public static string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
+        // This file contains the version number but we'll just hash it
+        private const string VersionHashFile = "assets/bin/Data/globalgamemanagers";
+
+        private const string MainAssetsFile1 = "assets/bin/Data/sharedassets17.assets";
+        private const string RootPackFile = "assets/bin/Data/sharedassets19.assets";
+        private const string ColorsFile = "assets/bin/Data/sharedassets1.assets";
+        private const string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
 
         private ZipFile archive;
+
+        public Version version;
+
+        public enum Version {
+            V1_0_0 = 0,
+            V1_0_1,
+            V1_0_2,
+            V1_1_0,
+        }
 
         public Apk(string path) {
             archive = ZipFile.Read(path);
             archive.CompressionLevel = CompressionLevel.None;
+            version = DetectVersion();
         }
 
         public void Dispose() {
             archive.Save();
             archive.Dispose();
+        }
+
+        private string VersionFileHash() {
+            SHA1 sha = SHA1Managed.Create();
+            byte[] hash = sha.ComputeHash(ReadEntireEntry(VersionHashFile));
+            return Convert.ToBase64String(hash);
+        }
+
+        private Version DetectVersion() {
+            string hash = VersionFileHash();
+            switch(hash) {
+                case "wnEQdoDvVbzx+ZLyza/7M3dpgPA=":
+                    return Version.V1_0_0;
+                case "gdRgBAUWQhEstDEIkDMhIhsUpfw=":
+                    return Version.V1_0_1;
+                case "19H8crwCXHxdE8iX2mxH/Aeun1A=":
+                    return Version.V1_0_2;
+                case "NNVcU90Hhx0/iiX9zLP4qZ8MLdY=":
+                    return Version.V1_1_0;
+                default:
+                    throw new ApplicationException($"Unrecognized APK version, hash {hash}");
+            }
+        }
+
+        public string MainAssetsFile() {
+            if(version >= Version.V1_1_0) {
+                return "assets/bin/Data/sharedassets18.assets";
+            } else {
+                return "assets/bin/Data/sharedassets17.assets";
+            }
         }
 
         public byte[] ReadEntireEntry(string entryPath) {

@@ -27,7 +27,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0x0A;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             text.WriteTo(w);
             w.Write(maintainTextAlignment);

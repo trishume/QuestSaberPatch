@@ -47,7 +47,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             action(saberTypeObject);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             topPos.WriteTo(w);
             bottomPos.WriteTo(w);

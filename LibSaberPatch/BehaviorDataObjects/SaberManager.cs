@@ -24,7 +24,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 0xE3;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             leftSaber.WriteTo(w);
             rightSaber.WriteTo(w);

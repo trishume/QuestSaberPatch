@@ -29,7 +29,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             return 13;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.Write(r);
             w.Write(g);

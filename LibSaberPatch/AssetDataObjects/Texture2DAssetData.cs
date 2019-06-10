@@ -112,7 +112,7 @@ namespace LibSaberPatch.AssetDataObjects
             path = reader.ReadAlignedString();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(name);
             w.Write(forcedFallbackFormat);

@@ -34,7 +34,7 @@ namespace LibSaberPatch.AssetDataObjects
             return 0;
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.Write(components.Length);
             foreach (AssetPtr p in components)

@@ -21,7 +21,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             levels = reader.ReadPrefixedList(r => new AssetPtr(r));
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WritePrefixedList(levels, x => x.WriteTo(w));
         }

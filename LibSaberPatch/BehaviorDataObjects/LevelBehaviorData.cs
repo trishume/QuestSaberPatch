@@ -97,7 +97,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             difficultyBeatmapSets = reader.ReadPrefixedList(r => new BeatmapSet(r));
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(levelID);
             w.WriteAlignedString(songName);
@@ -114,11 +114,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             coverImage.WriteTo(w);
             environment.WriteTo(w);
             w.WritePrefixedList(difficultyBeatmapSets, x => x.WriteTo(w));
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0F;
         }
 
         public override void Trace(Action<AssetPtr> action)

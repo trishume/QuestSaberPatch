@@ -36,15 +36,7 @@ namespace LibSaberPatch
             Characteristic characteristic
         ) {
             string beatmapFile = Path.Combine(levelFolderPath, _beatmapFilename);
-            string jsonData = File.ReadAllText(beatmapFile);
-            BeatmapSaveData saveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
-            byte[] projectedData = saveData.SerializeToBinary();
-
-            BeatmapDataBehaviorData beatmapData = new BeatmapDataBehaviorData() {
-                jsonData = "",
-                signature = new byte[128], // all zeros
-                projectedData = projectedData,
-            };
+            var beatmapData = BeatmapDataBehaviorData.FromJsonFile(beatmapFile, assets.apkVersion);
             string characteristicPart = ((characteristic == Characteristic.Standard) ? "" : characteristic.ToString());
             string assetName = levelID + characteristicPart + _difficulty.ToString() + "BeatmapData";
             MonoBehaviorAssetData monob = new MonoBehaviorAssetData() {

@@ -81,12 +81,12 @@ namespace jsonApp
                     }
 
                     SerializedAssets mainAssets = SerializedAssets.FromBytes(
-                        apk.ReadEntireEntry(Apk.MainAssetsFile)
+                        apk.ReadEntireEntry(apk.MainAssetsFile()), apk.version
                     );
 
                     SyncLevels(apk, mainAssets, inv, res);
 
-                    apk.ReplaceAssetsFile(Apk.MainAssetsFile, mainAssets.ToBytes());
+                    apk.ReplaceAssetsFile(apk.MainAssetsFile(), mainAssets.ToBytes());
 
                     if(inv.colors != null) {
                         UpdateColors(apk, inv.colors);
@@ -121,12 +121,16 @@ namespace jsonApp
             ulong maxBasePathID = mainAssets.MainAssetsMaxBaseGamePath();
 
             // === Load root level pack
-            SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.RootPackFile));
-            int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+            SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.RootPackFile()), apk.version);
+            string mainFileName = apk.MainAssetsFileName();
+            int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == mainFileName) + 1;
             BeatmapLevelPackCollection rootLevelPack = rootPackAssets.FindMainLevelPackCollection();
+            // Might be null if we're on a version older than v1.1.0
+            AlwaysOwnedBehaviorData alwaysOwned = mainAssets.FindScript<AlwaysOwnedBehaviorData>(x => true);
 
             // === Remove existing custom packs
             rootLevelPack.beatmapLevelPacks.RemoveAll(ptr => ptr.fileID == mainFileI && ptr.pathID > maxBasePathID);
+            if(alwaysOwned != null) alwaysOwned.levelPacks.RemoveAll(ptr => ptr.fileID == 0 && ptr.pathID > maxBasePathID);
             LevelPackBehaviorData.RemoveCustomPacksFromEnd(mainAssets);
 
             // === Remove old-school custom levels from Extras pack
@@ -178,10 +182,11 @@ namespace jsonApp
                 }
 
                 rootLevelPack.beatmapLevelPacks.Add(new AssetPtr(mainFileI, info.pack.pathID));
+                if(alwaysOwned != null) alwaysOwned.levelPacks.Add(info.pack);
             }
             res.presentLevels = availableLevels.Keys.ToList();
 
-            apk.ReplaceAssetsFile(Apk.RootPackFile, rootPackAssets.ToBytes());
+            apk.ReplaceAssetsFile(apk.RootPackFile(), rootPackAssets.ToBytes());
         }
 
         static void Install(
@@ -217,31 +222,31 @@ namespace jsonApp
 
         static void UpdateColors(Apk apk, CustomColors colors) {
             SerializedAssets colorAssets = SerializedAssets.FromBytes(
-                apk.ReadEntireEntry(Apk.ColorsFile));
+                apk.ReadEntireEntry(apk.ColorsFile()), apk.version);
             // There should only be one color manager
             var colorManager = colorAssets.FindScript<ColorManager>(cm => true);
             colorManager.UpdateColor(colorAssets, colors.colorA, ColorManager.ColorSide.A);
             colorManager.UpdateColor(colorAssets, colors.colorB, ColorManager.ColorSide.B);
-            apk.ReplaceAssetsFile(Apk.ColorsFile, colorAssets.ToBytes());
+            apk.ReplaceAssetsFile(apk.ColorsFile(), colorAssets.ToBytes());
         }
 
         static void UpdateText(Apk apk, Dictionary<string, string> replaceText) {
-            SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(Apk.TextFile));
+            SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.TextFile()), apk.version);
             var aotext = textAssets.GetAssetAt(1);
             TextAssetData ta = aotext.data as TextAssetData;
-            var segments = ta.ReadLocaleText(new List<char>() { ',', ',', '\n' });
+            var segments = ta.ReadLocaleText();
             TextAssetData.ApplyWatermark(segments);
 
             foreach(var entry in replaceText) {
-                List<string> value;
+                Dictionary<string, string> value;
                 if (!segments.TryGetValue(entry.Key, out value)) {
                     continue;
                 }
-                segments[entry.Key][value.Count - 1] = entry.Value;
+                value["ENGLISH"] = entry.Value;
             }
 
-            ta.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
-            apk.ReplaceAssetsFile(Apk.TextFile, textAssets.ToBytes());
+            ta.WriteLocaleText(segments);
+            apk.ReplaceAssetsFile(apk.TextFile(), textAssets.ToBytes());
         }
     }
 }

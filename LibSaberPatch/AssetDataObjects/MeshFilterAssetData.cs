@@ -20,12 +20,7 @@ namespace LibSaberPatch.AssetDataObjects
             mesh = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 4;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             gameObject.WriteTo(w);
             mesh.WriteTo(w);

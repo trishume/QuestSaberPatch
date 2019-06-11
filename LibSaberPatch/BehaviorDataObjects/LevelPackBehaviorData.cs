@@ -25,29 +25,28 @@ namespace LibSaberPatch.BehaviorDataObjects
         {
             isPackAlwaysOwned = true;
         }
-        public LevelPackBehaviorData(BinaryReader reader, int length)
+        public LevelPackBehaviorData(BinaryReader reader, int length, Apk.Version v)
         {
             packID = reader.ReadAlignedString();
             packName = reader.ReadAlignedString();
             coverImage = new AssetPtr(reader);
-            isPackAlwaysOwned = Convert.ToBoolean(reader.ReadByte());
-            reader.AlignStream();
+            if(v < Apk.Version.V1_1_0) {
+                isPackAlwaysOwned = Convert.ToBoolean(reader.ReadByte());
+                reader.AlignStream();
+            }
             beatmapLevelCollection = new AssetPtr(reader);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(packID);
             w.WriteAlignedString(packName);
             coverImage.WriteTo(w);
-            w.Write(isPackAlwaysOwned);
-            w.AlignStream();
+            if(v < Apk.Version.V1_1_0){
+                w.Write(isPackAlwaysOwned);
+                w.AlignStream();
+            }
             beatmapLevelCollection.WriteTo(w);
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x11;
         }
 
         public override void Trace(Action<AssetPtr> action)

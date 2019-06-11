@@ -112,7 +112,7 @@ namespace LibSaberPatch.AssetDataObjects
             path = reader.ReadAlignedString();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(name);
             w.Write(forcedFallbackFormat);
@@ -144,11 +144,6 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(offset);
             w.Write(size);
             w.WriteAlignedString(path);
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 2;
         }
     }
 }

@@ -7,7 +7,8 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class TextMeshPro : BehaviorData
     {
-        public const int PathID = 1065;
+        // DEPRECATED
+        //public const int PathID = 1065;
         // Teiko Medium SDF No Glow: PathID 57, FileID 3 (unity-builtin-extra)
         // Teiko Medium SDF: PathID 58, FileID 3
         // 0, 283
@@ -38,11 +39,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             remainingData = reader.ReadBytes(length - (int)(reader.BaseStream.Position - start));
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0xFB;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(material);
@@ -50,10 +46,10 @@ namespace LibSaberPatch.BehaviorDataObjects
             action(fontAsset);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             material.WriteTo(w);
-            color.WriteTo(w);
+            color.WriteTo(w, v);
             w.Write(raycastTarget);
             w.AlignStream();
             cullState.WriteTo(w);

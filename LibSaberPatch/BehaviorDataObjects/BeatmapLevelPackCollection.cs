@@ -18,12 +18,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             previewBeatmapLevelPack = reader.ReadPrefixedList(r => new AssetPtr(r));
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x01;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WritePrefixedList(beatmapLevelPacks, a => a.WriteTo(w));
             w.WritePrefixedList(previewBeatmapLevelPack, a => a.WriteTo(w));

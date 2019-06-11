@@ -8,7 +8,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class LocalizedTextMeshProUGUI : BehaviorData
     {
         // Restart Button Text: 142, 129 (level11)
-        public const int PathID = 345;
+        // DEPRECATED!
+        //public const int PathID = 345;
 
         public AssetPtr text;
         public byte maintainTextAlignment;
@@ -22,12 +23,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             key = reader.ReadAlignedString();
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0A;
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             text.WriteTo(w);
             w.Write(maintainTextAlignment);

@@ -43,7 +43,7 @@ namespace LibSaberPatch.AssetDataObjects
 
         public SpriteAssetData() { }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(name);
             foreach (float f in floats)
@@ -59,11 +59,6 @@ namespace LibSaberPatch.AssetDataObjects
             spriteAtlas.WriteTo(w);
             texture.WriteTo(w);
             w.Write(bytesAfterTexture);
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x06;
         }
 
         public override void Trace(Action<AssetPtr> action)

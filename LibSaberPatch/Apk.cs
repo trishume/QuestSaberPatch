@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Ionic.Zip;
 using Ionic.Zlib;
 
@@ -8,21 +9,85 @@ namespace LibSaberPatch
 {
     public class Apk : IDisposable
     {
-        public static string MainAssetsFile = "assets/bin/Data/sharedassets17.assets";
-        public static string RootPackFile = "assets/bin/Data/sharedassets19.assets";
-        public static string ColorsFile = "assets/bin/Data/sharedassets1.assets";
-        public static string TextFile = "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
+        internal const string VersionHashFile = "assets/bin/Data/globalgamemanagers";
 
         private ZipFile archive;
+
+        public Version version;
+
+        public enum Version {
+            V1_0_0 = 0,
+            V1_0_1,
+            V1_0_2,
+            V1_1_0,
+        }
 
         public Apk(string path) {
             archive = ZipFile.Read(path);
             archive.CompressionLevel = CompressionLevel.None;
+            version = DetectVersion();
         }
 
         public void Dispose() {
             archive.Save();
             archive.Dispose();
+        }
+
+        private string VersionFileHash() {
+            SHA1 sha = SHA1Managed.Create();
+            byte[] hash = sha.ComputeHash(ReadEntireEntry(VersionHashFile));
+            return Convert.ToBase64String(hash);
+        }
+
+        private Version DetectVersion() {
+            string hash = VersionFileHash();
+            switch(hash) {
+                case "wnEQdoDvVbzx+ZLyza/7M3dpgPA=":
+                    return Version.V1_0_0;
+                case "gdRgBAUWQhEstDEIkDMhIhsUpfw=":
+                    return Version.V1_0_1;
+                case "19H8crwCXHxdE8iX2mxH/Aeun1A=":
+                    return Version.V1_0_2;
+                case "NNVcU90Hhx0/iiX9zLP4qZ8MLdY=":
+                    return Version.V1_1_0;
+                default:
+                    throw new ApplicationException($"Unrecognized APK version, hash {hash}");
+            }
+        }
+
+        public string MainAssetsFile() {
+            if(version >= Version.V1_1_0) {
+                return "assets/bin/Data/sharedassets18.assets";
+            } else {
+                return "assets/bin/Data/sharedassets17.assets";
+            }
+        }
+
+        public string MainAssetsFileName() {
+            if(version >= Version.V1_1_0) {
+                return "sharedassets18.assets";
+            } else {
+                return "sharedassets17.assets";
+            }
+        }
+
+        public string RootPackFile()
+        {
+            if(version >= Version.V1_1_0) {
+                return "assets/bin/Data/sharedassets20.assets";
+            } else {
+                return "assets/bin/Data/sharedassets19.assets";
+            }
+        }
+
+        public string ColorsFile()
+        {
+            return "assets/bin/Data/sharedassets1.assets";
+        }
+
+        public string TextFile()
+        {
+            return "assets/bin/Data/231368cb9c1d5dd43988f2a85226e7d7";
         }
 
         public byte[] ReadEntireEntry(string entryPath) {
@@ -98,6 +163,7 @@ namespace LibSaberPatch
 
         private const string il2cppLibEntry = "lib/armeabi-v7a/libil2cpp.so";
         public void PatchSignatureCheck() {
+            if(version >= Version.V1_1_0) return;
             byte[] data = ReadEntireEntry(il2cppLibEntry);
 
             bool patched = false;
@@ -114,6 +180,8 @@ namespace LibSaberPatch
                 int sigPatchLoc = 0x0109D074;
                 byte[] toReplace = {0x8B, 0xD8, 0xFE, 0xEB};
                 patched = tryPatch(data, sigPatchLoc, sigPatch, toReplace);
+            } else {
+                throw new ApplicationException("Can't recognize code version to patch");
             }
 
             if(patched) WriteEntireEntry(il2cppLibEntry, data);

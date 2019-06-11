@@ -8,7 +8,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class Saber : BehaviorData
     {
         // LeftSaber: (142, 20) GO, Transform: (142, 54)
-        public const int PathID = 549;
+        // DEPRECATED
+        //public const int PathID = 549;
 
         public AssetPtr topPos;
         public AssetPtr bottomPos;
@@ -33,11 +34,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             saberTypeObject = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x07;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(topPos);
@@ -47,7 +43,7 @@ namespace LibSaberPatch.BehaviorDataObjects
             action(saberTypeObject);
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             topPos.WriteTo(w);
             bottomPos.WriteTo(w);

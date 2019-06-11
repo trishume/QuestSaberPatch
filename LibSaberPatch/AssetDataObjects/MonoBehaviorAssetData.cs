@@ -23,7 +23,12 @@ namespace LibSaberPatch.AssetDataObjects
             enabled = 1;
         }
 
-        public MonoBehaviorAssetData(BinaryReader reader, int length, byte[] scriptID)
+        public MonoBehaviorAssetData(
+            BinaryReader reader,
+            int length,
+            SerializedAssets.TypeRef typeRef,
+            Apk.Version version
+        )
         {
             int startOffset = (int)reader.BaseStream.Position;
             gameObject = new AssetPtr(reader);
@@ -32,78 +37,66 @@ namespace LibSaberPatch.AssetDataObjects
             name = reader.ReadAlignedString();
             int headerLen = (int)reader.BaseStream.Position - startOffset;
 
-            if (scriptID.SequenceEqual(LevelBehaviorData.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(LevelBehaviorData.ScriptID))
             {
                 data = new LevelBehaviorData(reader, length - headerLen);
                 return;
             }
-            if (scriptID.SequenceEqual(LevelCollectionBehaviorData.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(LevelCollectionBehaviorData.ScriptID))
             {
                 data = new LevelCollectionBehaviorData(reader, length - headerLen);
                 return;
             }
-            if (scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(BeatmapDataBehaviorData.ScriptID))
             {
-                data = new BeatmapDataBehaviorData(reader, length - headerLen);
+                data = new BeatmapDataBehaviorData(reader, length - headerLen, version);
                 return;
             }
-            if (scriptID.SequenceEqual(LevelPackBehaviorData.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(LevelPackBehaviorData.ScriptID))
             {
-                data = new LevelPackBehaviorData(reader, length - headerLen);
+                data = new LevelPackBehaviorData(reader, length - headerLen, version);
                 return;
             }
-            if (scriptID.SequenceEqual(ColorManager.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(ColorManager.ScriptID))
             {
                 data = new ColorManager(reader, length - headerLen);
                 return;
             }
-            if (scriptID.SequenceEqual(SimpleColor.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(SimpleColor.ScriptID))
             {
                 data = new SimpleColor(reader, length - headerLen);
                 return;
             }
-            if (scriptID.SequenceEqual(BeatmapLevelPackCollection.ScriptID))
+            if (typeRef.scriptID.SequenceEqual(BeatmapLevelPackCollection.ScriptID))
             {
                 data = new BeatmapLevelPackCollection(reader, length - headerLen);
+                return;
+            }
+            if (typeRef.scriptID.SequenceEqual(AlwaysOwnedBehaviorData.ScriptID))
+            {
+                data = new AlwaysOwnedBehaviorData(reader, length - headerLen);
                 return;
             }
 
             switch (script.pathID)
             {
-                case TextMeshPro.PathID:
-                    data = new TextMeshPro(reader, length - headerLen);
-                    break;
-                case Saber.PathID:
-                    data = new Saber(reader, length - headerLen);
-                    break;
-                case LocalizedTextMeshProUGUI.PathID:
-                    data = new LocalizedTextMeshProUGUI(reader, length - headerLen);
-                    break;
-                case Localization.PathID:
-                    data = new Localization(reader, length - headerLen);
-                    break;
                 default:
                     data = new UnknownBehaviorData(reader, length - headerLen);
                     break;
             }
             if (!(data is UnknownBehaviorData))
             {
-                Console.WriteLine($"Type: {data.GetType()} ScriptHash: {BitConverter.ToString(scriptID).Replace("-", "")}");
+                Console.WriteLine($"Type: {data.GetType()} ScriptHash: {BitConverter.ToString(typeRef.scriptID).Replace("-", "")}");
             }
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             gameObject.WriteTo(w);
             w.Write(enabled);
             script.WriteTo(w);
             w.WriteAlignedString(name);
-            data.WriteTo(w);
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return data.SharedAssetsTypeIndex();
+            data.WriteTo(w,v);
         }
 
         public override void Trace(Action<AssetPtr> action)

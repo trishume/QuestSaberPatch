@@ -53,7 +53,7 @@ namespace LibSaberPatch.AssetDataObjects
             compressionFormat = reader.ReadInt32();
         }
 
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(name);
             w.Write(loadType);
@@ -74,11 +74,6 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(offset);
             w.Write(size);
             w.Write(compressionFormat);
-        }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 5;
         }
 
         public override List<string> OwnedFiles(SerializedAssets assets)

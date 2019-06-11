@@ -21,8 +21,8 @@ namespace app
             using (Apk apk = new Apk(apkPath)) {
                 apk.PatchSignatureCheck();
 
-                byte[] data = apk.ReadEntireEntry(Apk.MainAssetsFile);
-                SerializedAssets assets = SerializedAssets.FromBytes(data);
+                byte[] data = apk.ReadEntireEntry(apk.MainAssetsFile());
+                SerializedAssets assets = SerializedAssets.FromBytes(data, apk.version);
 
                 HashSet<string> existingLevels = assets.ExistingLevelIDs();
                 LevelCollectionBehaviorData extrasCollection = assets.FindExtrasLevelCollection();
@@ -58,7 +58,7 @@ namespace app
                 }
 
                 byte[] outData = assets.ToBytes();
-                apk.ReplaceAssetsFile(Apk.MainAssetsFile, outData);
+                apk.ReplaceAssetsFile(apk.MainAssetsFile(), outData);
             }
 
             Console.WriteLine("Signing APK...");

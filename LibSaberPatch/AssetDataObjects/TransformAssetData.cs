@@ -26,12 +26,7 @@ namespace LibSaberPatch.AssetDataObjects
             parent = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return -1; // TODO
-        }
-
-        public override void WriteTo(BinaryWriter w)
+        public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             gameObject.WriteTo(w);
             localRotation.WriteTo(w);

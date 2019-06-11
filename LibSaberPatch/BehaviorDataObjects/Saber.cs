@@ -8,7 +8,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class Saber : BehaviorData
     {
         // LeftSaber: (142, 20) GO, Transform: (142, 54)
-        public const int PathID = 549;
+        // DEPRECATED
+        //public const int PathID = 549;
 
         public AssetPtr topPos;
         public AssetPtr bottomPos;

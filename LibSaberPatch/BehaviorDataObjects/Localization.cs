@@ -65,7 +65,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class Localization : BehaviorData
     {
         // Localization: 4, 1 (0f74782e1b8b9d744b2e1b71fdbc68af)
-        public const int PathID = 1697;
+        // DEPRECATED!
+        //public const int PathID = 1697;
 
         public LocalizationDocument polyglotDocument;
         public LocalizationDocument customDocument;

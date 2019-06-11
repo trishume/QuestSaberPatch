@@ -230,18 +230,18 @@ namespace jsonApp
             SerializedAssets textAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.TextFile()), apk.version);
             var aotext = textAssets.GetAssetAt(1);
             TextAssetData ta = aotext.data as TextAssetData;
-            var segments = ta.ReadLocaleText(new List<char>() { ',', ',', '\n' });
+            var segments = ta.ReadLocaleText();
             TextAssetData.ApplyWatermark(segments);
 
             foreach(var entry in replaceText) {
-                List<string> value;
+                Dictionary<string, string> value;
                 if (!segments.TryGetValue(entry.Key, out value)) {
                     continue;
                 }
-                segments[entry.Key][value.Count - 1] = entry.Value;
+                value["ENGLISH"] = entry.Value;
             }
 
-            ta.WriteLocaleText(segments, new List<char>() { ',', ',', '\n' });
+            ta.WriteLocaleText(segments);
             apk.ReplaceAssetsFile(apk.TextFile(), textAssets.ToBytes());
         }
     }

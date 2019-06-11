@@ -8,7 +8,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class SaberManager : BehaviorData
     {
         // GameObject: (142, 40), Script: (142, 167)
-        public const int PathID = 1210;
+        // DEPRECATED
+        //public const int PathID = 1210;
 
         public AssetPtr leftSaber;
         public AssetPtr rightSaber;

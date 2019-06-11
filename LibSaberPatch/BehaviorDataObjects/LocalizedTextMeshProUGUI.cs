@@ -8,7 +8,8 @@ namespace LibSaberPatch.BehaviorDataObjects
     public class LocalizedTextMeshProUGUI : BehaviorData
     {
         // Restart Button Text: 142, 129 (level11)
-        public const int PathID = 345;
+        // DEPRECATED!
+        //public const int PathID = 345;
 
         public AssetPtr text;
         public byte maintainTextAlignment;

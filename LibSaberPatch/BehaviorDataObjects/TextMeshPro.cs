@@ -7,7 +7,8 @@ namespace LibSaberPatch.BehaviorDataObjects
 {
     public class TextMeshPro : BehaviorData
     {
-        public const int PathID = 1065;
+        // DEPRECATED
+        //public const int PathID = 1065;
         // Teiko Medium SDF No Glow: PathID 57, FileID 3 (unity-builtin-extra)
         // Teiko Medium SDF: PathID 58, FileID 3
         // 0, 283

@@ -33,6 +33,13 @@ namespace LibSaberPatch.BehaviorDataObjects
                 w.WritePrefixedBytes(signature);
                 w.WritePrefixedBytes(projectedData);
             }
+
+            // The base game omits these, which causes a bunch of Unity
+            // warnings, but we try to round-trip assets files so don't force them
+            // else {
+            //     w.WritePrefixedBytes(new byte[0]);
+            //     w.WritePrefixedBytes(new byte[0]);
+            // }
         }
 
         public override int SharedAssetsTypeIndex()

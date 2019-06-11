@@ -27,6 +27,9 @@ namespace LibSaberPatch
         public Dictionary<byte[],AssetPtr> scriptIDToScriptPtr;
         public Dictionary<string,AssetPtr> environmentIDToPtr;
 
+        private Dictionary<Type,int> assetTypeToTypeID;
+        private Dictionary<Type,int> scriptTypeToTypeID;
+
         public Apk.Version apkVersion;
 
         public class TypeRef {
@@ -184,6 +187,8 @@ namespace LibSaberPatch
             // ===== Extra stuff
             scriptIDToScriptPtr = new Dictionary<byte[], AssetPtr>(new ByteArrayComparer());
             environmentIDToPtr = new Dictionary<string, AssetPtr>();
+            assetTypeToTypeID = new Dictionary<Type, int>();
+            scriptTypeToTypeID = new Dictionary<Type, int>();
 
             // ===== Parse Data
             for(int i = 0; i < objects.Count-1; i++) {
@@ -208,6 +213,7 @@ namespace LibSaberPatch
                     case MonoBehaviorAssetData.ClassID:
                         byte[] scriptID = types[obj.typeID].scriptID;
                         var monob = new MonoBehaviorAssetData(reader, obj.size, types[obj.typeID], apkVersion);
+                        scriptTypeToTypeID[monob.data.GetType()] = obj.typeID;
                         scriptIDToScriptPtr[scriptID] = monob.script;
                         obj.data = monob;
                         break;
@@ -233,6 +239,9 @@ namespace LibSaberPatch
                         obj.data = new UnknownAssetData(reader, obj.size);
                         break;
                 }
+
+                assetTypeToTypeID[obj.data.GetType()] = obj.typeID;
+
                 long bytesParsed = reader.BaseStream.Position - startOffset;
                 if(bytesParsed != obj.size)
                     throw new ParseException($"Parsed {bytesParsed} bytes but expected {obj.size} for path ID {obj.pathID}");
@@ -313,11 +322,19 @@ namespace LibSaberPatch
             outStream.Write(buf, 0, length);
         }
 
+        public int TypeIndexForAsset(AssetData data) {
+            if(data is MonoBehaviorAssetData) {
+                return scriptTypeToTypeID[(data as MonoBehaviorAssetData).data.GetType()];
+            } else {
+                return assetTypeToTypeID[data.GetType()];
+            }
+        }
+
         public AssetPtr AppendAsset(AssetData data) {
             ulong pathID = (ulong)(objects.Count + 1);
             AssetObject obj = new AssetObject() {
                 pathID = pathID,
-                typeID = data.SharedAssetsTypeIndex(),
+                typeID = TypeIndexForAsset(data),
                 data = data,
                 paddingLen = 0,
             };

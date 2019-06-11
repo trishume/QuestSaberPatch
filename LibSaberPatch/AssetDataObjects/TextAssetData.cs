@@ -102,18 +102,16 @@ namespace LibSaberPatch.AssetDataObjects
 
         public string WriteLocaleText(Dictionary<string, Dictionary<string, string>> values)
         {
-            string temp = "";
-            foreach (string s in values.Keys)
-            {
-                temp += s;
-                foreach (string lang in values[s].Keys)
-                {
-                    temp += ',' + lang + ',' + values[s][lang];
+            StringBuilder sb = new StringBuilder();
+            foreach (string s in values.Keys) {
+                sb.Append(s);
+                foreach (string lang in values[s].Keys) {
+                    sb.AppendFormat(",{0},{1}", lang, values[s][lang]);
                 }
-                temp += '\n';
+                sb.Append('\n');
             }
-            temp = temp.Remove(temp.Length - 1);
-            return temp;
+            sb.Length = sb.Length - 1; // remove trailing newline
+            return sb.ToString();
         }
     }
 }

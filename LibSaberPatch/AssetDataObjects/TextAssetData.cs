@@ -96,7 +96,7 @@ namespace LibSaberPatch.AssetDataObjects
 
             var value = localeValues["CREDITS_CONTENT"];
             string item = value["ENGLISH"];
-            if (item.Contains(message)) return;
+            if (item.Contains("Quest Modders")) return;
             localeValues["CREDITS_CONTENT"]["ENGLISH"] = item.Remove(item.Length - 2) + message + '"';
         }
 
@@ -110,7 +110,7 @@ namespace LibSaberPatch.AssetDataObjects
                 sb.Length--; // remove trailing comma
                 sb.Append("\r\n");
             }
-            sb.Length = sb.Length - 1; // remove trailing newline
+            sb.Length = sb.Length - 2; // remove trailing newline
             script = sb.ToString();
         }
     }

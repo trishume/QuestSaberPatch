@@ -111,8 +111,6 @@ namespace LibSaberPatch.AssetDataObjects
                 sb.Append("\r\n");
             }
             sb.Length = sb.Length - 1; // remove trailing newline
-            Console.WriteLine("Writing text: " + sb.ToString());
-            Console.WriteLine(sb.ToString().Contains("Sc2ad"));
             script = sb.ToString();
         }
     }

@@ -122,7 +122,8 @@ namespace jsonApp
 
             // === Load root level pack
             SerializedAssets rootPackAssets = SerializedAssets.FromBytes(apk.ReadEntireEntry(apk.RootPackFile()), apk.version);
-            int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == "sharedassets17.assets") + 1;
+            string mainFileName = apk.MainAssetsFileName();
+            int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == mainFileName) + 1;
             BeatmapLevelPackCollection rootLevelPack = rootPackAssets.FindMainLevelPackCollection();
 
             // === Remove existing custom packs

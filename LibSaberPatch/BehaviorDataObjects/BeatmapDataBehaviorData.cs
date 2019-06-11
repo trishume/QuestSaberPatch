@@ -42,11 +42,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             // }
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0E;
-        }
-
         public static BeatmapDataBehaviorData FromJsonFile(string path, Apk.Version v) {
             string jsonData = File.ReadAllText(path);
             if(v < Apk.Version.V1_1_0) {

@@ -38,11 +38,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             remainingData = reader.ReadBytes(length - (int)(reader.BaseStream.Position - start));
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0xFB;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(material);

@@ -145,10 +145,5 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(size);
             w.WriteAlignedString(path);
         }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            return 2;
-        }
     }
 }

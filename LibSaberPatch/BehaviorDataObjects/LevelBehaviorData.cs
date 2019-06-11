@@ -116,11 +116,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             w.WritePrefixedList(difficultyBeatmapSets, x => x.WriteTo(w));
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0F;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(audioClip);

@@ -21,11 +21,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             colorB = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0E;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(playerModel);

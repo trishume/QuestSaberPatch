@@ -76,11 +76,6 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(compressionFormat);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 5;
-        }
-
         public override List<string> OwnedFiles(SerializedAssets assets)
         {
             return new List<string>() { source };

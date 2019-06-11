@@ -17,10 +17,5 @@ namespace LibSaberPatch.BehaviorDataObjects
         {
             w.Write(bytes);
         }
-
-        public override int SharedAssetsTypeIndex()
-        {
-            throw new ApplicationException("unknown type index");
-        }
     }
 }

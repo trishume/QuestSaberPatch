@@ -86,11 +86,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             localize = new PersistentCalls(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x0F;
-        }
-
         public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             polyglotDocument.WriteTo(w);

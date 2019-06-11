@@ -33,11 +33,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             saberTypeObject = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x07;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(topPos);

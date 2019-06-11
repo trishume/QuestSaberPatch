@@ -45,11 +45,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             beatmapLevelCollection.WriteTo(w);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x11;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             action(coverImage);

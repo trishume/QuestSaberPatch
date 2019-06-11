@@ -106,11 +106,6 @@ namespace LibSaberPatch.AssetDataObjects
             data.WriteTo(w,v);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return data.SharedAssetsTypeIndex();
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             // So, we have AssetPtrs, however, we don't want to delete any of the pointers for Gameobject/Script

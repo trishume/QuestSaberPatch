@@ -26,11 +26,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             w.WritePrefixedList(levels, x => x.WriteTo(w));
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x10;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             foreach (AssetPtr p in levels)

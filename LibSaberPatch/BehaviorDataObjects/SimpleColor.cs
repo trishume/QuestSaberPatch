@@ -24,11 +24,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             a = reader.ReadSingle();
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 13;
-        }
-
         public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.Write(r);

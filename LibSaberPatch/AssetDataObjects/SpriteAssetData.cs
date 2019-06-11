@@ -61,11 +61,6 @@ namespace LibSaberPatch.AssetDataObjects
             w.Write(bytesAfterTexture);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0x06;
-        }
-
         public override void Trace(Action<AssetPtr> action)
         {
             foreach (AssetPtr p in atlasTags)

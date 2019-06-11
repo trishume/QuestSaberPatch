@@ -20,11 +20,6 @@ namespace LibSaberPatch.AssetDataObjects
             script = reader.ReadAlignedString();
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0;
-        }
-
         public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             w.WriteAlignedString(name);

@@ -422,7 +422,7 @@ namespace LibSaberPatch
             objects[ind] = new AssetObject()
             {
                 pathID = pathID,
-                typeID = data.SharedAssetsTypeIndex(),
+                typeID = TypeIndexForAsset(data),
                 data = data,
                 paddingLen = 0,
             };

@@ -19,11 +19,6 @@ namespace LibSaberPatch.BehaviorDataObjects
             rightSaber = new AssetPtr(reader);
         }
 
-        public override int SharedAssetsTypeIndex()
-        {
-            return 0xE3;
-        }
-
         public override void WriteTo(BinaryWriter w, Apk.Version v)
         {
             leftSaber.WriteTo(w);

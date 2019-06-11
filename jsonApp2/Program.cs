@@ -125,9 +125,11 @@ namespace jsonApp
             string mainFileName = apk.MainAssetsFileName();
             int mainFileI = rootPackAssets.externals.FindIndex(e => e.pathName == mainFileName) + 1;
             BeatmapLevelPackCollection rootLevelPack = rootPackAssets.FindMainLevelPackCollection();
+            AlwaysOwnedBehaviorData alwaysOwned = mainAssets.FindScript<AlwaysOwnedBehaviorData>(x => true);
 
             // === Remove existing custom packs
             rootLevelPack.beatmapLevelPacks.RemoveAll(ptr => ptr.fileID == mainFileI && ptr.pathID > maxBasePathID);
+            alwaysOwned.levelPacks.RemoveAll(ptr => ptr.fileID == 0 && ptr.pathID > maxBasePathID);
             LevelPackBehaviorData.RemoveCustomPacksFromEnd(mainAssets);
 
             // === Remove old-school custom levels from Extras pack
@@ -179,6 +181,7 @@ namespace jsonApp
                 }
 
                 rootLevelPack.beatmapLevelPacks.Add(new AssetPtr(mainFileI, info.pack.pathID));
+                alwaysOwned.levelPacks.Add(info.pack);
             }
             res.presentLevels = availableLevels.Keys.ToList();
 

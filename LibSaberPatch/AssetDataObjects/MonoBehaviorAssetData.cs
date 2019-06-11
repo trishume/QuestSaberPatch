@@ -72,6 +72,11 @@ namespace LibSaberPatch.AssetDataObjects
                 data = new BeatmapLevelPackCollection(reader, length - headerLen);
                 return;
             }
+            if (typeRef.scriptID.SequenceEqual(AlwaysOwnedBehaviorData.ScriptID))
+            {
+                data = new AlwaysOwnedBehaviorData(reader, length - headerLen);
+                return;
+            }
 
             switch (script.pathID)
             {

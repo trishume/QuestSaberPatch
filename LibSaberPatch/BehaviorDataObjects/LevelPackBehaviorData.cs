@@ -30,8 +30,10 @@ namespace LibSaberPatch.BehaviorDataObjects
             packID = reader.ReadAlignedString();
             packName = reader.ReadAlignedString();
             coverImage = new AssetPtr(reader);
-            if(v < Apk.Version.V1_1_0) isPackAlwaysOwned = Convert.ToBoolean(reader.ReadByte());
-            reader.AlignStream();
+            if(v < Apk.Version.V1_1_0) {
+                isPackAlwaysOwned = Convert.ToBoolean(reader.ReadByte());
+                reader.AlignStream();
+            }
             beatmapLevelCollection = new AssetPtr(reader);
         }
 
@@ -40,8 +42,10 @@ namespace LibSaberPatch.BehaviorDataObjects
             w.WriteAlignedString(packID);
             w.WriteAlignedString(packName);
             coverImage.WriteTo(w);
-            if(v < Apk.Version.V1_1_0) w.Write(isPackAlwaysOwned);
-            w.AlignStream();
+            if(v < Apk.Version.V1_1_0){
+                w.Write(isPackAlwaysOwned);
+                w.AlignStream();
+            }
             beatmapLevelCollection.WriteTo(w);
         }
 

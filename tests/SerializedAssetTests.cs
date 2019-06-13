@@ -109,5 +109,19 @@ namespace TestApp
             Texture2DAssetData cover = Texture2DAssetData.CoverFromImageFile(imageFile, "BUBBLETEA");
             Assert.Equal(262143, cover.completeImageSize);
         }
+
+        [Fact]
+        public void TestTextReplaceRoundTrip() {
+            using (Apk apk = new Apk(baseAPKPath)) {
+                byte[] data = apk.ReadEntireEntry(apk.TextFile());
+                SerializedAssets textAssets = SerializedAssets.FromBytes(data, apk.version);
+                var aotext = textAssets.GetAssetAt(1);
+                TextAssetData ta = aotext.data as TextAssetData;
+                string oldScript = ta.script;
+                var segments = ta.ReadLocaleText();
+                ta.WriteLocaleText(segments);
+                Assert.Equal(oldScript, ta.script);
+            }
+        }
     }
 }

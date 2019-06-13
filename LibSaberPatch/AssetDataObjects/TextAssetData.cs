@@ -108,9 +108,9 @@ namespace LibSaberPatch.AssetDataObjects
                     sb.AppendFormat("{0},", values[s][lang]);
                 }
                 sb.Length--; // remove trailing comma
-                sb.Append("\r\n");
+                sb.Append("\n");
             }
-            sb.Length = sb.Length - 2; // remove trailing newline
+            sb.Length = sb.Length - 1; // remove trailing newline
             script = sb.ToString();
         }
     }

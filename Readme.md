@@ -148,6 +148,15 @@ And after running each command it will return an output JSON line that is in thi
   // reason is an error message about the level being invalid such as missing a
   // file or the JSON being incorrect.
   "installSkipped":{"BUBBLETEA":"Invalid level JSON: some error"},
+  // This will be null if `colors` was null. Otherwise it will contain the resulting
+  // saber colors. Below is the result on a fresh APK with both replacements null,
+  // i.e. these are the default colors in case they are useful for making a GUI
+  "newColors":{
+    "colorA":{"r":0.9411765,"g":0.1882353,"b":0.1882353,"a":1.0},
+    "colorB":{"r":0.1882353,"g":0.619607866,"b":1.0,"a":1.0}
+  },
+  // True if text replacement ran, mirrors `replaceText`
+  "didReplaceText":true,
   // This should be null unless something screws up, in which case it will be a
   // string with the exception message and backtrace, make sure to check this and
   // preferably surface it somehow or at least log it.

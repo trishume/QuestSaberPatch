@@ -29,8 +29,11 @@ namespace LibSaberPatch
         }
 
         public void Dispose() {
-            archive.Save();
             archive.Dispose();
+        }
+
+        public void Save() {
+            archive.Save();
         }
 
         private string VersionFileHash() {

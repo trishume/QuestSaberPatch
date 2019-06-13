@@ -76,6 +76,8 @@ namespace jsonApp
                     }
 
                     res.presentLevels = existingLevels.ToList();
+
+                    apk.Save();
                 }
 
                 if(inv.sign) {
